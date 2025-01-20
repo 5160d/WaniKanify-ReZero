@@ -5,7 +5,9 @@ import { Box } from "@mui/joy";
 import React, { useState } from "react";
 
 import { APITokenField } from "src/components"
-import { wanikanifyTheme } from "~src/styles/wanikanify_theme";
+import { WanikanifyTheme } from "src/styles/wanikanify_theme";
+
+import "src/styles/style.css"
 
 
 function IndexPopup() {
@@ -25,7 +27,6 @@ function IndexPopup() {
         backgroundPosition: "center"
       }}
     >
-      <CssVarsProvider theme={wanikanifyTheme}>
         <form>
           <Stack spacing={4}>
             <APITokenField />
@@ -38,7 +39,6 @@ function IndexPopup() {
             </Button>
           </Stack>
         </form>
-      </CssVarsProvider>
     </Box>
   );
 }
