@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 
 import {
-    Box, Button, Checkbox, FormControl, FormControlLabel, FormLabel,
+    Box, Button, Checkbox, FormControl, FormControlLabel, FormLabel, Stack, Switch,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Tooltip,
     IconButton, Input, InputAdornment, List, ListItem,
     Radio, RadioGroup, Typography, Divider
@@ -10,103 +10,247 @@ import { HelpOutline, Delete } from "@mui/icons-material";
 
 import "src/styles/style.css"
 
+const WaniTooltip = ({ title, children }: { title: string; children: React.ReactNode }) => (
+    <Box sx={{ p: 2, maxWidth: 300 }}>
+        <Typography
+            variant="h6"
+            fontWeight="bold"
+            sx={{
+                color: 'primary.main',
+                borderBottom: 1,
+                borderColor: 'divider',
+                pb: 1,
+                mb: 2
+            }}
+        >
+            {title}
+        </Typography>
+        <Box sx={{
+            color: 'text.secondary',
+            '& a': {
+                color: 'primary.main',
+                textDecoration: 'none',
+                '&:hover': {
+                    textDecoration: 'underline'
+                }
+            }
+        }}>
+            {children}
+        </Box>
+    </Box>
+);
 
 export const APITokenField = () => {
     return (
-        <TextField
-            placeholder="API Token"
-            variant="outlined"
-            fullWidth
-            InputProps={{
-                endAdornment: (
-                    <InputAdornment position="end">
-                        <Button variant="contained" color="primary">
-                            Test API Token
-                        </Button>
-                    </InputAdornment>
-                )
-            }}
-        />
+        <Box display="flex" alignItems="center" gap={2}>
+            <TextField
+                required
+                id="filled-required"
+                label="API Token"
+                variant="filled"
+                fullWidth
+                InputProps={{
+                    endAdornment: (
+                        <InputAdornment position="end" sx={{ mr: -1 }}>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                endIcon={
+                                    <Tooltip
+                                        title={
+                                            <WaniTooltip title="API Key">
+                                                <Typography
+                                                    variant="body2"
+                                                    sx={{
+                                                        mb: 2,
+                                                        color: 'text.secondary'
+                                                    }}
+                                                >
+                                                    Set your Token here.
+                                                </Typography>
+                                                <Box sx={{
+                                                    bgcolor: 'background.paper',
+                                                    p: 2,
+                                                    borderRadius: 1,
+                                                    border: 1,
+                                                    borderColor: 'divider'
+                                                }}>
+                                                    <Typography variant="body2" sx={{ mb: 2 }}>
+                                                        You can generate a new API token on the{" "}
+                                                        <a
+                                                            href="https://www.wanikani.com/settings/personal_access_tokens"
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                        >
+                                                            API Tokens section
+                                                        </a>{" "}
+                                                        of your WaniKani profile.
+                                                    </Typography>
+                                                    <Typography variant="body2">
+                                                        Your API token is only used to read your vocabulary list.
+                                                    </Typography>
+                                                </Box>
+                                            </WaniTooltip>
+                                        }
+                                        placement="top"
+                                        arrow
+                                        PopperProps={{
+                                            modifiers: [
+                                                {
+                                                    name: 'preventOverflow',
+                                                    options: {
+                                                        boundary: window,
+                                                        altBoundary: true,
+                                                        padding: 8
+                                                    },
+                                                },
+                                                {
+                                                    name: 'flip',
+                                                    options: {
+                                                        fallbackPlacements: ['top', 'left', 'right'],
+                                                    },
+                                                }
+                                            ],
+                                        }}
+                                        sx={{
+                                            '& .MuiTooltip-tooltip': {
+                                                bgcolor: 'background.paper',
+                                                boxShadow: 4,
+                                                border: 1,
+                                                borderColor: 'divider'
+                                            }
+                                        }}
+                                    >
+                                        <IconButton
+                                            color="inherit"
+                                            sx={{
+                                                '&:hover': {
+                                                    bgcolor: 'inherit.light',
+                                                    color: 'inherit.contrastText'
+                                                }
+                                            }}
+                                        >
+                                            <HelpOutline />
+                                        </IconButton>
+                                    </Tooltip>
+                                }
+                            >
+                                Test API Token
+                            </Button>
+                        </InputAdornment>
+                    )
+                }}
+            />
+        </Box>
     );
 };
 
 export const ClearCacheButton = () => {
     return (
-        <Box display="flex" alignItems="center" gap={2}>
-            {/* Clear Cache Button */}
-            <Button color="warning" type="submit" name="clearButton">
-                Clear Cache
-            </Button>
-
-            {/* Tooltip */}
-            <Tooltip
-                title={
-                    <Box>
-                        <Typography
-                            variant="body1"
-                            sx={{ fontWeight: 'bold' }}
-                        >
-                            Vocabulary Cache
-                        </Typography>
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                            Your studied vocabulary words are cached locally to prevent overloading the WaniKani servers.
-                        </Typography>
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                            You may clear the cache manually by hitting this button. The cache will be repopulated automatically.
-                        </Typography>
-                    </Box>
-                }
-                placement="bottom"
-            >
-                <IconButton color="primary">
-                    <HelpOutline />
-                </IconButton>
-            </Tooltip>
-        </Box>
+        <Button color="warning" type="submit" name="clearButton"
+            endIcon={
+                <Tooltip
+                    title={
+                        <WaniTooltip title="Vocabulary Cache">
+                            <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                                Delete local vocab and audio cache.
+                            </Typography>
+                            <Box sx={{
+                                bgcolor: 'background.paper',
+                                p: 2,
+                                borderRadius: 1,
+                                border: 1,
+                                borderColor: 'divider'
+                            }}>
+                                <Typography variant="body2">
+                                    Your studied vocabulary words are cached locally to prevent overloading the WaniKani servers.
+                                </Typography>
+                                <Typography variant="body2">
+                                    You may clear the cache manually by hitting this button.
+                                    The cache will be repopulated automatically.
+                                </Typography>
+                            </Box>
+                        </WaniTooltip>
+                    }
+                    placement="bottom"
+                    arrow
+                    sx={{
+                        '& .MuiTooltip-tooltip': {
+                            bgcolor: 'background.paper',
+                            boxShadow: 4,
+                            border: 1,
+                            borderColor: 'divider'
+                        }
+                    }}
+                >
+                    <IconButton
+                        color="inherit"
+                        sx={{
+                            '&:hover': {
+                                bgcolor: 'inherit.light',
+                                color: 'inherit.contrastText'
+                            }
+                        }}
+                    >
+                        <HelpOutline />
+                    </IconButton>
+                </Tooltip>
+            }
+        >
+            Clear Cache
+        </Button>
     );
 };
 
 export const AutoRunToggle = () => {
     return (
-        <Box display="flex" alignItems="center" gap={2}>
-            {/* Toggle Switch */}
-            <FormControl
-                sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}
-            >
-                <Checkbox
-                    id="autoRunSwitch"
-                    color="primary"
-                    inputProps={{ 'aria-label': 'Auto WaniKanify Pages' }}
-                    sx={{ border: '1px solid', borderColor: 'currentColor', borderRadius: '4px' }}
-                />
-                <FormLabel htmlFor="autoRunSwitch" sx={{ ml: 1, fontSize: '1rem' }} >
-                    Auto WaniKanify Pages
-                </FormLabel>
-            </FormControl>
-
-
-            {/* Tooltip */}
+        <FormControl
+            sx={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 2 }}
+        >
+            <FormControlLabel control={<Switch />} label="Auto WaniKanify Pages" />
             <Tooltip
                 title={
-                    <Box>
-                        <Typography variant="h5" fontWeight="bold">
-                            Auto Run
-                        </Typography>
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                            You may have WaniKanify run automatically after a page loads. Otherwise, click on the extension icon to run it.
-                        </Typography>
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                            With both settings, clicking the extension will return the page to its original state.
-                        </Typography>
-                    </Box>
+                    <WaniTooltip title="Auto Run">
+                        <Box sx={{
+                            bgcolor: 'background.paper',
+                            p: 2,
+                            borderRadius: 1,
+                            border: 1,
+                            borderColor: 'divider'
+                        }}>
+                            <Typography variant="body2" sx={{ mt: 1 }}>
+                                You may have WaniKanify run automatically after a page loads. Otherwise, click on the extension icon to run it.
+                            </Typography>
+                            <Typography variant="body2" sx={{ mt: 1 }}>
+                                With both settings, clicking the extension will return the page to its original state.
+                            </Typography>
+                        </Box>
+                    </WaniTooltip>
                 }
                 placement="bottom"
+                arrow
+                sx={{
+                    '& .MuiTooltip-tooltip': {
+                        bgcolor: 'background.paper',
+                        boxShadow: 4,
+                        border: 1,
+                        borderColor: 'divider'
+                    }
+                }}
             >
-                <IconButton color="primary">
+                <IconButton
+                    color="primary"
+                    sx={{
+                        '&:hover': {
+                            bgcolor: 'primary.light',
+                            color: 'primary.contrastText'
+                        }
+                    }}
+                >
                     <HelpOutline />
                 </IconButton>
             </Tooltip>
-        </Box>
+        </FormControl>
     );
 };
 
@@ -115,79 +259,59 @@ export const AudioToggle = () => {
     const [isToggled, setIsToggled] = useState(false);
 
     return (
-        <Box display="flex" alignItems="center" gap={2}>
-            {/* Audio Toggle */}
-            <FormControl sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }} >
-                <Checkbox
-                    id="audioSwitch"
-                    checked={isToggled}
-                    onChange={(e) => setIsToggled(e.target.checked)}
-                    color="primary"
+        <Stack display="flex" direction="row" spacing={2} alignItems="center" p={2}>
+            <FormControl sx={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 2 }}>
+                {/* Toggle Switch */}
+                <FormControlLabel control={<Switch onChange={(e) => setIsToggled(e.target.checked)} />} label="Play Audio" />
+                {/* Tooltip */}
+                <Tooltip
+                    title={
+                        <WaniTooltip title="Optional Audio">
+                            <Typography variant="body2" sx={{ mt: 1 }}>
+                                Mousing over a word or clicking it will audibly play its pronunciation.
+                            </Typography>
+                        </WaniTooltip>
+                    }
+                    placement="bottom"
+                    arrow
                     sx={{
-                        border: '1px solid',
-                        borderColor: 'currentColor',
-                        borderRadius: '4px'
+                        '& .MuiTooltip-tooltip': {
+                            bgcolor: 'background.paper',
+                            boxShadow: 4,
+                            border: 1,
+                            borderColor: 'divider'
+                        }
                     }}
-                />
-                <FormLabel
-                    htmlFor="audioSwitch"
                 >
-                    Play Audio
-                </FormLabel>
+                    <IconButton
+                        color="primary"
+                        sx={{
+                            '&:hover': {
+                                bgcolor: 'primary.light',
+                                color: 'primary.contrastText'
+                            }
+                        }}
+                    >
+                        <HelpOutline />
+                    </IconButton>
+                </Tooltip>
             </FormControl>
-
-
-            {/* Tooltip */}
-            <Tooltip
-                title={
-                    <Box>
-                        <Typography variant="h5" fontWeight="bold">
-                            Optional Audio
-                        </Typography>
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                            Mousing over a word or clicking it will audibly play its pronunciation.
-                        </Typography>
-                    </Box>
-                }
-                placement="bottom"
-            >
-                <IconButton color="primary">
-                    <HelpOutline />
-                </IconButton>
-            </Tooltip>
-
             {/* Divider */}
             <Divider orientation="vertical" sx={{ height: "32px" }} />
-
-            {/* Conditionally Render RadioGroup */}
-            <FormControl>
-                <Box
-                    sx={{
-                        display: 'flex',
-                        gap: 2,
-                        alignItems: 'center',
-                        p: 1,
-                    }}
-                >
-                    <RadioGroup
-                        row // Ensures horizontal orientation
-                        name="audioMode"
-                    >
-                        <FormControlLabel
-                            value="click"
-                            control={<Radio checked={isToggled} id="audioClick" />}
-                            label="Click"
-                        />
-                        <FormControlLabel
-                            value="hover"
-                            control={<Radio disabled={!isToggled} id="audioHover" />}
-                            label="Hover"
-                        />
-                    </RadioGroup>
-                </Box>
-
-            </FormControl>
-        </Box>
+            {/* Conditionally Enable RadioGroup */}
+            <RadioGroup row name="audioMode" sx={{ display: 'flex', gap: 2, alignItems: 'center', p: 1, }}>
+                <FormControlLabel
+                    value="click"
+                    control={<Radio disabled={!isToggled} id="audioClick" />}
+                    label="Click"
+                />
+                <FormControlLabel
+                    value="hover"
+                    control={<Radio disabled={!isToggled} id="audioHover" />}
+                    label="Hover"
+                />
+            </RadioGroup>
+        </Stack>
     );
 };
 
@@ -221,27 +345,51 @@ export const SitesFilteringTable = () => {
                 </Typography>
                 <Tooltip
                     title={
-                        <Box>
-                            <Typography variant="h5" fontWeight="bold">
-                                Filtered Websites
+                        <WaniTooltip title="Filtered Websites">
+                            <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                                Block WaniKanify on those websites.
                             </Typography>
-                            <Typography variant="body2" sx={{ mt: 1 }}>
-                                WaniKanify will not run on the sites below. Use regular expressions for URL
-                                patterns. A site is filtered out if any pattern matches the URL.
-                            </Typography>
-                            <Typography variant="body2" sx={{ mt: 1 }}>
-                                Be sure to click the save button to save any changes to this list.
-                            </Typography>
-                        </Box>
+                            <Box sx={{
+                                bgcolor: 'background.paper',
+                                p: 2,
+                                borderRadius: 1,
+                                border: 1,
+                                borderColor: 'divider'
+                            }}>
+                                <Typography variant="body2" sx={{ mt: 1 }}>
+                                    WaniKanify will not run on the sites below. Use regular expressions for URL
+                                    patterns. A site is filtered out if any pattern matches the URL.
+                                </Typography>
+                                <Typography variant="body2" sx={{ mt: 1 }}>
+                                    Be sure to click the save button to save any changes to this list.
+                                </Typography>
+                            </Box>
+                        </WaniTooltip>
                     }
                     placement="bottom"
+                    arrow
+                    sx={{
+                        '& .MuiTooltip-tooltip': {
+                            bgcolor: 'background.paper',
+                            boxShadow: 4,
+                            border: 1,
+                            borderColor: 'divider'
+                        }
+                    }}
                 >
-                    <IconButton color="primary">
+                    <IconButton
+                        color="primary"
+                        sx={{
+                            '&:hover': {
+                                bgcolor: 'primary.light',
+                                color: 'primary.contrastText'
+                            }
+                        }}
+                    >
                         <HelpOutline />
                     </IconButton>
                 </Tooltip>
             </Box>
-
             {/* Table */}
             <Box
                 sx={{
@@ -251,9 +399,7 @@ export const SitesFilteringTable = () => {
                     overflowX: "auto",
                 }}
             >
-
-
-                <TableContainer>
+                <TableContainer sx={{ maxHeight: 440 }}>
                     <Table
                         sx={{
                             border: '1px solid rgba(224, 224, 224, 1)', // Adds border to the table
@@ -306,8 +452,6 @@ export const SitesFilteringTable = () => {
                         </TableBody>
                     </Table>
                 </TableContainer>
-
-
             </Box>
         </Box>
     );
@@ -324,27 +468,36 @@ export const NumbersReplacementToggle = () => {
                     alignItems: 'center',
                 }}
             >
-                <Checkbox id="userSwitch" color="primary" />
-                <FormLabel htmlFor="userSwitch" sx={{ ml: 1, fontSize: "1rem" }}>
-                    WaniKanify Numbers
-                </FormLabel>
+                <FormControlLabel control={<Switch />} label="WaniKanify Numbers" />
             </FormControl>
-
-            {/* Tooltip */}
             <Tooltip
                 title={
-                    <Box>
-                        <Typography variant="h5" fontWeight="bold">
-                            WaniKanify Numbers
-                        </Typography>
+                    <WaniTooltip title="WaniKanify Numbers">
                         <Typography variant="body2" sx={{ mt: 1 }}>
                             Toggle on for numerical numbers to be replaced with Kanji as well.
                         </Typography>
-                    </Box>
+                    </WaniTooltip>
                 }
                 placement="bottom"
+                arrow
+                sx={{
+                    '& .MuiTooltip-tooltip': {
+                        bgcolor: 'background.paper',
+                        boxShadow: 4,
+                        border: 1,
+                        borderColor: 'divider'
+                    }
+                }}
             >
-                <IconButton color="primary">
+                <IconButton
+                    color="primary"
+                    sx={{
+                        '&:hover': {
+                            bgcolor: 'primary.light',
+                            color: 'primary.contrastText'
+                        }
+                    }}
+                >
                     <HelpOutline />
                 </IconButton>
             </Tooltip>
@@ -362,18 +515,32 @@ export const SRSCheckboxes = () => {
                 </Typography>
                 <Tooltip
                     title={
-                        <Box>
-                            <Typography variant="h5" fontWeight="bold">
-                                SRS Filtering
-                            </Typography>
+                        <WaniTooltip title="SRS Filtering">
                             <Typography variant="body2" sx={{ mt: 1 }}>
                                 WaniKanify will only substitute words in the checked SRS groups.
                             </Typography>
-                        </Box>
+                        </WaniTooltip>
                     }
                     placement="bottom"
+                    arrow
+                    sx={{
+                        '& .MuiTooltip-tooltip': {
+                            bgcolor: 'background.paper',
+                            boxShadow: 4,
+                            border: 1,
+                            borderColor: 'divider'
+                        }
+                    }}
                 >
-                    <IconButton color="primary">
+                    <IconButton
+                        color="primary"
+                        sx={{
+                            '&:hover': {
+                                bgcolor: 'primary.light',
+                                color: 'primary.contrastText'
+                            }
+                        }}
+                    >
                         <HelpOutline />
                     </IconButton>
                 </Tooltip>
@@ -432,27 +599,71 @@ export const CustomVocabularyTextArea = () => {
                 </Typography>
                 <Tooltip
                     title={
-                        <Box>
-                            <Typography variant="h5" fontWeight="bold">
-                                Custom Vocabulary
-                            </Typography>
-                            <Typography variant="body2" sx={{ mt: 1 }}>
+                        <WaniTooltip title="Custom Vocabulary">
+                            <Typography
+                                variant="body2"
+                                sx={{
+                                    mb: 2,
+                                    color: 'text.secondary'
+                                }}
+                            >
                                 This overrides Wanikani vocab.
                             </Typography>
-                            <Typography variant="body2" sx={{ mt: 1 }}>
-                                Format: eng1,eng2,...;vocab;reading
-                                <br />
-                                Example: cat,feline;猫;ねこ
-                                <br />
-                                Separate entries with ':'
-                                <br />
-                                The reading is for audio functionality (optional).
-                            </Typography>
-                        </Box>
+                            <Box sx={{
+                                bgcolor: 'background.paper',
+                                p: 2,
+                                borderRadius: 1,
+                                border: 1,
+                                borderColor: 'divider'
+                            }}>
+                                <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                                    Format:
+                                </Typography>
+                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                    eng1,eng2,...;vocab;reading
+                                </Typography>
+                                <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                                    Example:
+                                </Typography>
+                                <Typography
+                                    variant="body2"
+                                    sx={{
+                                        fontFamily: 'monospace',
+                                        bgcolor: 'action.hover',
+                                        p: 1,
+                                        borderRadius: 0.5
+                                    }}
+                                >
+                                    cat,feline;猫;ねこ
+                                </Typography>
+                                <Typography variant="body2" sx={{ mt: 2 }}>
+                                    • Separate entries with ':'
+                                    <br />
+                                    • Reading is optional (for audio)
+                                </Typography>
+                            </Box>
+                        </WaniTooltip>
                     }
-                    placement="bottom"
+                    placement="bottom-start"
+                    arrow
+                    sx={{
+                        '& .MuiTooltip-tooltip': {
+                            bgcolor: 'background.paper',
+                            boxShadow: 4,
+                            border: 1,
+                            borderColor: 'divider'
+                        }
+                    }}
                 >
-                    <IconButton color="primary">
+                    <IconButton
+                        color="primary"
+                        sx={{
+                            '&:hover': {
+                                bgcolor: 'primary.light',
+                                color: 'primary.contrastText'
+                            }
+                        }}
+                    >
                         <HelpOutline />
                     </IconButton>
                 </Tooltip>
@@ -484,21 +695,43 @@ export const VocabularyBlacklistTextArea = () => {
                 </Typography>
                 <Tooltip
                     title={
-                        <Box>
-                            <Typography variant="h5" fontWeight="bold">
-                                Blacklisted Vocabulary
-                            </Typography>
-                            <Typography variant="body2" sx={{ mt: 1 }}>
-                                Vocabulary on this list will not be replaced in the pages.
-                            </Typography>
-                            <Typography variant="body2" sx={{ mt: 1 }}>
-                                Vocabulary must be semicolon-separated.
-                            </Typography>
-                        </Box>
+                        <WaniTooltip title="Blacklisted Vocabulary">
+                            <Box sx={{
+                                bgcolor: 'background.paper',
+                                p: 2,
+                                borderRadius: 1,
+                                border: 1,
+                                borderColor: 'divider'
+                            }}>
+                                <Typography variant="body2" sx={{ mt: 1 }}>
+                                    Vocabulary on this list will not be replaced in the pages.
+                                </Typography>
+                                <Typography variant="body2" sx={{ mt: 1 }}>
+                                    Vocabulary must be semicolon-separated.
+                                </Typography>
+                            </Box>
+                        </WaniTooltip>
                     }
                     placement="bottom"
+                    arrow
+                    sx={{
+                        '& .MuiTooltip-tooltip': {
+                            bgcolor: 'background.paper',
+                            boxShadow: 4,
+                            border: 1,
+                            borderColor: 'divider'
+                        }
+                    }}
                 >
-                    <IconButton color="primary">
+                    <IconButton
+                        color="primary"
+                        sx={{
+                            '&:hover': {
+                                bgcolor: 'primary.light',
+                                color: 'primary.contrastText'
+                            }
+                        }}
+                    >
                         <HelpOutline />
                     </IconButton>
                 </Tooltip>
@@ -576,40 +809,106 @@ export const SpreadsheetImportTable = () => {
                 </Typography>
                 <Tooltip
                     title={
-                        <Box>
-                            <Typography variant="h5" fontWeight="bold">
+                        <Box sx={{
+                            p: 2,
+                            width: 800,
+                            maxWidth: '90vw',
+                            bgcolor: 'background.tooltip',
+                            borderRadius: 1,
+                        }}>
+                            <Typography
+                                variant="h6"
+                                fontWeight="bold"
+                                sx={{
+                                    color: 'primary.main',
+                                    borderBottom: 1,
+                                    borderColor: 'divider',
+                                    pb: 1,
+                                    mb: 2
+                                }}
+                            >
                                 Vocabulary Spreadsheets
                             </Typography>
-                            <Typography variant="body2" sx={{ mt: 1 }}>
-                                Import vocabulary from Google Spreadsheets published on the Web.
-                            </Typography>
-                            <Typography variant="body2" sx={{ mt: 1 }}>
-                                To publish the spreadsheet: <em>File-{">"}Share-{">"}Publish to web</em>.
-                            </Typography>
-                            <Typography variant="body2" sx={{ mt: 1 }}>
-                                <strong>1. Spreadsheet collection key:</strong> The spreadsheet collection {"("}group of sheets{")"} unique key. Found in its URL, it looks similar to:
-                                <em>1lIo2calXb_GtaQCKLr989-Ma_hxXlxFsHE0egko-D9k</em><br />
-                                <strong>2. Spreadsheet name:</strong> Name of the selected tab at the bottom of the spreadsheet.<br />
-                                <strong>3. English words column name:</strong> The name of the column {"("}in the spreadsheet header{")"} that contains the english words.<br />
-                                <strong>4. Japanese words column name:</strong> The name of the column {"("}in the spreadsheet header{")"} that contains the corresponding Kanji/japanese words.<br />
-                                <strong>5. Japanese readings column name:</strong> Optionally, the name of the column (in the spreadsheet header) that contains the corresponding furigana readings for the audio feature.<br />
-                                <strong>6. English words delimiter:</strong> Delimiter used in the English column to separate multiple words associated to a same Japanese one {"("}default is a comma{")"}.
-                            </Typography>
-                            <Typography variant="body2" sx={{ mt: 1 }}>
-                                Google Chrome Sync synchronizes the list of spreadsheets but not the vocabulary. Click import on each different browser.
-                            </Typography>
+                            <Box sx={{
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 2fr',
+                                gap: 3
+                            }}>
+                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                    Import vocabulary from Google Spreadsheets published on the Web.
+                                    <Typography variant="body2" sx={{ mt: 2 }}>
+                                        To publish the spreadsheet: <em>File{'->'}Share{'->'}Publish to web</em>.
+                                    </Typography>
+                                </Typography>
+                                <Box sx={{
+                                    bgcolor: 'background.paper',
+                                    p: 2,
+                                    borderRadius: 1,
+                                    border: 1,
+                                    borderColor: 'divider'
+                                }}>
+                                    <Typography variant="body2" component="div" sx={{ mt: 2, color: 'text.secondary' }}>
+                                        <strong>1. Spreadsheet collection key:</strong> The spreadsheet collection (group of sheets) unique key. Found in its URL and similar to this:<br />
+                                        <code style={{ backgroundColor: 'action.hover', padding: '2px 4px' }}>
+                                            1lIo2calXb_GtaQCKLr989-Ma_hxXlxFsHE0egko-D9k
+                                        </code>
+                                        <br />
+                                        <strong>2. Spreadsheet name:</strong> Name of the selected tab at the bottom of the spreadsheet.<br />
+                                        <strong>3. English words column name:</strong> The name of the column containing english words.<br />
+                                        <strong>4. Japanese words column name:</strong> The name of the column containing Kanji/japanese words.<br />
+                                        <strong>5. Japanese readings column name:</strong> Optional column name containing furigana readings.<br />
+                                        <strong>6. English words delimiter:</strong> Delimiter for multiple English words (default: comma).
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
+                                        Note: Google Chrome Sync synchronizes the list of spreadsheets but not the vocabulary. Click import on each different browser.
+                                    </Typography>
+                                </Box>
+                            </Box>
                         </Box>
                     }
-                    placement="bottom"
+                    placement="top"
+                    arrow
+                    PopperProps={{
+                        modifiers: [
+                            {
+                                name: 'preventOverflow',
+                                options: {
+                                    boundary: window,
+                                    altBoundary: true,
+                                    padding: 8
+                                },
+                            },
+                            {
+                                name: 'flip',
+                                options: {
+                                    fallbackPlacements: ['top', 'left', 'right'],
+                                },
+                            }
+                        ],
+                    }}
+                    sx={{
+                        '& .MuiTooltip-tooltip': {
+                            bgcolor: 'background.paper',
+                            boxShadow: 4,
+                            border: 1,
+                            borderColor: 'divider'
+                        }
+                    }}
                 >
-                    <IconButton color="primary">
+                    <IconButton
+                        color="primary"
+                        sx={{
+                            '&:hover': {
+                                bgcolor: 'primary.light',
+                                color: 'primary.contrastText'
+                            }
+                        }}
+                    >
                         <HelpOutline />
                     </IconButton>
                 </Tooltip>
             </Box>
-
-            {/* Table */}
-            <Box sx={{ overflowX: "auto", border: "1px solid", borderColor: "neutral.outlinedBorder", borderRadius: "md" }}>
+            <TableContainer sx={{ maxHeight: 440, overflowX: "auto", border: "1px solid", borderColor: "neutral.outlinedBorder", borderRadius: "md" }}>
                 <Table>
                     <TableHead>
                         <TableRow>
@@ -644,42 +943,42 @@ export const SpreadsheetImportTable = () => {
                         <TableRow>
                             <TableCell>
                                 <Input
-                                    placeholder="Collection Key"
+                                    placeholder="1lIo2calXb_GtaQCMLr989_Ma_hxXlxFsHE0egko-D9k"
                                     value={newSpreadsheet.collectionKey}
                                     onChange={(e) => setNewSpreadsheet({ ...newSpreadsheet, collectionKey: e.target.value })}
                                 />
                             </TableCell>
                             <TableCell>
                                 <Input
-                                    placeholder="Spreadsheet Name"
+                                    placeholder="6k Pt 1"
                                     value={newSpreadsheet.spreadSheetName}
                                     onChange={(e) => setNewSpreadsheet({ ...newSpreadsheet, spreadSheetName: e.target.value })}
                                 />
                             </TableCell>
                             <TableCell>
                                 <Input
-                                    placeholder="English Column"
+                                    placeholder="English"
                                     value={newSpreadsheet.englishColumn}
                                     onChange={(e) => setNewSpreadsheet({ ...newSpreadsheet, englishColumn: e.target.value })}
                                 />
                             </TableCell>
                             <TableCell>
                                 <Input
-                                    placeholder="Japanese Column"
+                                    placeholder="Japanese"
                                     value={newSpreadsheet.japaneseColumn}
                                     onChange={(e) => setNewSpreadsheet({ ...newSpreadsheet, japaneseColumn: e.target.value })}
                                 />
                             </TableCell>
                             <TableCell>
                                 <Input
-                                    placeholder="Reading Column"
+                                    placeholder="Reading"
                                     value={newSpreadsheet.readingColumn}
                                     onChange={(e) => setNewSpreadsheet({ ...newSpreadsheet, readingColumn: e.target.value })}
                                 />
                             </TableCell>
                             <TableCell>
                                 <Input
-                                    placeholder="Delimiter"
+                                    placeholder=","
                                     value={newSpreadsheet.delimiter}
                                     onChange={(e) => setNewSpreadsheet({ ...newSpreadsheet, delimiter: e.target.value })}
                                 />
@@ -692,7 +991,7 @@ export const SpreadsheetImportTable = () => {
                         </TableRow>
                     </TableBody>
                 </Table>
-            </Box>
+            </TableContainer>
         </Box>
     );
 };
