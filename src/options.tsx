@@ -1,20 +1,53 @@
+// External Libraries
+import React, { useState } from "react";
 import { GitHub } from "@mui/icons-material";
-import { Box, Stack, Typography, Divider, Button, Card, CardContent, IconButton, Tooltip, useTheme } from "@mui/material";
+import { 
+    Box, 
+    Stack, 
+    Typography, 
+    Divider, 
+    Button, 
+    Card, 
+    CardContent, 
+    IconButton, 
+    Tooltip, 
+    useTheme 
+} from "@mui/material";
 import { ThemeProvider } from '@mui/material/styles';
-import React from "react";
+import { useWaniSettings } from 'src/components/settings/hooks/useWaniSettings';
 
-import waniLogo from "data-base64:assets/icon.png";
-import * as Comps from "src/components";
+// Components
+import { APITokenField } from "src/components/settings/APITokenField";
+import { SRSCheckboxes } from "src/components/settings/SRSCheckboxes";
+import { SpreadsheetImportTable } from "src/components/settings/SpreadsheetImport";
+import { CustomVocabularyTextArea } from "src/components/settings/CustomVocabulary";
+import { VocabularyBlacklistTextArea } from "src/components/settings/VocabularyBlacklist/VocabularyBlacklist";
+import { SitesFilteringTable } from "src/components/settings/SitesFiltering";
+import { ClearCacheButton } from "src/components/settings/ClearCacheButton";
+import { AutoRunToggle } from "src/components/settings/toggles/AutoRunToggle";
+import { NumbersReplacementToggle } from "src//components/settings/toggles/NumbersToggle";
+import { AudioToggle } from "src/components/settings/toggles/AudioToggle";
+
+// Hooks and Utils
 import { useSystemTheme } from "src/hooks/systemTheme";
+import { DEFAULT_SETTINGS } from "src/components/settings/constants";
+
+// Assets and Styles
+import waniLogo from "data-base64:assets/icon.png";
 import { waniStyle } from "src/styles/wanikanifyStyles";
-import "src/styles/style.css"
+import "src/styles/style.css";
 
 export default function Options() {
     const mode = useSystemTheme();
     const theme = useTheme();
+    const { settings, updateSettings } = useWaniSettings();
+    
+    const handleSave = () => {
+        updateSettings(settings);
+    };
         
-        return (
-            <ThemeProvider theme={waniStyle(mode)}>
+    return (
+        <ThemeProvider theme={waniStyle(mode)}>
             <Box sx={{ 
                 bgcolor: 'background.default',
                 minHeight: '100vh',
@@ -71,38 +104,66 @@ export default function Options() {
                                 {section === 'General' && (
                                     <>
                                         <Box display="flex" alignItems="center" width="70%">
-                                            <Comps.APITokenField />
+                                            <APITokenField />
                                         </Box>
                                         <Box mt={3}>
-                                            <Comps.ClearCacheButton />
+                                            <ClearCacheButton />
                                         </Box>
                                     </>
                                 )}
 
                                 {section === 'Behavior' && (
                                     <>
-                                        <Comps.AutoRunToggle />
-                                        <Comps.AudioToggle />
+                                        <AutoRunToggle
+                                            value={settings.autoRun}
+                                            onChange={(newValue) => updateSettings({ autoRun: newValue })}
+                                        />
+                                        <AudioToggle
+                                            enabled={settings.audio.enabled}
+                                            mode={settings.audio.mode}
+                                            onEnabledChange={(enabled) => updateSettings({ audio: { ...settings.audio, enabled } })}
+                                            onModeChange={(mode) => updateSettings({ audio: { ...settings.audio, mode } })}
+                                        />
                                         <Box mt={3} width="50%">
-                                            <Comps.SitesFilteringTable />
+                                            <SitesFilteringTable 
+                                                value={settings.sitesFiltering}
+                                                onChange={(newValue) => updateSettings({ sitesFiltering: newValue })}
+                                            />
                                         </Box>
                                     </>
                                 )}
 
                                 {section === 'Vocabulary' && (
                                     <>
-                                        <Comps.NumbersReplacementToggle />
+                                        <NumbersReplacementToggle
+                                            value={settings.numbersReplacement}
+                                            onChange={(newValue) => updateSettings({ numbersReplacement: newValue })}
+                                        />
                                         <Box mt={3}>
-                                            <Comps.SRSCheckboxes />
+                                            <SRSCheckboxes 
+                                                value={settings.srsGroups} 
+                                                onChange={(newValue) => {
+                                                    updateSettings({ srsGroups: newValue });
+                                                }} 
+                                            />
                                         </Box>
                                         <Box mt={3}>
-                                            <Comps.CustomVocabularyTextArea />
+                                            <CustomVocabularyTextArea 
+                                                value={settings.customVocabulary}
+                                                onChange={(newValue) => updateSettings({ customVocabulary: newValue })}
+                                            />
                                         </Box>
                                         <Box mt={3}>
-                                            <Comps.VocabularyBlacklistTextArea />
+                                            <VocabularyBlacklistTextArea 
+                                                value={settings.vocabularyBlacklist.join('\n')}
+                                                onChange={(newValue) => updateSettings({ vocabularyBlacklist: newValue.split('\n') })}
+                                            />
                                         </Box>
                                         <Box mt={3}>
-                                            <Comps.SpreadsheetImportTable />
+                                            <SpreadsheetImportTable 
+                                                value={settings.spreadsheetImport}
+                                                onChange={(newValue) => updateSettings({ spreadsheetImport: newValue })}
+                                            />
                                         </Box>
                                     </>
                                 )}
@@ -123,6 +184,7 @@ export default function Options() {
                             variant="contained"
                             color="primary" 
                             size="large"
+                            onClick={handleSave}
                             sx={{
                                 px: 6,
                                 py: 1.5,

@@ -2,7 +2,7 @@ import { Box, Button, Stack } from "@mui/material";
 import { ThemeProvider } from '@mui/material/styles';
 import React from "react";
 
-import { APITokenField } from "src/components";
+import { APITokenField } from "~src/components/settings/APITokenField";
 import { waniStyle } from "src/styles/wanikanifyStyles";
 import "src/styles/style.css";
 
