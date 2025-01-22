@@ -39,7 +39,15 @@ export const BaseToggle: React.FC<ToggleProps> = ({
             placement="bottom"
             arrow
         >
-            <IconButton color="primary">
+            <IconButton
+                color="primary"
+                sx={{
+                    '&:hover': {
+                        bgcolor: 'primary.light',
+                        color: 'primary.contrastText'
+                    }
+                }}
+            >
                 <HelpOutline />
             </IconButton>
         </Tooltip>

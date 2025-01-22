@@ -21,7 +21,7 @@ import { APITokenField } from "src/components/settings/APITokenField";
 import { SRSCheckboxes } from "src/components/settings/SRSCheckboxes";
 import { SpreadsheetImportTable } from "src/components/settings/SpreadsheetImport";
 import { CustomVocabularyTextArea } from "src/components/settings/CustomVocabulary";
-import { VocabularyBlacklistTextArea } from "src/components/settings/VocabularyBlacklist/VocabularyBlacklist";
+import { VocabularyBlacklistTextArea } from "~src/components/settings/VocabularyBlacklist";
 import { SitesFilteringTable } from "src/components/settings/SitesFiltering";
 import { ClearCacheButton } from "src/components/settings/ClearCacheButton";
 import { AutoRunToggle } from "src/components/settings/toggles/AutoRunToggle";
@@ -102,12 +102,12 @@ const Footer: React.FC<FooterProps> = ({ githubUrl }) => (
 export default function Options(): ReactElement {
   const mode = useSystemTheme();
   const theme = useTheme();
-  const { settings, updateSettings } = useWaniSettings();
+  const { settings, updateSettings, saveToStorage, isDirty } = useWaniSettings();
 
   // Use useCallback for event handlers
   const handleSave = useCallback(() => {
-    updateSettings(settings);
-  }, [settings, updateSettings]);
+    saveToStorage();
+  }, [saveToStorage]);
 
   return (
     <ThemeProvider theme={waniStyle(mode)}>
@@ -224,6 +224,7 @@ export default function Options(): ReactElement {
               color="primary" 
               size="large"
               onClick={handleSave}
+              disabled={!isDirty}
               sx={{
                 px: 6,
                 py: 1.5,

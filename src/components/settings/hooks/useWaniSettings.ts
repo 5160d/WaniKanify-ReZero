@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Storage } from "@plasmohq/storage";
 import { type WaniSettings } from '..';
+
+import { isDev } from 'src/components/common/constants';
 import { DEFAULT_SETTINGS } from '../constants';
 
 export const useWaniSettings = () => {
     const [settings, setSettings] = useState<WaniSettings>(DEFAULT_SETTINGS);
-    const storage = new Storage();
+    const [isDirty, setIsDirty] = useState(false);
+    const storage = isDev ? new Storage({ area: "local" }) : new Storage();
 
     useEffect(() => {
-        // Load settings from storage
         const loadSettings = async () => {
             try {
                 const stored = await storage.get('waniSettings');
@@ -22,15 +24,24 @@ export const useWaniSettings = () => {
         loadSettings();
     }, []);
 
-    const updateSettings = async (newSettings: Partial<WaniSettings>) => {
-        const updated = { ...settings, ...newSettings };
-        setSettings(updated);
+    const updateSettings = (newSettings: Partial<WaniSettings>) => {
+        setSettings(current => ({ ...current, ...newSettings }));
+        setIsDirty(true);
+    };
+
+    const saveToStorage = async () => {
         try {
-            await storage.set('waniSettings', updated);
+            await storage.set('waniSettings', settings);
+            setIsDirty(false);
         } catch (error) {
             console.error('Failed to save settings:', error);
         }
     };
 
-    return { settings, updateSettings };
+    return { 
+        settings, 
+        updateSettings, 
+        saveToStorage,
+        isDirty 
+    };
 };

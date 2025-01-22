@@ -68,7 +68,15 @@ export const CustomVocabularyTextArea: React.FC<CustomVocabularyProps> = ({
                     placement="bottom-start"
                     arrow
                 >
-                    <IconButton color="primary">
+                    <IconButton
+                        color="primary"
+                        sx={{
+                            '&:hover': {
+                                bgcolor: 'primary.light',
+                                color: 'primary.contrastText'
+                            }
+                        }}
+                    >
                         <HelpOutline />
                     </IconButton>
                 </Tooltip>
@@ -82,7 +90,7 @@ export const CustomVocabularyTextArea: React.FC<CustomVocabularyProps> = ({
                 onChange={handleChange}
                 error={Boolean(externalError || validationError)}
                 helperText={externalError || validationError}
-                sx={{ 
+                sx={{
                     width: '100%',
                     '& .MuiInputBase-input': {
                         resize: 'vertical',

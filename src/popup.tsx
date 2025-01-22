@@ -7,7 +7,6 @@ import { APITokenField } from "~src/components/settings/APITokenField"
 import { waniStyle } from "src/styles/wanikanifyStyles"
 import "src/styles/style.css"
 
-// Constants for styling
 const POPUP_DIMENSIONS = {
   width: "500px",
   height: "286px"
@@ -40,11 +39,11 @@ const BUTTON_STYLES = {
 } as const
 
 const IndexPopup: React.FC = () => {
-  const { settings, updateSettings } = useWaniSettings();
+  const { settings, updateSettings, saveToStorage, isDirty } = useWaniSettings();
   
   const handleSave = React.useCallback(() => {
-    updateSettings({ apiToken: settings.apiToken });
-  }, [settings.apiToken, updateSettings]);
+    saveToStorage();
+  }, [saveToStorage]);
 
   return (
     <ThemeProvider theme={waniStyle('light')}>
@@ -76,6 +75,7 @@ const IndexPopup: React.FC = () => {
             color="primary"
             sx={BUTTON_STYLES}
             onClick={handleSave}
+            disabled={!isDirty}
           >
             Save
           </Button>

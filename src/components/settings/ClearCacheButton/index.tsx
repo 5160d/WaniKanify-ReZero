@@ -36,17 +36,18 @@ export const ClearCacheButton: React.FC = () => {
                     placement="bottom"
                     arrow
                 >
-                    <IconButton
+                    <Box
                         color="inherit"
                         sx={{
                             '&:hover': {
                                 bgcolor: 'inherit.light',
                                 color: 'inherit.contrastText'
-                            }
+                            },
+                            borderRadius: "50%"
                         }}
                     >
-                        <HelpOutline />
-                    </IconButton>
+                        <HelpOutline color="inherit" />
+                    </Box>
                 </Tooltip>
             }
         >

@@ -17,7 +17,7 @@ import { WaniTooltip } from '../../common/WaniTooltip';
 
 export const SRSCheckboxes: React.FC<SRSCheckboxesProps> = ({ onChange, value }) => {
     const handleChange = (groupId: string, checked: boolean) => {
-        const newGroups = checked 
+        const newGroups = checked
             ? [...value, groupId]
             : value.filter(id => id !== groupId);
         onChange(newGroups);
@@ -40,7 +40,15 @@ export const SRSCheckboxes: React.FC<SRSCheckboxesProps> = ({ onChange, value })
                     placement="bottom"
                     arrow
                 >
-                    <IconButton color="primary">
+                    <IconButton
+                        color="primary"
+                        sx={{
+                            '&:hover': {
+                                bgcolor: 'primary.light',
+                                color: 'primary.contrastText'
+                            }
+                        }}
+                    >
                         <HelpOutline />
                     </IconButton>
                 </Tooltip>

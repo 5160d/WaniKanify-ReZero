@@ -75,9 +75,17 @@ export const APITokenField: React.FC<APITokenFieldProps> = ({ value, onChange })
                                             ],
                                         }}
                                     >
-                                        <IconButton color="inherit">
+                                        <Box
+                                            color="inherit"
+                                            sx={{
+                                                '&:hover': {
+                                                    bgcolor: 'inherit.light',
+                                                    color: 'inherit.contrastText'
+                                                }
+                                            }}
+                                        >
                                             <HelpOutline />
-                                        </IconButton>
+                                        </Box>
                                     </Tooltip>
                                 }
                             >

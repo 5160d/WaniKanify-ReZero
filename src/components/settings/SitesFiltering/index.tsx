@@ -82,7 +82,15 @@ export const SitesFilteringTable: React.FC<SitesFilteringTableProps> = ({ value,
                     arrow
                     placement="bottom"
                 >
-                    <IconButton color="primary">
+                    <IconButton
+                        color="primary"
+                        sx={{
+                            '&:hover': {
+                                bgcolor: 'primary.light',
+                                color: 'primary.contrastText'
+                            }
+                        }}
+                    >
                         <HelpOutline />
                     </IconButton>
                 </Tooltip>
