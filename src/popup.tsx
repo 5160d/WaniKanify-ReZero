@@ -42,8 +42,8 @@ function IndexPopup() {
             width: "100%",
           }}
         >
-          <Box sx={{bgcolor: 'background.paper'}}>
-          <APITokenField />
+          <Box width="90%" sx={{bgcolor: 'background.paper'}}>
+            <APITokenField />
           </Box>
           <Button
             variant="contained"

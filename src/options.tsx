@@ -1,4 +1,5 @@
-import { Box, Stack, Typography, Divider, Button, Card, CardContent, useTheme } from "@mui/material";
+import { GitHub } from "@mui/icons-material";
+import { Box, Stack, Typography, Divider, Button, Card, CardContent, IconButton, Tooltip, useTheme } from "@mui/material";
 import { ThemeProvider } from '@mui/material/styles';
 import React from "react";
 
@@ -69,7 +70,7 @@ export default function Options() {
                                 
                                 {section === 'General' && (
                                     <>
-                                        <Box display="flex" alignItems="center" width="50%">
+                                        <Box display="flex" alignItems="center" width="70%">
                                             <Comps.APITokenField />
                                         </Box>
                                         <Box mt={3}>
@@ -132,6 +133,32 @@ export default function Options() {
                         </Button>
                     </Box>
                 </Box>
+                {/* Footer */}
+                <Box 
+                    sx={{ 
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        p: 1,
+                        bgcolor: 'background.paper',
+                        boxShadow: 1,
+                        display: 'flex',
+                        justifyContent: 'center'
+                    }}>
+                        <Tooltip title="View on GitHub">
+                            <IconButton
+                                onClick={() => window.open('https://github.com/5160d/WaniKanify-ReZero', '_blank', 'noopener')}
+                                aria-label="View source on GitHub"
+                                sx={{
+                                    '&:hover': {
+                                        color: 'primary.main'
+                                    }
+                                }}
+                            >
+                                <GitHub fontSize="large" />
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
             </Box>
         </ThemeProvider>
     );

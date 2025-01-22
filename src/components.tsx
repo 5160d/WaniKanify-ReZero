@@ -1,12 +1,12 @@
 import React, { useState } from "react"
 
 import {
-    Box, Button, Checkbox, FormControl, FormControlLabel, FormLabel, Stack, Switch,
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Tooltip,
+    Box, Button, Checkbox, Divider, FormControl, FormControlLabel, FormLabel, Stack, Switch,
     IconButton, Input, InputAdornment, List, ListItem,
-    Radio, RadioGroup, Typography, Divider
+    Radio, RadioGroup, Typography,
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Tooltip
 } from "@mui/material";
-import { HelpOutline, Delete } from "@mui/icons-material";
+import { Delete, HelpOutline } from "@mui/icons-material";
 
 import "src/styles/style.css"
 
@@ -42,7 +42,7 @@ const WaniTooltip = ({ title, children }: { title: string; children: React.React
 
 export const APITokenField = () => {
     return (
-        <Box display="flex" alignItems="center" gap={2}>
+        <Box display="flex" alignItems="center" gap={2} width="100%">
             <TextField
                 required
                 id="filled-required"
