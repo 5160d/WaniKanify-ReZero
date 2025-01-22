@@ -12,7 +12,12 @@ import { HelpOutline } from '@mui/icons-material';
 import { WaniTooltip } from '../../common/WaniTooltip';
 import { WANIKANI_API_URL } from './constants';
 
-export const APITokenField: React.FC = () => {
+export interface APITokenFieldProps {
+    value: string;
+    onChange: (value: string) => void;
+}
+
+export const APITokenField: React.FC<APITokenFieldProps> = ({ value, onChange }) => {
     return (
         <Box display="flex" alignItems="center" gap={2} width="100%">
             <TextField
@@ -21,6 +26,8 @@ export const APITokenField: React.FC = () => {
                 label="API Token"
                 variant="filled"
                 fullWidth
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
                 InputProps={{
                     endAdornment: (
                         <InputAdornment position="end" sx={{ mr: -1 }}>
