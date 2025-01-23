@@ -81,19 +81,19 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
                                     borderColor: 'divider'
                                 }}>
                                     <Typography variant="body2" component="div" sx={{ mt: 2, color: 'text.secondary' }}>
-                                        <strong>1. Spreadsheet collection key:</strong> The spreadsheet collection (group of sheets) unique key. Found in its URL and similar to this:<br />
+                                        <strong>1. Collection key:</strong> The spreadsheet collection (group of sheets) unique key. Found in its URL and similar to this:<br />
                                         <code style={{ backgroundColor: 'action.hover', padding: '2px 4px' }}>
                                             1lIo2calXb_GtaQCKLr989-Ma_hxXlxFsHE0egko-D9k
                                         </code>
                                         <br />
-                                        <strong>2. Spreadsheet name:</strong> Name of the selected tab at the bottom of the spreadsheet.<br />
-                                        <strong>3. English words column name:</strong> The name of the column containing english words.<br />
-                                        <strong>4. Japanese words column name:</strong> The name of the column containing Kanji/japanese words.<br />
-                                        <strong>5. Japanese readings column name:</strong> Optional column name containing furigana readings.<br />
-                                        <strong>6. English words delimiter:</strong> Delimiter for multiple English words (default: comma).
+                                        <strong>2. Sheet:</strong> Name of the selected tab at the bottom of the spreadsheet.<br />
+                                        <strong>3. English Column:</strong> The name of the column containing english words.<br />
+                                        <strong>4. Japanese Column:</strong> The name of the column containing Kanji/japanese words.<br />
+                                        <strong>5. Reading Column:</strong> Optional column name containing furigana readings.<br />
+                                        <strong>6. Delimiter:</strong> Delimiter for multiple English words (default: comma).
                                     </Typography>
                                     <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
-                                        Note: Google Chrome Sync synchronizes the list of spreadsheets but not the vocabulary. Click import on each different browser.
+                                        Note: Browser Sync synchronizes the list of spreadsheets but not the vocabulary. Click import on each different browser.
                                     </Typography>
                                 </Box>
                             </Box>

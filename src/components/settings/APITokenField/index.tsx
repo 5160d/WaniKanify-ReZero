@@ -4,9 +4,9 @@ import {
     TextField,
     Button,
     InputAdornment,
-    IconButton,
     Tooltip,
-    Typography
+    Typography,
+    IconButton
 } from '@mui/material';
 import { HelpOutline } from '@mui/icons-material';
 import { WaniTooltip } from '../../common/WaniTooltip';
@@ -31,10 +31,7 @@ export const APITokenField: React.FC<APITokenFieldProps> = ({ value, onChange })
                 InputProps={{
                     endAdornment: (
                         <InputAdornment position="end" sx={{ mr: -1 }}>
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                endIcon={
+
                                     <Tooltip
                                         title={
                                             <WaniTooltip title="API Key">
@@ -75,22 +72,19 @@ export const APITokenField: React.FC<APITokenFieldProps> = ({ value, onChange })
                                             ],
                                         }}
                                     >
-                                        <Box
-                                            color="inherit"
-                                            sx={{
-                                                '&:hover': {
-                                                    bgcolor: 'inherit.light',
-                                                    color: 'inherit.contrastText'
-                                                }
-                                            }}
-                                        >
-                                            <HelpOutline />
-                                        </Box>
+                                        <IconButton
+                        color="primary"
+                        sx={{
+                            '&:hover': {
+                                bgcolor: 'primary.light',
+                                color: 'primary.contrastText'
+                            }
+                        }}
+                    >
+                        <HelpOutline />
+                    </IconButton>
                                     </Tooltip>
-                                }
-                            >
-                                Test API Token
-                            </Button>
+
                         </InputAdornment>
                     )
                 }}

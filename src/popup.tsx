@@ -1,9 +1,8 @@
 import { Box, Button, Stack } from "@mui/material"
 import { ThemeProvider } from '@mui/material/styles'
 import React from "react"
-import { useWaniSettings } from "src/components/settings/hooks/useWaniSettings"
 
-import { APITokenField } from "~src/components/settings/APITokenField"
+import { APITokenField, saveButtonStyle, useWaniSettings } from "src/components/settings"
 import { waniStyle } from "src/styles/wanikanifyStyles"
 import "src/styles/style.css"
 
@@ -24,18 +23,6 @@ const BACKGROUND_STYLES = {
   backgroundPosition: "center",
   opacity: 0.9,
   transition: 'opacity 0.3s ease'
-} as const
-
-const BUTTON_STYLES = {
-  width: "20%",
-  py: 1.5,
-  borderRadius: 2,
-  textTransform: 'none',
-  fontWeight: 600,
-  transition: 'transform 0.2s ease',
-  '&:hover': {
-    transform: 'translateY(-2px)'
-  }
 } as const
 
 const IndexPopup: React.FC = () => {
@@ -70,10 +57,12 @@ const IndexPopup: React.FC = () => {
               onChange={(value) => updateSettings({ apiToken: value })}
             />
           </Box>
+
+          {/* Save Button */}
           <Button
             variant="contained"
             color="primary"
-            sx={BUTTON_STYLES}
+            sx={saveButtonStyle}
             onClick={handleSave}
             disabled={!isDirty}
           >
