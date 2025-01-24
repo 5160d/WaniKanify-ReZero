@@ -1,5 +1,5 @@
 // External Libraries
-import React, { useCallback, type ReactElement } from "react";
+import React, { useCallback, useState, type ReactElement } from "react";
 import { GitHub } from "@mui/icons-material";
 import {
   Box,
@@ -11,7 +11,6 @@ import {
   CardContent,
   IconButton,
   Tooltip,
-  useTheme,
   Zoom
 } from "@mui/material";
 import { ThemeProvider } from '@mui/material/styles';
@@ -19,14 +18,14 @@ import { ThemeProvider } from '@mui/material/styles';
 // Components
 import {
   APITokenField, AutoRunToggle, AudioToggle,
-  ClearCacheButton, CustomVocabularyTextArea, NumbersReplacementToggle,
+  ClearCacheButton, CustomVocabularyTextArea, DEFAULT_SETTINGS_FORM_ERRORS, NumbersReplacementToggle,
   SRSCheckboxes, SitesFilteringTable, SpreadsheetImportTable,
   useWaniSettings, VocabularyBlacklistTextArea,
   saveButtonStyle
 } from "src/components/settings";
 
 // Hooks and Utils
-import { useSystemTheme } from "src/hooks/systemTheme";
+import { useSystemTheme } from "~src/hooks";
 
 // Assets and Styles
 import waniLogo from "data-base64:assets/icon.png";
@@ -59,7 +58,7 @@ const Header = ({ logo }: HeaderProps): ReactElement => (
       variant="h4"
       fontWeight="bold"
       sx={{ color: 'primary.main' }}>
-      WaniKanify Settings
+      WaniKanify settingsForm
     </Typography>
   </Stack>
 );
@@ -143,8 +142,8 @@ const Footer: React.FC<FooterProps> = ({ githubUrl }) => (
 
 export default function Options(): ReactElement {
   const mode = useSystemTheme();
-  const theme = useTheme();
-  const { settings, updateSettings, saveToStorage, isDirty } = useWaniSettings();
+  const { settingsForm, updateSettingsForm, saveToStorage, isDirty } = useWaniSettings();
+  const [errors] = useState(DEFAULT_SETTINGS_FORM_ERRORS);
 
   // Use useCallback for event handlers
   const handleSave = useCallback(() => {
@@ -183,8 +182,8 @@ export default function Options(): ReactElement {
                   <>
                     <Box display="flex" alignItems="center" width="70%">
                       <APITokenField
-                        value={settings.apiToken}
-                        onChange={(newValue) => updateSettings({ apiToken: newValue })}
+                        value={settingsForm.apiToken}
+                        onChange={(newValue) => updateSettingsForm({ apiToken: newValue })}
                       />
                     </Box>
                     <Box mt={3}>
@@ -196,19 +195,19 @@ export default function Options(): ReactElement {
                 {section === 'Behavior' && (
                   <>
                     <AutoRunToggle
-                      value={settings.autoRun}
-                      onChange={(newValue) => updateSettings({ autoRun: newValue })}
+                      value={settingsForm.autoRun}
+                      onChange={(newValue) => updateSettingsForm({ autoRun: newValue })}
                     />
                     <AudioToggle
-                      enabled={settings.audio.enabled}
-                      mode={settings.audio.mode}
-                      onEnabledChange={(enabled) => updateSettings({ audio: { ...settings.audio, enabled } })}
-                      onModeChange={(mode) => updateSettings({ audio: { ...settings.audio, mode } })}
+                      enabled={settingsForm.audio.enabled}
+                      mode={settingsForm.audio.mode}
+                      onEnabledChange={(enabled) => updateSettingsForm({ audio: { ...settingsForm.audio, enabled } })}
+                      onModeChange={(mode) => updateSettingsForm({ audio: { ...settingsForm.audio, mode } })}
                     />
                     <Box mt={3} width="50%">
                       <SitesFilteringTable
-                        value={settings.sitesFiltering}
-                        onChange={(newValue) => updateSettings({ sitesFiltering: newValue })}
+                        value={settingsForm.sitesFiltering}
+                        onChange={(newValue) => updateSettingsForm({ sitesFiltering: newValue })}
                       />
                     </Box>
                   </>
@@ -217,33 +216,36 @@ export default function Options(): ReactElement {
                 {section === 'Vocabulary' && (
                   <>
                     <NumbersReplacementToggle
-                      value={settings.numbersReplacement}
-                      onChange={(newValue) => updateSettings({ numbersReplacement: newValue })}
+                      value={settingsForm.numbersReplacement}
+                      onChange={(newValue) => updateSettingsForm({ numbersReplacement: newValue })}
                     />
                     <Box mt={3}>
                       <SRSCheckboxes
-                        value={settings.srsGroups}
+                        value={settingsForm.srsGroups}
                         onChange={(newValue) => {
-                          updateSettings({ srsGroups: newValue });
+                          updateSettingsForm({ srsGroups: newValue });
                         }}
                       />
                     </Box>
                     <Box mt={3}>
                       <CustomVocabularyTextArea
-                        value={settings.customVocabulary}
-                        onChange={(newValue) => updateSettings({ customVocabulary: newValue })}
+                        value={settingsForm.customVocabulary}
+                        onChange={(newValue, isValid) => {
+                          errors.customVocabulary = !isValid;
+                          updateSettingsForm({ customVocabulary: newValue });
+                        }}
                       />
                     </Box>
                     <Box mt={3}>
                       <VocabularyBlacklistTextArea
-                        value={settings.vocabularyBlacklist.join('\n')}
-                        onChange={(newValue) => updateSettings({ vocabularyBlacklist: newValue.split('\n') })}
+                        value={settingsForm.vocabularyBlacklist}
+                        onChange={(newValue) => updateSettingsForm({ vocabularyBlacklist: newValue })}
                       />
                     </Box>
                     <Box mt={3}>
                       <SpreadsheetImportTable
-                        value={settings.spreadsheetImport}
-                        onChange={(newValue) => updateSettings({ spreadsheetImport: newValue })}
+                        value={settingsForm.spreadsheetImport}
+                        onChange={(newValue) => updateSettingsForm({ spreadsheetImport: newValue })}
                       />
                     </Box>
                   </>
@@ -261,13 +263,19 @@ export default function Options(): ReactElement {
               justifyContent: 'center'
             }}
           >
-            {/* Save Button */}
             <Button
-              variant="contained"
+              variant={Object.values(errors).some(error => error) ? "outlined" : "contained"}
               color="primary"
-              sx={saveButtonStyle}
+              sx={{
+                ...saveButtonStyle,
+                '&.Mui-disabled': {
+                  color: Object.values(errors).some(error => error)
+                    ? 'error.main'
+                    : undefined
+                }
+              }}
               onClick={handleSave}
-              disabled={!isDirty}
+              disabled={!isDirty || Object.values(errors).some(error => error)}
             >
               Save Changes
             </Button>

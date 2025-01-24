@@ -13,43 +13,19 @@ import {
     Tooltip
 } from '@mui/material';
 import { Delete, HelpOutline } from '@mui/icons-material';
-import { WaniTooltip } from '../../common/WaniTooltip';
+import { WaniTooltip } from '../../common/wanitooltip';
+import type { ChangingProps } from '~src/components/common/types';
 
-interface SitesFilteringTableProps {
-    value: string[];
-    onChange: (sites: string[]) => void;
-}
 
-export const SitesFilteringTable: React.FC<SitesFilteringTableProps> = ({ value, onChange }) => {
-    const [newWebsite, setNewWebsite] = useState('');
-    const [error, setError] = useState('');
+export const SitesFilteringTable: React.FC<ChangingProps<string[]>> = ({ value, onChange }) => {
+    const [newRegex, setNewRegex] = useState('');
 
-    const validatePattern = (pattern: string): boolean => {
-        try {
-            new RegExp(pattern);
-            return true;
-        } catch {
-            return false;
-        }
+    const handleAddRegex = () => {
+        onChange([...value, newRegex.trim()]);
+        setNewRegex('');
     };
 
-    const handleAddWebsite = () => {
-        if (!newWebsite.trim()) {
-            setError('Pattern cannot be empty');
-            return;
-        }
-
-        if (!validatePattern(newWebsite)) {
-            setError('Invalid regular expression pattern');
-            return;
-        }
-
-        onChange([...value, newWebsite.trim()]);
-        setNewWebsite('');
-        setError('');
-    };
-
-    const handleDeleteWebsite = (index: number) => {
+    const handleDeleteRegex = (index: number) => {
         onChange(value.filter((_, i) => i !== index));
     };
 
@@ -123,18 +99,17 @@ export const SitesFilteringTable: React.FC<SitesFilteringTableProps> = ({ value,
                                 <TableCell>
                                     <Input
                                         fullWidth
-                                        value={newWebsite}
-                                        onChange={(e) => setNewWebsite(e.target.value)}
+                                        value={newRegex}
+                                        onChange={(e) => setNewRegex(e.target.value)}
                                         placeholder="Enter URL pattern (regex)"
-                                        error={!!error}
                                     />
                                 </TableCell>
                                 <TableCell align="right">
                                     <Button
                                         color="primary"
                                         variant="contained"
-                                        onClick={handleAddWebsite}
-                                        disabled={!newWebsite.trim()}
+                                        onClick={handleAddRegex}
+                                        disabled={!newRegex.trim()}
                                     >
                                         Add
                                     </Button>
@@ -148,7 +123,7 @@ export const SitesFilteringTable: React.FC<SitesFilteringTableProps> = ({ value,
                                         <IconButton
                                             size="small"
                                             color="error"
-                                            onClick={() => handleDeleteWebsite(index)}
+                                            onClick={() => handleDeleteRegex(index)}
                                             aria-label="Delete"
                                         >
                                             <Delete />

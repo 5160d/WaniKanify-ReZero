@@ -7,49 +7,16 @@ import {
     IconButton
 } from '@mui/material';
 import { HelpOutline } from '@mui/icons-material';
-import { WaniTooltip } from '../../common/WaniTooltip';
-import type { VocabularyBlacklistProps, ValidationStatus } from './types';
+import { WaniTooltip } from '../../common/wanitooltip';
+import type { ChangingProps } from '~src/components/common/types';
 
-export const VocabularyBlacklistTextArea: React.FC<VocabularyBlacklistProps> = ({
+export const VocabularyBlacklistTextArea: React.FC<ChangingProps<string>> = ({
     value,
-    onChange,
-    onValidate
+    onChange
 }) => {
-    const [validationStatus, setValidationStatus] = useState<ValidationStatus>({
-        isValid: true,
-        message: '',
-        type: 'none'
-    });
-
-    const validateInput = useCallback((input: string) => {
-        const trimmed = input.trim();
-        if (!trimmed) {
-            return { isValid: true, message: '', type: 'none' as const };
-        }
-
-        const hasValidFormat = trimmed.split(';').every(word => word.trim().length > 0);
-        if (!hasValidFormat) {
-            return {
-                isValid: false,
-                message: 'Failed to parse the list',
-                type: 'error' as const
-            };
-        }
-
-        return {
-            isValid: true,
-            message: 'Vocabulary Blacklist applied.',
-            type: 'success' as const
-        };
-    }, []);
 
     const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-        const newValue = event.target.value;
-        const status = validateInput(newValue);
-        
-        setValidationStatus(status);
-        onChange(newValue);
-        onValidate?.(status.isValid);
+        onChange(event.target.value);
     };
 
     return (
@@ -94,17 +61,15 @@ export const VocabularyBlacklistTextArea: React.FC<VocabularyBlacklistProps> = (
                 onChange={handleChange}
                 sx={{ resize: "vertical", overflow: 'auto' }}
                 fullWidth
-                error={validationStatus.type === 'error'}
             />
-            {validationStatus.type !== 'none' && (
-                <Typography 
-                    variant="body2" 
-                    color={validationStatus.type} 
-                    sx={{ mt: 1 }}
-                >
-                    {validationStatus.message}
-                </Typography>
-            )}
+            <Typography
+                variant="body2"
+                color="primary"
+                sx={{ mt: 1 }}
+            >
+                {/* Make sure to exclude redoundant semicolons from the count */}
+                {value.split(';').filter(Boolean).length} words
+            </Typography>
         </Box>
     );
 };

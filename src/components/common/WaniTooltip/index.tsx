@@ -7,9 +7,9 @@ export interface TooltipProps {
     placement?: 'top' | 'bottom' | 'left' | 'right';
 }
 
-export const WaniTooltip: React.FC<TooltipProps> = ({ 
-    title, 
-    children, 
+export const WaniTooltip: React.FC<TooltipProps> = ({
+    title,
+    children,
 }) => (
     <Box sx={{ p: 2, maxWidth: 300 }}>
         <Typography

@@ -12,10 +12,10 @@ import {
 } from '@mui/material';
 import { HelpOutline } from '@mui/icons-material';
 import { SRS_GROUPS } from './constants';
-import type { SRSCheckboxesProps } from './types';
-import { WaniTooltip } from '../../common/WaniTooltip';
+import { WaniTooltip } from '../../common/wanitooltip';
+import type { ChangingProps } from '~src/components/common/types';
 
-export const SRSCheckboxes: React.FC<SRSCheckboxesProps> = ({ onChange, value }) => {
+export const SRSCheckboxes: React.FC<ChangingProps<string[]>> = ({ onChange, value }) => {
     const handleChange = (groupId: string, checked: boolean) => {
         const newGroups = checked
             ? [...value, groupId]

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, IconButton, Tooltip, Typography, Box } from '@mui/material';
-import { WaniTooltip } from '../../common/WaniTooltip';
+import { WaniTooltip } from '../../common/wanitooltip';
 import { HelpOutline } from "@mui/icons-material";
 
 export const ClearCacheButton: React.FC = () => {

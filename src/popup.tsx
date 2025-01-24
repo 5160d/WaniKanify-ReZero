@@ -26,8 +26,8 @@ const BACKGROUND_STYLES = {
 } as const
 
 const IndexPopup: React.FC = () => {
-  const { settings, updateSettings, saveToStorage, isDirty } = useWaniSettings();
-  
+  const { settingsForm, updateSettingsForm, saveToStorage, isDirty } = useWaniSettings();
+
   const handleSave = React.useCallback(() => {
     saveToStorage();
   }, [saveToStorage]);
@@ -44,17 +44,17 @@ const IndexPopup: React.FC = () => {
           position: "relative",
           "&::before": BACKGROUND_STYLES
         }}>
-        <Stack 
-          spacing={4} 
+        <Stack
+          spacing={4}
           alignItems="center"
-          sx={{ 
+          sx={{
             position: "relative",
             width: "100%",
           }}>
-          <Box width="90%" sx={{bgcolor: 'background.paper'}}>
-            <APITokenField 
-              value={settings.apiToken}
-              onChange={(value) => updateSettings({ apiToken: value })}
+          <Box width="90%" sx={{ bgcolor: 'background.paper' }}>
+            <APITokenField
+              value={settingsForm.apiToken}
+              onChange={(value) => updateSettingsForm({ apiToken: value })}
             />
           </Box>
 

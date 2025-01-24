@@ -1,21 +1,20 @@
 export interface TooltipProps {
-    title: string;
-    children: React.ReactNode;
+  title: string;
+  children: React.ReactNode;
 }
 
-export interface ToggleProps {
-    value: boolean;
-    onChange: (value: boolean) => void;
-    label: string;
-    tooltipTitle: string;
-    tooltipContent: string | React.ReactNode;
+export interface ChangingProps<T> {
+  value: T;
+  onChange: (value: T) => void;
 }
 
-export type AudioMode = 'click' | 'hover';
+export interface ChangingWithValidationProps<T> {
+  value: T;
+  onChange: (value: T, isValid: boolean) => void;
+}
 
-export interface AudioToggleProps {
-    enabled: boolean;
-    mode: AudioMode;
-    onEnabledChange: (enabled: boolean) => void;
-    onModeChange: (mode: AudioMode) => void;
+export interface ToggleProps extends ChangingProps<boolean> {
+  label: string;
+  tooltipTitle: string;
+  tooltipContent: string | React.ReactNode;
 }

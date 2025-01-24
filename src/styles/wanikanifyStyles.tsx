@@ -36,7 +36,7 @@ export const waniStyle = (mode: 'light' | 'dark') => createTheme({
           borderRadius: 12,
           transition: 'all 0.2s ease-in-out',
           '&:hover': {
-            boxShadow: mode === 'light' 
+            boxShadow: mode === 'light'
               ? '0 4px 20px rgba(0,0,0,0.1)'
               : '0 4px 20px rgba(0,0,0,0.5)',
           },

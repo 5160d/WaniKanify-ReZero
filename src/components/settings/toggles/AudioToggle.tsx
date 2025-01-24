@@ -6,8 +6,8 @@ import {
     RadioGroup,
     Radio
 } from '@mui/material';
-import type { AudioToggleProps, AudioMode } from '../../common/types';
-import { BaseToggle } from 'src/components/common/toggles/BaseToggle';
+import { BaseToggle } from '~src/components/common/toggles';
+import type { AudioMode, AudioToggleProps } from './types';
 
 export const AudioToggle: React.FC<AudioToggleProps> = ({
     enabled,

@@ -1,22 +1,23 @@
-import React from 'react';
+import { Fragment } from 'react';
 import { Box, Typography, TextField, Tooltip, IconButton } from '@mui/material';
 import { HelpOutline } from '@mui/icons-material';
-import { WaniTooltip } from '../../common/WaniTooltip';
-import type { CustomVocabularyProps } from './types';
+import { WaniTooltip } from '../../common/wanitooltip';
 import { EXAMPLES, HELP_TEXT } from './constants';
-import { useVocabularyValidation } from './hooks';
+import type { ChangingWithValidationProps } from '~src/components/common/types';
+import { useToCustomVocabularyMap } from './hooks';
 
-export const CustomVocabularyTextArea: React.FC<CustomVocabularyProps> = ({
+export const CustomVocabularyTextArea: React.FC<ChangingWithValidationProps<string>> = ({
     value,
-    onChange,
-    error: externalError
+    onChange
 }) => {
-    const { error: validationError, validateEntry } = useVocabularyValidation();
+
+    const { error: validationError, entryParse: parseVocab } = useToCustomVocabularyMap();
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newValue = e.target.value;
-        validateEntry(newValue);
-        onChange(newValue);
+
+        parseVocab(newValue);
+        onChange(newValue, !validationError);
     };
 
     return (
@@ -57,9 +58,9 @@ export const CustomVocabularyTextArea: React.FC<CustomVocabularyProps> = ({
                                 </Typography>
                                 <Typography variant="body2" sx={{ mt: 2 }}>
                                     {HELP_TEXT.NOTES.map((note, i) => (
-                                        <React.Fragment key={i}>
+                                        <Fragment key={i}>
                                             • {note}<br />
-                                        </React.Fragment>
+                                        </Fragment>
                                     ))}
                                 </Typography>
                             </Box>
@@ -88,8 +89,8 @@ export const CustomVocabularyTextArea: React.FC<CustomVocabularyProps> = ({
                 minRows={4}
                 value={value}
                 onChange={handleChange}
-                error={Boolean(externalError || validationError)}
-                helperText={externalError || validationError}
+                error={Boolean(validationError)}
+                helperText={validationError}
                 sx={{
                     width: '100%',
                     '& .MuiInputBase-input': {

@@ -1,11 +1,9 @@
 import React from 'react';
 import { Typography } from '@mui/material';
-import { BaseToggle } from 'src/components/common/toggles/BaseToggle';
+import { BaseToggle } from '~src/components/common/toggles';
+import type { ChangingProps } from '~src/components/common/types';
 
-export const AutoRunToggle: React.FC<{
-    value: boolean;
-    onChange: (value: boolean) => void;
-}> = ({ value, onChange }) => (
+export const AutoRunToggle: React.FC<ChangingProps<boolean>> = ({ value, onChange }) => (
     <BaseToggle
         value={value}
         onChange={onChange}
