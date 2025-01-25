@@ -31,6 +31,7 @@ import { useSystemTheme } from "~src/hooks";
 import waniLogo from "data-base64:assets/icon.png";
 import { waniStyle } from "src/styles/wanikanifyStyles";
 import "src/styles/style.css";
+import { githubUrl } from "./components/common/constants";
 
 
 interface HeaderProps {
@@ -281,7 +282,7 @@ export default function Options(): ReactElement {
             </Button>
           </Box>
         </Box>
-        <Footer githubUrl="https://github.com/5160d/WaniKanify-ReZero" />
+        <Footer githubUrl={githubUrl} />
       </Box>
     </ThemeProvider>
   );

@@ -81,27 +81,37 @@ export class WaniSettingsFormImpl implements WaniSettingsForm {
     }
 
     private _customVocabularyStringify(customVocabulary: CustomVocabularyMap): string {
+        if (!customVocabulary?.size) return "";
 
-        let japaneseMap = new Map<string, { eng: string[], reading: string }>();
+        const japaneseMap = new Map<string, { eng: string[], reading: string }>();
 
-        customVocabulary.entries().forEach(([eng, { japanese, reading }]) => {
+        Array.from(customVocabulary).forEach(([eng, data]) => {
+            const { japanese, reading } = data;
             if (japaneseMap.has(japanese)) {
-                japaneseMap.get(japanese).eng.push(eng);
+                japaneseMap.get(japanese)!.eng.push(eng);
             } else {
                 japaneseMap.set(japanese, { eng: [eng], reading });
             }
         });
 
-        return Array.from(japaneseMap.entries())
+        return Array.from(japaneseMap)
             .map(([japanese, { eng, reading }]) => `${eng.join(',')}:${japanese}:${reading}`)
             .join(';');
     }
 
     private _vocabularyBlacklistStringify(vocabularyBlacklist: Set<string>): string {
+        if (!vocabularyBlacklist?.size) {
+            return '';
+        }
+
         return Array.from(vocabularyBlacklist).join(';');
     }
 
     private _vocabularyBlacklistParse(vocabularyBlacklist: string): Set<string> {
+        if (!vocabularyBlacklist.trim()) {
+            return new Set();
+        }
+
         return new Set(vocabularyBlacklist.split(';').filter(Boolean));
     }
 }

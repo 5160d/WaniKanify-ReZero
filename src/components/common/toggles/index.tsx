@@ -1,6 +1,6 @@
 import React from 'react';
 import { FormControl, FormControlLabel, Switch, Tooltip, Box, Typography, IconButton } from '@mui/material';
-import { WaniTooltip } from '../wanitooltip';
+import { WaniTooltip } from '../WaniTooltip';
 import type { ToggleProps } from '../types';
 import { HelpOutline } from '@mui/icons-material';
 

@@ -15,7 +15,8 @@ import {
     Tooltip,
     Stack
 } from '@mui/material';
-import { Delete, HelpOutline } from '@mui/icons-material';
+import { Delete, HelpOutline, WarningAmber } from '@mui/icons-material';
+import { orange } from '@mui/material/colors';
 import { COLUMNS, EMPTY_SPREADSHEET } from './constants';
 import type { SpreadSheet, SpreadsheetImportProps } from './types';
 
@@ -24,10 +25,8 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
     const [newSheet, setNewSheet] = useState<SpreadSheet>(EMPTY_SPREADSHEET);
 
     const handleAddSpreadsheet = () => {
-        if (Object.values(newSheet).every(v => v.trim())) {
-            onChange([...value, newSheet]);
-            setNewSheet(EMPTY_SPREADSHEET);
-        }
+        onChange([...value, newSheet]);
+        setNewSheet(EMPTY_SPREADSHEET);
     };
 
     const handleDeleteSpreadsheet = (index: number) => {
@@ -67,12 +66,14 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
                                 gridTemplateColumns: '1fr 2fr',
                                 gap: 3
                             }}>
-                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                    Import vocabulary from Google Spreadsheets published on the Web.
-                                    <Typography variant="body2" sx={{ mt: 2 }}>
+                                <Box>
+                                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                        Import vocabulary from Google Spreadsheets published on the Web.
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
                                         To publish the spreadsheet: <em>File{'->'}Share{'->'}Publish to web</em>.
                                     </Typography>
-                                </Typography>
+                                </Box>
                                 <Box sx={{
                                     bgcolor: 'background.paper',
                                     p: 2,
@@ -87,13 +88,13 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
                                         </code>
                                         <br />
                                         <strong>2. Sheet:</strong> Name of the selected tab at the bottom of the spreadsheet.<br />
-                                        <strong>3. English Column:</strong> The name of the column containing english words.<br />
-                                        <strong>4. Japanese Column:</strong> The name of the column containing Kanji/japanese words.<br />
-                                        <strong>5. Reading Column:</strong> Optional column name containing furigana readings.<br />
-                                        <strong>6. Delimiter:</strong> Delimiter for multiple English words (default: comma).
+                                        <strong>3. English Column:</strong> Name of the column containing english words.<br />
+                                        <strong>4. Japanese Column:</strong> Name of the column containing Kanji/japanese words.<br />
+                                        <strong>5. <Typography component="span" color="success.main" display="inline">Optional </Typography>Reading Column:</strong> Name of the column containing furigana readings.<br />
+                                        <strong>6. <Typography component="span" color="success.main" display="inline">Optional </Typography>Delimiter:</strong> Delimiter for multiple English words (default: comma).<br />
                                     </Typography>
                                     <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
-                                        Note: Browser Sync synchronizes the list of spreadsheets but not the vocabulary. Click import on each different browser.
+                                        <WarningAmber sx={{ color: orange[500] }} /> Browser Sync synchronizes the list of spreadsheets but not the vocabulary. Click import on each different browser.
                                     </Typography>
                                 </Box>
                             </Box>
@@ -194,7 +195,12 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
                                 <Button
                                     variant="contained"
                                     onClick={handleAddSpreadsheet}
-                                    disabled={!Object.values(newSheet).every(v => v.trim())}
+                                    disabled={!Object.values({
+                                        collectionKey: newSheet.collectionKey,
+                                        spreadSheetName: newSheet.spreadSheetName,
+                                        englishColumn: newSheet.englishColumn,
+                                        japaneseColumn: newSheet.japaneseColumn
+                                    }).every(v => v.trim())}
                                 >
                                     Add
                                 </Button>

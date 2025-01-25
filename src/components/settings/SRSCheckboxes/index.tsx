@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import { HelpOutline } from '@mui/icons-material';
 import { SRS_GROUPS } from './constants';
-import { WaniTooltip } from '../../common/wanitooltip';
+import { WaniTooltip } from '../../common/WaniTooltip';
 import type { ChangingProps } from '~src/components/common/types';
 
 export const SRSCheckboxes: React.FC<ChangingProps<string[]>> = ({ onChange, value }) => {
@@ -32,9 +32,17 @@ export const SRSCheckboxes: React.FC<ChangingProps<string[]>> = ({ onChange, val
                 <Tooltip
                     title={
                         <WaniTooltip title="SRS Filtering">
-                            <Typography variant="body2">
-                                WaniKanify will only substitute words in the checked SRS groups.
-                            </Typography>
+                            <Box sx={{
+                                bgcolor: 'background.paper',
+                                p: 2,
+                                borderRadius: 1,
+                                border: 1,
+                                borderColor: 'divider'
+                            }}>
+                                <Typography variant="body2">
+                                    WaniKanify will only substitute words in the checked SRS groups.
+                                </Typography>
+                            </Box>
                         </WaniTooltip>
                     }
                     placement="bottom"
@@ -52,7 +60,7 @@ export const SRSCheckboxes: React.FC<ChangingProps<string[]>> = ({ onChange, val
                         <HelpOutline />
                     </IconButton>
                 </Tooltip>
-            </Box>
+            </Box >
             <List sx={{
                 display: "flex",
                 flexDirection: "row",
@@ -74,6 +82,6 @@ export const SRSCheckboxes: React.FC<ChangingProps<string[]>> = ({ onChange, val
                     </ListItem>
                 ))}
             </List>
-        </Box>
+        </Box >
     );
 };

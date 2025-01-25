@@ -13,7 +13,7 @@ import {
     Tooltip
 } from '@mui/material';
 import { Delete, HelpOutline } from '@mui/icons-material';
-import { WaniTooltip } from '../../common/wanitooltip';
+import { WaniTooltip } from '../../common/WaniTooltip';
 import type { ChangingProps } from '~src/components/common/types';
 
 

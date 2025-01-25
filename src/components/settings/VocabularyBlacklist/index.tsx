@@ -7,7 +7,7 @@ import {
     IconButton
 } from '@mui/material';
 import { HelpOutline } from '@mui/icons-material';
-import { WaniTooltip } from '../../common/wanitooltip';
+import { WaniTooltip } from '../../common/WaniTooltip';
 import type { ChangingProps } from '~src/components/common/types';
 
 export const VocabularyBlacklistTextArea: React.FC<ChangingProps<string>> = ({
@@ -28,12 +28,20 @@ export const VocabularyBlacklistTextArea: React.FC<ChangingProps<string>> = ({
                 <Tooltip
                     title={
                         <WaniTooltip title="Blacklisted Vocabulary">
-                            <Typography variant="body2">
-                                Vocabulary on this list will not be replaced in the pages.
-                            </Typography>
-                            <Typography variant="body2" sx={{ mt: 1 }}>
-                                Vocabulary must be semicolon-separated.
-                            </Typography>
+                            <Box sx={{
+                                bgcolor: 'background.paper',
+                                p: 2,
+                                borderRadius: 1,
+                                border: 1,
+                                borderColor: 'divider'
+                            }}>
+                                <Typography variant="body2">
+                                    Vocabulary on this list will not be replaced in the pages.
+                                </Typography>
+                                <Typography variant="body2" sx={{ mt: 1 }}>
+                                    Vocabulary must be semicolon-separated.
+                                </Typography>
+                            </Box>
                         </WaniTooltip>
                     }
                     placement="bottom"

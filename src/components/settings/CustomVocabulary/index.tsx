@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 import { Box, Typography, TextField, Tooltip, IconButton } from '@mui/material';
 import { HelpOutline } from '@mui/icons-material';
-import { WaniTooltip } from '../../common/wanitooltip';
+import { WaniTooltip } from '../../common/WaniTooltip';
 import { EXAMPLES, HELP_TEXT } from './constants';
 import type { ChangingWithValidationProps } from '~src/components/common/types';
 import { useToCustomVocabularyMap } from './hooks';

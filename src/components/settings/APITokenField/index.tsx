@@ -9,7 +9,7 @@ import {
     IconButton
 } from '@mui/material';
 import { HelpOutline } from '@mui/icons-material';
-import { WaniTooltip } from '../../common/wanitooltip';
+import { WaniTooltip } from '../../common/WaniTooltip';
 import { WANIKANI_API_URL } from './constants';
 import type { ChangingProps } from 'src/components/common/types';
 
