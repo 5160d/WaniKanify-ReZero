@@ -9,5 +9,6 @@ export { AutoRunToggle } from './toggles/AutoRunToggle';
 export { NumbersReplacementToggle } from './toggles/NumbersToggle';
 export { VocabularyBlacklistTextArea } from './VocabularyBlacklist';
 export { useWaniSettings } from './hooks/useWaniSettings';
-export { saveButtonStyle } from './SaveButton/SaveButtonStyle';
+export { saveButtonStyle } from './SaveButton/style';
 export { DEFAULT_SETTINGS_FORM_ERRORS } from './constants';
+export { SaveButton } from './SaveButton';

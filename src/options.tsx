@@ -1,12 +1,11 @@
 // External Libraries
-import React, { useCallback, useState, type ReactElement } from "react";
+import React, { useCallback, useEffect, useState, type ReactElement } from "react";
 import { GitHub } from "@mui/icons-material";
 import {
   Box,
   Stack,
   Typography,
   Divider,
-  Button,
   Card,
   CardContent,
   IconButton,
@@ -19,9 +18,8 @@ import { ThemeProvider } from '@mui/material/styles';
 import {
   APITokenField, AutoRunToggle, AudioToggle,
   ClearCacheButton, CustomVocabularyTextArea, DEFAULT_SETTINGS_FORM_ERRORS, NumbersReplacementToggle,
-  SRSCheckboxes, SitesFilteringTable, SpreadsheetImportTable,
+  SaveButton, SRSCheckboxes, SitesFilteringTable, SpreadsheetImportTable,
   useWaniSettings, VocabularyBlacklistTextArea,
-  saveButtonStyle
 } from "src/components/settings";
 
 // Hooks and Utils
@@ -144,7 +142,17 @@ const Footer: React.FC<FooterProps> = ({ githubUrl }) => (
 export default function Options(): ReactElement {
   const mode = useSystemTheme();
   const { settingsForm, updateSettingsForm, saveToStorage, isDirty } = useWaniSettings();
-  const [errors] = useState(DEFAULT_SETTINGS_FORM_ERRORS);
+  const [errors, setErrors] = useState(DEFAULT_SETTINGS_FORM_ERRORS);
+
+  useEffect(() => {
+    if(!isDirty) {
+      setErrors(DEFAULT_SETTINGS_FORM_ERRORS);
+    }
+    return () => {
+      // Cleanup errors when component unmounts
+      setErrors(DEFAULT_SETTINGS_FORM_ERRORS);
+    };
+  }, [isDirty, setErrors, DEFAULT_SETTINGS_FORM_ERRORS]);
 
   // Use useCallback for event handlers
   const handleSave = useCallback(() => {
@@ -264,22 +272,11 @@ export default function Options(): ReactElement {
               justifyContent: 'center'
             }}
           >
-            <Button
-              variant={Object.values(errors).some(error => error) ? "outlined" : "contained"}
-              color="primary"
-              sx={{
-                ...saveButtonStyle,
-                '&.Mui-disabled': {
-                  color: Object.values(errors).some(error => error)
-                    ? 'error.main'
-                    : undefined
-                }
-              }}
+            <SaveButton
+              hasErrors={Object.values(errors).some(error => error)}
+              isDirty={isDirty}
               onClick={handleSave}
-              disabled={!isDirty || Object.values(errors).some(error => error)}
-            >
-              Save Changes
-            </Button>
+            />
           </Box>
         </Box>
         <Footer githubUrl={githubUrl} />

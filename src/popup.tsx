@@ -1,8 +1,8 @@
-import { Box, Button, Stack } from "@mui/material"
+import { Box, Stack } from "@mui/material"
 import { ThemeProvider } from '@mui/material/styles'
-import React from "react"
+import React, { useState } from "react"
 
-import { APITokenField, saveButtonStyle, useWaniSettings } from "src/components/settings"
+import { APITokenField, useWaniSettings, SaveButton } from "src/components/settings"
 import { waniStyle } from "src/styles/wanikanifyStyles"
 import "src/styles/style.css"
 
@@ -27,6 +27,7 @@ const BACKGROUND_STYLES = {
 
 const IndexPopup: React.FC = () => {
   const { settingsForm, updateSettingsForm, saveToStorage, isDirty } = useWaniSettings();
+  const [error, setError] = useState(false);
 
   const handleSave = React.useCallback(() => {
     saveToStorage();
@@ -58,16 +59,11 @@ const IndexPopup: React.FC = () => {
             />
           </Box>
 
-          {/* Save Button */}
-          <Button
-            variant="contained"
-            color="primary"
-            sx={saveButtonStyle}
+          <SaveButton
+            hasErrors={error}
+            isDirty={isDirty}
             onClick={handleSave}
-            disabled={!isDirty}
-          >
-            Save
-          </Button>
+          />
         </Stack>
       </Box>
     </ThemeProvider>
