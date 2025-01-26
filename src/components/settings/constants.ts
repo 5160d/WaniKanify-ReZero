@@ -7,7 +7,7 @@ export const DEFAULT_SETTINGS: WaniSettings = {
     numbersReplacement: false,
     srsGroups: ['apprentice', 'guru', 'master', 'enlightened', 'burned'],
     customVocabulary: new Map(),
-    vocabularyBlacklist: new Set<string>,
+    vocabularyBlacklist: new Set<string>(),
     spreadsheetImport: [],
     apiToken: '',
     sitesFiltering: []

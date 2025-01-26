@@ -10,6 +10,7 @@ import { Storage } from "@plasmohq/storage"
 import { type WaniSettings, WaniSettingsFormImpl } from '../types';
 import { isDev } from 'src/components/common/constants';
 import { DEFAULT_SETTINGS } from '../constants';
+import equal from 'fast-deep-equal/es6/react';
 
 /**
  * Creates a new settings form instance from WaniSettings
@@ -47,12 +48,13 @@ export const useWaniSettings = () => {
      * @param newSettingsForm - Partial settings to update
      */
     const updateSettingsForm = (newSettingsForm: Partial<WaniSettingsFormImpl>) => {
+        const updated = new WaniSettingsFormImpl();
         setSettingsForm(current => {
-            const updated = new WaniSettingsFormImpl();
             Object.assign(updated, current, newSettingsForm);
             return updated;
         });
-        setIsDirty(true);
+        // Handle when the user reverted to saved settings
+        setIsDirty(!equal(updated, settingToSettingForm(savedSettings)));
     };
 
     /**
