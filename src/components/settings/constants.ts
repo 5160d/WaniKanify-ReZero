@@ -6,7 +6,7 @@ export const DEFAULT_SETTINGS: WaniSettings = {
     audio: { enabled: false, mode: 'click' },
     numbersReplacement: false,
     srsGroups: ['apprentice', 'guru', 'master', 'enlightened', 'burned'],
-    customVocabulary: new Map(),
+    customVocabulary: new Map() as CustomVocabularyMap,
     vocabularyBlacklist: new Set<string>(),
     spreadsheetImport: [],
     apiToken: '',

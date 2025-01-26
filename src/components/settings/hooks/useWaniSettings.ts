@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react';
 import { useStorage } from "@plasmohq/storage/hook"
 import { Storage } from "@plasmohq/storage"
-import { type WaniSettings, WaniSettingsFormImpl } from '../types';
+import { type WaniSettings, WaniSettingsFormImpl, waniSettingsSerializer, waniSettingsDeserializer } from '../types';
 import { isDev } from 'src/components/common/constants';
 import { DEFAULT_SETTINGS } from '../constants';
 import equal from 'fast-deep-equal/es6/react';
@@ -19,7 +19,7 @@ import equal from 'fast-deep-equal/es6/react';
  */
 const settingToSettingForm = (waniSettings: WaniSettings) => {
     const settingsForm = new WaniSettingsFormImpl();
-    settingsForm.setFromWaniSettings(waniSettings);
+    settingsForm.setFromWaniSettings(waniSettings ?? DEFAULT_SETTINGS);
     return settingsForm;
 };
 
@@ -29,11 +29,17 @@ const settingToSettingForm = (waniSettings: WaniSettings) => {
  */
 export const useWaniSettings = () => {
     // Avoid using Sync storage in dev mode
-    const [savedSettings, setSavedSettings] = isDev ? useStorage<WaniSettings>({ key: "WaniSettings",
-                                                                                 instance: new Storage({ area: "local" })
-                                                                                }, DEFAULT_SETTINGS)
-                                                    : useStorage<WaniSettings>("WaniSettings", DEFAULT_SETTINGS);
-    const [settingsForm, setSettingsForm] = useState<WaniSettingsFormImpl>(settingToSettingForm(savedSettings));
+    const [savedSettings, setSavedSettings] = useStorage<WaniSettings>({
+        key: "WaniSettings",
+        instance: new Storage({
+            area: isDev ? "local" : "sync",
+            serde: {
+                serializer: (value) => JSON.stringify(value, waniSettingsSerializer),
+                deserializer: (text) => JSON.parse(text, waniSettingsDeserializer)
+            }
+        })
+    });
+    const [settingsForm, setSettingsForm] = useState<WaniSettingsFormImpl>(() => settingToSettingForm(savedSettings));
     // Track if form has modifications not yet saved
     const [isDirty, setIsDirty] = useState(false);
 
@@ -42,7 +48,7 @@ export const useWaniSettings = () => {
         setSettingsForm(settingToSettingForm(savedSettings))
         setIsDirty(false);
     }, [savedSettings])
-      
+
     /**
      * Updates settings form with new values while preserving saved settings
      * @param newSettingsForm - Partial settings to update

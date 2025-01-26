@@ -25,19 +25,21 @@ const isFurigana = (text: string): boolean => {
  * @returns Map of English terms to Japanese translations
  */
 export const parseCustomVocabulary = (input: string): CustomVocabularyMap => {
-    if (!input?.trim()) return new Map();
+    let vocabMap : CustomVocabularyMap = new Map();
+
+    if (!input?.trim()) return vocabMap;
 
     return input
         .split(';')                    // Split entries
         .filter(Boolean)               // Remove empty entries
-        .reduce((map, entry) => {
+        .reduce((vocabMap, entry) => {
             // Parse components
             const [eng, jp, reading = ''] = entry.split(':').filter(Boolean);
             
             // Validate entry format
             if (!eng || !jp || (reading && !isFurigana(reading))) {
-                map.clear();
-                return map;
+                vocabMap.clear();
+                return vocabMap;
             }
 
             /**
@@ -46,11 +48,11 @@ export const parseCustomVocabulary = (input: string): CustomVocabularyMap => {
              **/ 
             eng.split(',')
                 .filter(Boolean)
-                .forEach(word => map.set(word.trim(), { 
+                .forEach(word => vocabMap.set(word.trim(), { 
                     japanese: jp.trim(), 
                     reading: reading.trim() 
                 }));
 
-            return map;
+            return vocabMap;
         }, new Map() as CustomVocabularyMap);
 };

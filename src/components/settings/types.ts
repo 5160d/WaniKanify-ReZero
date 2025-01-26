@@ -19,6 +19,37 @@ export interface WaniSettings {
     spreadsheetImport: SpreadSheet[];
 }
 
+// functions to serialize and deserialize WaniSettings
+export function waniSettingsSerializer(key: string, value: any): any {
+    if (key === "customVocabulary") {
+      // Convert a Map into an object with a _type marker
+      return {
+        _type: "customVocabulary",
+        object: Array.from(value)
+      }
+    }
+    if (key === "vocabularyBlacklist") {
+      // Convert a Set into an object with a _type marker
+      return {
+        _type: "vocabularyBlacklist",
+        object: Array.from(value)
+      }
+    }
+    return value
+  }
+  
+export function waniSettingsDeserializer(key: string, value: any): any {
+    // Handle Maps
+    if (value && value._type === "customVocabulary") {
+      return new Map(value.object) as CustomVocabularyMap
+    }
+    // Handle Sets
+    if (value && value._type === "vocabularyBlacklist") {
+      return new Set<string>(value.object)
+    }
+    return value
+  }
+
 export interface WaniSettingsForm {
     apiToken: string;
     autoRun: boolean;
