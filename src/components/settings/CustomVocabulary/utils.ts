@@ -34,7 +34,9 @@ export const parseCustomVocabulary = (input: string): CustomVocabularyMap => {
         .filter(Boolean)               // Remove empty entries
         .reduce((vocabMap, entry) => {
             // Parse components
-            const [eng, jp, reading = ''] = entry.split(':').filter(Boolean);
+            const components = entry.split(':').filter(Boolean);
+            const [eng, jp] = components.slice(0, 2);
+            const reading = components.slice(2).join() || ''; // make sure to read everything after the second colon
             
             // Validate entry format
             if (!eng || !jp || (reading && !isFurigana(reading))) {

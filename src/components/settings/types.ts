@@ -126,7 +126,7 @@ export class WaniSettingsFormImpl implements WaniSettingsForm {
         });
 
         return Array.from(japaneseMap)
-            .map(([japanese, { eng, reading }]) => `${eng.join(',')}:${japanese}:${reading}`)
+            .map(([japanese, { eng, reading }]) => `${eng.join(',')}:${japanese}${reading ? ':' + reading : ''}`)
             .join(';');
     }
 
