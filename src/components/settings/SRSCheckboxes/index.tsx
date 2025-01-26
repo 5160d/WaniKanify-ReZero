@@ -14,12 +14,14 @@ import { HelpOutline } from '@mui/icons-material';
 import { SRS_GROUPS } from './constants';
 import { WaniTooltip } from '../../common/WaniTooltip';
 import type { ChangingProps } from '~src/components/common/types';
+import type { SrsGroupsObject } from '../types';
 
-export const SRSCheckboxes: React.FC<ChangingProps<string[]>> = ({ onChange, value }) => {
+export const SRSCheckboxes: React.FC<ChangingProps<SrsGroupsObject>> = ({ onChange, value }) => {
     const handleChange = (groupId: string, checked: boolean) => {
-        const newGroups = checked
-            ? [...value, groupId]
-            : value.filter(id => id !== groupId);
+        const newGroups = {
+            ...value,
+            [groupId]: checked
+        };
         onChange(newGroups);
     };
 
@@ -73,7 +75,7 @@ export const SRSCheckboxes: React.FC<ChangingProps<string[]>> = ({ onChange, val
                     <ListItem key={group.id} sx={{ p: 2 }}>
                         <FormControl>
                             <Checkbox
-                                checked={value.includes(group.id)}
+                                checked={value[group.id]}
                                 onChange={(e) => handleChange(group.id, e.target.checked)}
                                 color="primary"
                             />

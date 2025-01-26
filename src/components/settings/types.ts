@@ -3,6 +3,7 @@ import type { AudioMode } from './toggles/types';
 import { parseCustomVocabulary } from './CustomVocabulary/utils';
 
 export type CustomVocabularyMap = Map<string, { japanese: string, reading: string }>;
+export type SrsGroupsObject = { apprentice: boolean, guru: boolean, master: boolean, enlightened: boolean, burned: boolean };
 
 export interface WaniSettings {
     apiToken: string;
@@ -12,7 +13,7 @@ export interface WaniSettings {
         mode: AudioMode;
     };
     numbersReplacement: boolean;
-    srsGroups: string[];
+    srsGroups: SrsGroupsObject;
     customVocabulary: CustomVocabularyMap;
     vocabularyBlacklist: Set<string>;
     sitesFiltering: string[];
@@ -22,33 +23,33 @@ export interface WaniSettings {
 // functions to serialize and deserialize WaniSettings
 export function waniSettingsSerializer(key: string, value: any): any {
     if (key === "customVocabulary") {
-      // Convert a Map into an object with a _type marker
-      return {
-        _type: "customVocabulary",
-        object: Array.from(value)
-      }
+        // Convert a Map into an object with a _type marker
+        return {
+            _type: "customVocabulary",
+            object: Array.from(value)
+        }
     }
     if (key === "vocabularyBlacklist") {
-      // Convert a Set into an object with a _type marker
-      return {
-        _type: "vocabularyBlacklist",
-        object: Array.from(value)
-      }
+        // Convert a Set into an object with a _type marker
+        return {
+            _type: "vocabularyBlacklist",
+            object: Array.from(value)
+        }
     }
     return value
-  }
-  
+}
+
 export function waniSettingsDeserializer(key: string, value: any): any {
     // Handle Maps
     if (value && value._type === "customVocabulary") {
-      return new Map(value.object) as CustomVocabularyMap
+        return new Map(value.object) as CustomVocabularyMap
     }
     // Handle Sets
     if (value && value._type === "vocabularyBlacklist") {
-      return new Set<string>(value.object)
+        return new Set<string>(value.object)
     }
     return value
-  }
+}
 
 export interface WaniSettingsForm {
     apiToken: string;
@@ -58,7 +59,7 @@ export interface WaniSettingsForm {
         mode: AudioMode;
     };
     numbersReplacement: boolean;
-    srsGroups: string[];
+    srsGroups: SrsGroupsObject;
     customVocabulary: string;
     vocabularyBlacklist: string;
     sitesFiltering: string[];
@@ -78,7 +79,7 @@ export class WaniSettingsFormImpl implements WaniSettingsForm {
         mode: AudioMode;
     };
     numbersReplacement: boolean;
-    srsGroups: string[];
+    srsGroups: SrsGroupsObject;
     customVocabulary: string;
     vocabularyBlacklist: string;
     sitesFiltering: string[];
