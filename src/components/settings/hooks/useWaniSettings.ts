@@ -17,7 +17,7 @@ import equal from 'fast-deep-equal/es6/react';
  * @param waniSettings - The source settings to initialize from
  * @returns A new WaniSettingsFormImpl instance
  */
-const settingToSettingForm = (waniSettings: WaniSettings) => {
+const settingsToSettingsForm = (waniSettings: WaniSettings) => {
     const settingsForm = new WaniSettingsFormImpl();
     settingsForm.setFromWaniSettings(waniSettings ?? DEFAULT_SETTINGS);
     return settingsForm;
@@ -39,13 +39,13 @@ export const useWaniSettings = () => {
             }
         })
     });
-    const [settingsForm, setSettingsForm] = useState<WaniSettingsFormImpl>(() => settingToSettingForm(savedSettings));
+    const [settingsForm, setSettingsForm] = useState<WaniSettingsFormImpl>(() => settingsToSettingsForm(savedSettings));
     // Track if form has modifications not yet saved
     const [isDirty, setIsDirty] = useState(false);
 
     // Sync form state with storage changes
     useEffect(() => {
-        setSettingsForm(settingToSettingForm(savedSettings))
+        setSettingsForm(settingsToSettingsForm(savedSettings))
         setIsDirty(false);
     }, [savedSettings])
 
@@ -60,7 +60,7 @@ export const useWaniSettings = () => {
             return updated;
         });
         // Handle when the user reverted to saved settings
-        setIsDirty(!equal(updated, settingToSettingForm(savedSettings)));
+        setIsDirty(!equal(updated, settingsToSettingsForm(savedSettings)));
     };
 
     /**

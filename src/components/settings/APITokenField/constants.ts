@@ -1,1 +1,1 @@
-export const WANIKANI_API_URL = "https://www.wanikani.com/settings/personal_access_tokens";
+export const WANIKANI_API_TOKEN_URL = "https://www.wanikani.com/settings/personal_access_tokens";

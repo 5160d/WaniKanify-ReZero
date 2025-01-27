@@ -1,5 +1,3 @@
-import { type Theme } from '@mui/material/styles';
-
 export const saveButtonStyle = {
     color: "primary",
     width: "20%",

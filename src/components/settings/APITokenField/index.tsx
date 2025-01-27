@@ -2,7 +2,6 @@ import React from 'react';
 import {
     Box,
     TextField,
-    Button,
     InputAdornment,
     Tooltip,
     Typography,
@@ -10,7 +9,7 @@ import {
 } from '@mui/material';
 import { HelpOutline } from '@mui/icons-material';
 import { WaniTooltip } from '../../common/WaniTooltip';
-import { WANIKANI_API_URL } from './constants';
+import { WANIKANI_API_TOKEN_URL } from './constants';
 import type { ChangingProps } from 'src/components/common/types';
 
 
@@ -48,7 +47,7 @@ export const APITokenField: React.FC<ChangingProps<string>> = ({ value, onChange
                                             <Typography variant="body2" sx={{ mb: 2 }}>
                                                 You can generate a new API token on the{" "}
                                                 <a
-                                                    href={WANIKANI_API_URL}
+                                                    href={WANIKANI_API_TOKEN_URL}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                 >
