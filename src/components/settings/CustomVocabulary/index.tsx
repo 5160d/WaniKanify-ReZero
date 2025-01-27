@@ -1,23 +1,29 @@
-import { Fragment } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Box, Typography, TextField, Tooltip, IconButton } from '@mui/material';
 import { HelpOutline } from '@mui/icons-material';
 import { WaniTooltip } from '../../common/WaniTooltip';
 import { EXAMPLES, HELP_TEXT } from './constants';
-import type { ChangingWithValidationProps } from '~src/components/common/types';
+import type { ChangingWithErrorHandlingProps } from '~src/components/common/types';
 import { useToCustomVocabularyMap } from './hooks';
 
-export const CustomVocabularyTextArea: React.FC<ChangingWithValidationProps<string>> = ({
+export const CustomVocabularyTextArea: React.FC<ChangingWithErrorHandlingProps<string>> = ({
     value,
-    onChange
+    onChange,
+    onErrorHandled
 }) => {
-
     const { error: validationError, entryParse: parseVocab } = useToCustomVocabularyMap();
 
+    // provide error state to parent component once validationError changes
+    useEffect(() => {
+        onErrorHandled(Boolean(validationError));
+    }, [validationError]);
+
+    // Verify input and update error state
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newValue = e.target.value;
 
         parseVocab(newValue);
-        onChange(newValue, !Boolean(validationError));
+        onChange(newValue);
     };
 
     return (

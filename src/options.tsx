@@ -239,10 +239,10 @@ export default function Options(): ReactElement {
                     <Box mt={3}>
                       <CustomVocabularyTextArea
                         value={settingsForm.customVocabulary}
-                        onChange={(newValue, isValid) => {
-                          errors.customVocabulary = !isValid;
+                        onChange={(newValue) => {
                           updateSettingsForm({ customVocabulary: newValue });
                         }}
+                        onErrorHandled={(error) => setErrors({ ...errors, customVocabulary: error })}
                       />
                     </Box>
                     <Box mt={3}>

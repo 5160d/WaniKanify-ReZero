@@ -8,9 +8,9 @@ export interface ChangingProps<T> {
   onChange: (value: T) => void;
 }
 
-export interface ChangingWithValidationProps<T> {
+export interface ChangingWithErrorHandlingProps<T> extends ChangingProps<T> {
   value: T;
-  onChange: (value: T, isValid: boolean) => void;
+  onErrorHandled: (hasError: boolean) => void;
 }
 
 export interface ToggleProps extends ChangingProps<boolean> {
