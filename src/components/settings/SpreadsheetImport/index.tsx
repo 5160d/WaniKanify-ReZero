@@ -90,8 +90,8 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
                                         <strong>2. Sheet:</strong> Name of the selected tab at the bottom of the spreadsheet.<br />
                                         <strong>3. English Column:</strong> Name of the column containing english words.<br />
                                         <strong>4. Japanese Column:</strong> Name of the column containing Kanji/japanese words.<br />
-                                        <strong>5. <Typography component="span" color="success.main" display="inline">Optional </Typography>Reading Column:</strong> Name of the column containing furigana readings.<br />
-                                        <strong>6. <Typography component="span" color="success.main" display="inline">Optional </Typography>Delimiter:</strong> Delimiter for multiple English words (default: comma).<br />
+                                        <strong>5. <Box component="span" color="success.main" display="inline">Optional </Box>Reading Column:</strong> Name of the column containing furigana readings.<br />
+                                        <strong>6. <Box component="span" color="success.main" display="inline">Optional </Box>Delimiter:</strong> Delimiter for multiple English words (default: comma).<br />
                                     </Typography>
                                     <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
                                         <WarningAmber sx={{ color: orange[500] }} /> Browser Sync synchronizes the list of spreadsheets but not the vocabulary. Click import on each different browser.

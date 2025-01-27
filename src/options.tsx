@@ -205,9 +205,9 @@ export default function Options(): ReactElement {
                           }}>
                           <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
                             Filters are applied in order:<br/>
-                            <code style={{ display: 'block', marginTop: '8px' }}>
-                            Blacklisted Vocabulary &gt;<br/>
+                            <code style={{ display: 'block', marginTop: '8px', backgroundColor: 'action.hover', padding: '2px 2px' }}>
                             Wanikanify Numbers &gt;<br/>
+                            Blacklisted Vocabulary &gt;<br/>
                             Custom Vocabulary &gt;<br/>
                             Imported Vocabulary &gt;<br/>
                             SRS Groups
