@@ -58,7 +58,7 @@ const Header = ({ logo }: HeaderProps): ReactElement => (
       variant="h4"
       fontWeight="bold"
       sx={{ color: 'primary.main' }}>
-      WaniKanify settingsForm
+      WaniKanify Settings
     </Typography>
   </Stack>
 );
