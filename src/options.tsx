@@ -1,6 +1,6 @@
 // External Libraries
 import React, { useCallback, useEffect, useState, type ReactElement } from "react";
-import { GitHub } from "@mui/icons-material";
+import { GitHub, HelpOutline } from "@mui/icons-material";
 import {
   Box,
   Stack,
@@ -30,6 +30,7 @@ import waniLogo from "data-base64:assets/icon.png";
 import { waniStyle } from "src/styles/wanikanifyStyles";
 import "src/styles/style.css";
 import { githubUrl } from "./components/common/constants";
+import { WaniTooltip } from "./components/common/WaniTooltip";
 
 
 interface HeaderProps {
@@ -172,19 +173,80 @@ export default function Options(): ReactElement {
           {['General', 'Behavior', 'Vocabulary'].map((section, index) => (
             <Card key={section} sx={{ mb: 4 }}>
               <CardContent>
-                <Typography
-                  variant="h6"
-                  fontWeight="600"
-                  gutterBottom
-                  sx={{
-                    color: 'primary.main',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1
-                  }}
-                >
-                  {`${index + 1}. ${section}`}
-                </Typography>
+                {section === 'Vocabulary' ? (
+                  <Box display="flex" alignItems="center" gap={2} mb={2}>
+                    <Typography
+                      variant="h6"
+                      fontWeight="600"
+                      gutterBottom
+                      sx={{
+                        color: 'primary.main',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1
+                      }}
+                    >
+                      {`${index + 1}. ${section}`}
+                    </Typography>
+                    <Tooltip
+                      title={
+                        <WaniTooltip title="Vocabulary">
+                          <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                            Section to customize the vocabulary replacement rules.
+                          </Typography>
+                          <Box sx={{
+                          bgcolor: 'background.paper',
+                          p: 2,
+                          borderRadius: 1,
+                          border: 1,
+                          borderColor: 'divider',
+                          maxWidth: '100%',
+                          wordWrap: 'break-word'
+                          }}>
+                          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                            Filters are applied in order:<br/>
+                            <code style={{ display: 'block', marginTop: '8px' }}>
+                            Blacklisted Vocabulary &gt;<br/>
+                            Wanikanify Numbers &gt;<br/>
+                            Custom Vocabulary &gt;<br/>
+                            Imported Vocabulary &gt;<br/>
+                            SRS Groups
+                            </code>
+                          </Typography>
+                          </Box>
+                        </WaniTooltip>
+                      }
+                      placement="bottom"
+                      arrow
+                    >
+                      <IconButton
+                        color="primary"
+                        sx={{
+                          '&:hover': {
+                            bgcolor: 'primary.light',
+                            color: 'primary.contrastText'
+                          }
+                        }}
+                      >
+                        <HelpOutline sx={{ mt: -0.5 }}/>
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                ) : (
+                  <Typography
+                    variant="h6"
+                    fontWeight="600"
+                    gutterBottom
+                    sx={{
+                      color: 'primary.main',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1
+                    }}
+                  >
+                    {`${index + 1}. ${section}`}
+                  </Typography>
+                )}
                 <Divider sx={{ mb: 3 }} />
 
                 {section === 'General' && (

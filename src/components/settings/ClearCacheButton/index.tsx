@@ -46,7 +46,7 @@ export const ClearCacheButton: React.FC = () => {
                             borderRadius: "50%"
                         }}
                     >
-                        <HelpOutline color="inherit" />
+                        <HelpOutline color="inherit" sx={{ mt: -0.5 }}/>
                     </Box>
                 </Tooltip>
             }
