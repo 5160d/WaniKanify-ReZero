@@ -67,8 +67,13 @@ export const VocabularyBlacklistTextArea: React.FC<ChangingProps<string>> = ({
                 minRows={4}
                 value={value}
                 onChange={handleChange}
-                sx={{ resize: "vertical", overflow: 'auto' }}
-                fullWidth
+                sx={{
+                    width: '100%',
+                    '& .MuiInputBase-input': {
+                        resize: 'vertical',
+                        overflow: 'auto'
+                    }
+                }}
             />
             <Typography
                 variant="body2"
