@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import { Delete, HelpOutline, WarningAmber } from '@mui/icons-material';
 import { orange } from '@mui/material/colors';
-import { COLUMNS, EMPTY_SPREADSHEET } from './constants';
+import { COLUMNS, EMPTY_SPREADSHEET, TOOLTIP_CONTENT } from './constants';
 import type { SpreadSheet, SpreadsheetImportProps } from './types';
 
 
@@ -59,7 +59,7 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
                                     mb: 2
                                 }}
                             >
-                                Spreadsheet Import
+                                {TOOLTIP_CONTENT.TITLE}
                             </Typography>
                             <Box sx={{
                                 display: 'grid',
@@ -68,10 +68,10 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
                             }}>
                                 <Box>
                                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                        Import vocabulary from Google Spreadsheets published on the Web.
+                                        {TOOLTIP_CONTENT.DESCRIPTION}
                                     </Typography>
                                     <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
-                                        To publish the spreadsheet: <em>File{'->'}Share{'->'}Publish to web</em>.
+                                        {TOOLTIP_CONTENT.PUBLISH_INSTRUCTION}
                                     </Typography>
                                 </Box>
                                 <Box sx={{
@@ -82,19 +82,26 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
                                     borderColor: 'divider'
                                 }}>
                                     <Typography variant="body2" component="div" sx={{ mt: 2, color: 'text.secondary' }}>
-                                        <strong>1. Collection key:</strong> The spreadsheet collection (group of sheets) unique key. Found in its URL and similar to this:<br />
-                                        <code style={{ backgroundColor: 'action.hover', padding: '2px 4px' }}>
-                                            1lIo2calXb_GtaQCKLr989-Ma_hxXlxFsHE0egko-D9k
-                                        </code>
-                                        <br />
-                                        <strong>2. Sheet:</strong> Name of the selected tab at the bottom of the spreadsheet.<br />
-                                        <strong>3. English Column:</strong> Name of the column containing english words.<br />
-                                        <strong>4. Japanese Column:</strong> Name of the column containing Kanji/japanese words.<br />
-                                        <strong>5. <Box component="span" color="success.main" display="inline">Optional </Box>Reading Column:</strong> Name of the column containing furigana readings.<br />
-                                        <strong>6. <Box component="span" color="success.main" display="inline">Optional </Box>Delimiter:</strong> Delimiter for multiple English words (default: comma).<br />
+                                        {TOOLTIP_CONTENT.FIELDS.map((field, index) => (
+                                            <React.Fragment key={field.id}>
+                                                <strong>
+                                                    {`${index + 1}.`}{field.optional && <Box component="span" color="success.main" display="inline"> Optional </Box>}{` ${field.label}: `}
+                                                </strong>
+                                                {field.description}
+                                                {field.example && (
+                                                    <>
+                                                        <br />
+                                                        <code style={{ backgroundColor: 'action.hover', padding: '2px 4px' }}>
+                                                            {field.example}
+                                                        </code>
+                                                    </>
+                                                )}
+                                                <br />
+                                            </React.Fragment>
+                                        ))}
                                     </Typography>
                                     <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
-                                        <WarningAmber sx={{ color: orange[500] }} /> Browser Sync synchronizes the list of spreadsheets but not the vocabulary. Click import on each different browser.
+                                        <WarningAmber sx={{ color: orange[500] }} /> {TOOLTIP_CONTENT.WARNING}
                                     </Typography>
                                 </Box>
                             </Box>
