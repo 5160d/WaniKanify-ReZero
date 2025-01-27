@@ -38,23 +38,31 @@ export const APITokenField: React.FC<ChangingProps<string>> = ({ value, onChange
                             <Tooltip
                                 title={
                                     <WaniTooltip title="API Token">
-                                        <Typography variant="body2" sx={{ mb: 2 }}>
-                                            You can generate a new API token on the{" "}
-                                            <a
-                                                href={WANIKANI_API_URL}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                API Tokens section
-                                            </a>{" "}
-                                            of your WaniKani profile.
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ mb: 2 }}>
-                                            Your API token is only used to read your vocabulary list.
-                                        </Typography>
+                                        <Box sx={{
+                                            bgcolor: 'background.paper',
+                                            p: 2,
+                                            borderRadius: 1,
+                                            border: 1,
+                                            borderColor: 'divider'
+                                        }}>
+                                            <Typography variant="body2" sx={{ mb: 2 }}>
+                                                You can generate a new API token on the{" "}
+                                                <a
+                                                    href={WANIKANI_API_URL}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
+                                                    API Tokens section
+                                                </a>{" "}
+                                                of your WaniKani profile.
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ mb: 2 }}>
+                                                Your API token is only used to read your vocabulary list.
+                                            </Typography>
+                                        </Box>
                                     </WaniTooltip>
                                 }
-                                placement="top"
+                                placement="bottom"
                                 arrow
                                 PopperProps={{
                                     modifiers: [
