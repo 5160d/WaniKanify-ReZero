@@ -65,6 +65,7 @@ export const VocabularyBlacklistTextArea: React.FC<ChangingProps<string>> = ({
                 placeholder="in;I;why;time"
                 multiline
                 minRows={4}
+                rows={4}
                 value={value}
                 onChange={handleChange}
                 sx={{

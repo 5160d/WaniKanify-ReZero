@@ -93,6 +93,7 @@ export const CustomVocabularyTextArea: React.FC<ChangingWithErrorHandlingProps<s
                 placeholder={EXAMPLES.MULTIPLE}
                 multiline
                 minRows={4}
+                rows={4}
                 value={value}
                 onChange={handleChange}
                 error={Boolean(validationError)}
