@@ -69,7 +69,7 @@ export const SRSCheckboxes: React.FC<ChangingProps<SrsGroupsObject>> = ({ onChan
                 border: 1,
                 borderColor: "divider",
                 borderRadius: 1,
-                overflow: "hidden",
+                overflow: "auto",
             }}>
                 {SRS_GROUPS.map((group) => (
                     <ListItem key={group.id} sx={{ p: 2 }}>
