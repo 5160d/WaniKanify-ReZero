@@ -21,6 +21,5 @@ export const DEFAULT_SETTINGS: WaniSettings = {
 
 export const DEFAULT_SETTINGS_FORM_ERRORS: WaniSettingsFormErrors = {
     apiToken: false,
-    autoRun: false,
     customVocabulary: false
 }

@@ -17,7 +17,7 @@ export const CustomVocabularyTextArea: React.FC<ChangingWithValidationProps<stri
         const newValue = e.target.value;
 
         parseVocab(newValue);
-        onChange(newValue, !validationError);
+        onChange(newValue, !Boolean(validationError));
     };
 
     return (

@@ -150,6 +150,5 @@ export class WaniSettingsFormImpl implements WaniSettingsForm {
 
 export interface WaniSettingsFormErrors {
     apiToken: boolean;
-    autoRun: boolean;
     customVocabulary: boolean;
 }
