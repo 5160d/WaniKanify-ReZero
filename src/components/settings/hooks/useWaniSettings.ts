@@ -11,6 +11,8 @@ import { type WaniSettings, WaniSettingsFormImpl, waniSettingsSerializer, waniSe
 import { isDev } from 'src/components/common/constants';
 import { DEFAULT_SETTINGS } from '../constants';
 import equal from 'fast-deep-equal/es6/react';
+import type { SaveStatus } from '../SaveButton/types';
+import { SAVE_ERROR, SAVE_SUCCESS } from '../SaveButton/constants';
 
 /**
  * Creates a new settings form instance from WaniSettings
@@ -42,10 +44,21 @@ export const useWaniSettings = () => {
     const [settingsForm, setSettingsForm] = useState<WaniSettingsFormImpl>(() => settingsToSettingsForm(savedSettings));
     // Track if form has modifications not yet saved
     const [isDirty, setIsDirty] = useState(false);
+    const [saveStatus, setSaveStatus] = useState<SaveStatus>({ status: "idle", message: "" });
 
     // Sync form state with storage changes
     useEffect(() => {
         setSettingsForm(settingsToSettingsForm(savedSettings))
+
+        // used to differentiate between initial load and actual save
+        if(isDirty) {
+            setSaveStatus({ status: 'success' , message: SAVE_SUCCESS });
+            // we fired the mesaage, now reset it
+            setTimeout(() => {
+                setSaveStatus({ status: 'idle', message: '' });
+            }, 30);
+        }
+
         setIsDirty(false);
     }, [savedSettings])
 
@@ -68,8 +81,10 @@ export const useWaniSettings = () => {
      */
     const saveToStorage = () => {
         try {
+            setSaveStatus({ status: 'pending', message: '' });
             setSavedSettings(settingsForm.toWaniSettings());
         } catch (error) {
+            setSaveStatus({ status: "error", message: SAVE_ERROR });
             console.error('Failed to save settings:', error);
         }
     };
@@ -78,6 +93,7 @@ export const useWaniSettings = () => {
         settingsForm,
         updateSettingsForm,
         saveToStorage,
-        isDirty
+        isDirty,
+        saveStatus
     };
 };

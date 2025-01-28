@@ -26,7 +26,7 @@ const BACKGROUND_STYLES = {
 } as const
 
 const IndexPopup: React.FC = () => {
-  const { settingsForm, updateSettingsForm, saveToStorage, isDirty } = useWaniSettings();
+  const { settingsForm, updateSettingsForm, saveToStorage, isDirty, saveStatus } = useWaniSettings();
   const [error, setError] = useState(false);
 
   const handleSave = React.useCallback(() => {
@@ -62,7 +62,8 @@ const IndexPopup: React.FC = () => {
           <SaveButton
             hasErrors={error}
             isDirty={isDirty}
-            onClick={handleSave}
+            onClick={handleSave} 
+            status={saveStatus}
           />
         </Stack>
       </Box>

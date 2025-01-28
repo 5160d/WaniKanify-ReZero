@@ -142,9 +142,10 @@ const Footer: React.FC<FooterProps> = ({ githubUrl }) => (
 
 export default function Options(): ReactElement {
   const mode = useSystemTheme();
-  const { settingsForm, updateSettingsForm, saveToStorage, isDirty } = useWaniSettings();
+  const { settingsForm, updateSettingsForm, saveToStorage, isDirty, saveStatus } = useWaniSettings();
   const [errors, setErrors] = useState(DEFAULT_SETTINGS_FORM_ERRORS);
 
+  // Reset errors when form is clean
   useEffect(() => {
     if(!isDirty) {
       setErrors(DEFAULT_SETTINGS_FORM_ERRORS);
@@ -335,6 +336,7 @@ export default function Options(): ReactElement {
             }}
           >
             <SaveButton
+              status={saveStatus}
               hasErrors={Object.values(errors).some(error => error)}
               isDirty={isDirty}
               onClick={handleSave}

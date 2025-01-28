@@ -1,12 +1,51 @@
-import { Button, type ButtonProps } from '@mui/material';
+import { Button, type ButtonProps, Alert, Fade, Box } from '@mui/material';
 import { saveButtonStyle } from './style';
+import { useState, useEffect } from 'react';
+import type { SaveStatus, AlertState } from './types';
 
 interface SaveButtonProps extends ButtonProps {
     hasErrors: boolean;
     isDirty: boolean;
+    status: SaveStatus;
 }
-export const SaveButton = ({ hasErrors, isDirty, ...props }: SaveButtonProps) => (
-    <Button
+export const SaveButton: React.FC<SaveButtonProps> = ({ hasErrors, isDirty, status, ...props }) => {
+  const [alert, setAlert] = useState<AlertState>({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+
+  useEffect(() => {
+    if (status.status === 'success') {
+      setAlert({
+        open: true,
+        message: status.message,
+        severity: 'success'
+      });
+      setTimeout(() => {
+        setAlert(prev => ({ ...prev, open: false }));
+      }, 2000);
+    }
+  }, [status]);
+
+  return (
+    <Box position="relative">
+      <Fade in={alert.open} timeout={ { enter: 1000, exit: 1200 }} >
+        <Alert 
+          severity={alert.severity}
+          sx={{
+            position: 'absolute',
+            bottom: '100%',
+            left: '50%',
+            transform: 'translateX(-50%) translateY(-8px)',
+            minWidth: '200px',
+            boxShadow: 2,
+          }}
+        >
+          {alert.message}
+        </Alert>
+      </Fade>
+      <Button
         disabled={!isDirty || hasErrors}
         variant={hasErrors ? "outlined" : "contained"}
         sx={{
@@ -17,7 +56,9 @@ export const SaveButton = ({ hasErrors, isDirty, ...props }: SaveButtonProps) =>
             }
         }}
         {...props}
-    >
+      >
         Save
-    </Button>
-);
+      </Button>
+    </Box>
+  );
+};
