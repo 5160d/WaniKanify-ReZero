@@ -16,12 +16,15 @@ const buildForm = () => {
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 
 describe('SettingsPreview', () => {
-  it('renders preview text with replacement styling', async () => {
+  it('renders preview with Japanese replacement and data attributes', async () => {
     const form = buildForm()
     const { container } = render(<SettingsPreview settingsForm={form} />)
     await flush()
-    await flush()
-
-    expect(container.textContent).toContain('fox')
+    // Look for Japanese replacement 狐 and its tooltip data attribute
+    const text = container.textContent || ''
+    expect(text).toContain('狐')
+    const span = container.querySelector('span.wanikanify-replacement[data-wanikanify-original="fox"]')
+    expect(span).not.toBeNull()
+    expect(span?.getAttribute('data-wanikanify-reading')).toBe('きつね')
   })
 })

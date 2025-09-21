@@ -1,7 +1,9 @@
-import React, { useMemo } from "react"
+import React, { useEffect, useMemo, useRef } from "react"
 import { Card, CardContent, Stack, Typography } from "@mui/material"
 
 import { TextReplacementEngine, type ReplacementResult } from "~src/services/textReplacer"
+import { initializeTooltipPositioning, toggleTooltipVisibility } from "~src/services/tooltips"
+import { AudioService } from "~src/services/audio"
 import type { WaniSettingsFormImpl } from "~src/components/settings/types"
 import { parseCustomVocabulary } from "~src/components/settings/CustomVocabulary/utils"
 
@@ -53,9 +55,27 @@ const buildVocabularyFromForm = (settingsForm: WaniSettingsFormImpl) => {
   return engine
 }
 
-const renderPreview = (result: ReplacementResult): React.ReactNode => {
+const NUMBER_REGEX = /\p{N}+/u
+
+const renderPreview = (result: ReplacementResult, numbersReplacement: boolean): React.ReactNode => {
   if (!result.matches.length) {
-    return result.value
+    if (!numbersReplacement) return result.value
+    if (!NUMBER_REGEX.test(result.value)) return result.value
+    return result.value.split(/(\p{N}+)/u).map((segment, i) => {
+      if (!segment) return null
+      if (NUMBER_REGEX.test(segment)) {
+        return (
+          <span
+            key={`num-${i}-${segment}`}
+            className="wanikanify-replacement"
+            data-wanikanify-original={segment}
+          >
+            {segment}
+          </span>
+        )
+      }
+      return segment
+    })
   }
 
   const nodes: React.ReactNode[] = []
@@ -87,7 +107,28 @@ const renderPreview = (result: ReplacementResult): React.ReactNode => {
   })
 
   if (cursor < result.value.length) {
-    nodes.push(result.value.slice(cursor))
+    const tail = result.value.slice(cursor)
+    if (numbersReplacement && NUMBER_REGEX.test(tail)) {
+      const pieces = tail.split(/(\p{N}+)/u)
+      pieces.forEach((piece, pi) => {
+        if (!piece) return
+        if (NUMBER_REGEX.test(piece)) {
+          nodes.push(
+            <span
+              key={`tail-num-${pi}-${piece}`}
+              className="wanikanify-replacement"
+              data-wanikanify-original={piece}
+            >
+              {piece}
+            </span>
+          )
+        } else {
+          nodes.push(piece)
+        }
+      })
+    } else {
+      nodes.push(tail)
+    }
   }
 
   return nodes
@@ -99,6 +140,58 @@ export const SettingsPreview: React.FC<SettingsPreviewProps> = ({ settingsForm }
     settingsForm.vocabularyBlacklist,
     settingsForm.numbersReplacement
   ])
+  const rootRef = useRef<HTMLDivElement | null>(null)
+  const audioRef = useRef<AudioService | null>(null)
+
+  // Initialize audio service once
+  useEffect(() => {
+    audioRef.current = new AudioService()
+    return () => {
+      // Dispose to remove any global listeners deterministically (important for tests)
+      audioRef.current?.dispose()
+      audioRef.current = null
+    }
+  }, [])
+
+  // Update audio settings when form changes
+  useEffect(() => {
+    if (!audioRef.current) return
+    audioRef.current.updateSettings({
+      enabled: settingsForm.audio.enabled,
+      mode: settingsForm.audio.mode,
+      volume: settingsForm.audio.volume ?? 1
+    })
+  }, [settingsForm.audio.enabled, settingsForm.audio.mode, settingsForm.audio.volume])
+
+  // Provide vocabulary to audio service for TTS fallback (even without audio URLs)
+  useEffect(() => {
+    if (!audioRef.current) return
+    // Derive simple list from current engine vocabulary by scanning sample results once
+    const uniqueJapanese = new Set<string>()
+    const entries: { japanese: string; reading?: string; audioUrls?: string[] }[] = []
+    SAMPLE_TEXTS.forEach(sample => {
+      const r = engine.replace(sample)
+      r.matches.forEach(m => {
+        if (!m.replacement) return
+        if (uniqueJapanese.has(m.replacement)) return
+        uniqueJapanese.add(m.replacement)
+        entries.push({ japanese: m.replacement, reading: m.reading })
+      })
+    })
+    audioRef.current.setVocabulary(entries)
+  }, [engine, settingsForm.customVocabulary, settingsForm.vocabularyBlacklist, settingsForm.numbersReplacement])
+
+  useEffect(() => {
+    if (rootRef.current) {
+      initializeTooltipPositioning(rootRef.current)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (rootRef.current) {
+      toggleTooltipVisibility(rootRef.current, settingsForm.showReplacementTooltips)
+    }
+  }, [settingsForm.showReplacementTooltips])
 
   return (
     <Card variant="outlined" sx={{ borderRadius: 3 }}>
@@ -106,6 +199,7 @@ export const SettingsPreview: React.FC<SettingsPreviewProps> = ({ settingsForm }
         className={
           settingsForm.showReplacementTooltips ? undefined : "wanikanify-tooltips-disabled"
         }
+        ref={rootRef}
       >
         <Stack spacing={2}>
           <Typography variant="h6" color="text.primary">
@@ -128,7 +222,7 @@ export const SettingsPreview: React.FC<SettingsPreviewProps> = ({ settingsForm }
                     backgroundColor: 'action.hover'
                   }}
                 >
-                  {renderPreview(result)}
+                  {renderPreview(result, settingsForm.numbersReplacement)}
                 </Typography>
               )
             })}

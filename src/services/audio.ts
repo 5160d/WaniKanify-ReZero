@@ -97,6 +97,16 @@ export class AudioService {
     }
   }
 
+  /**
+   * Explicit cleanup to remove global event listeners. Useful for React unmount scenarios
+   * (e.g. options Live Preview component) and for deterministic test teardown.
+   */
+  dispose(): void {
+    document.removeEventListener("click", this.clickListener, true)
+    document.removeEventListener("mousemove", this.hoverListener, true)
+    this.stop()
+  }
+
   private refreshEventListeners(): void {
     document.removeEventListener("click", this.clickListener, true)
     document.removeEventListener("mousemove", this.hoverListener, true)
