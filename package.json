@@ -67,7 +67,8 @@
 		],
 		"short_name": "WaniKanify",
 		"action": {
-			"default_title": "WaniKanify ReZero"
+			"default_title": "WaniKanify ReZero",
+			"default_popup": "popup.html"
 		},
 		"browser_specific_settings": {
 			"gecko": {
