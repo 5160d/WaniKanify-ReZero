@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WaniKanify Tooltip Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .test-text {
+            font-size: 18px;
+            margin: 10px 0;
+        }
+        .instructions {
+            background: #f0f8ff;
+            padding: 15px;
+            border-left: 4px solid #007acc;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="instructions">
+        <h3>🧪 WaniKanify Tooltip Test Page</h3>
+        <p><strong>Instructions:</strong></p>
+        <ol>
+            <li>Make sure the WaniKanify extension is loaded and enabled</li>
+            <li>Add some test vocabulary: "small" → "小さい" with reading "ちいさい"</li>
+            <li>Hover over the replaced Japanese text below</li>
+            <li>Check that <strong>bottom tooltip shows English</strong> and <strong>top tooltip shows reading</strong></li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Case 1: Simple Sentence</h2>
+        <div class="test-text">
+            The cat is very small and cute.
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Case 2: Multiple Replacements</h2>
+        <div class="test-text">
+            I have a small cat and a big dog. The small one is white.
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Case 3: Different Contexts</h2>
+        <div class="test-text">
+            <p>This is a small house with small windows.</p>
+            <p>The small car parked near the small tree.</p>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Expected Results</h2>
+        <div style="background: #f9f9f9; padding: 15px; border-radius: 4px;">
+            <p><strong>✅ Correct behavior:</strong></p>
+            <ul>
+                <li><strong>Bottom tooltip (dark):</strong> Shows "small" (English)</li>
+                <li><strong>Top tooltip (light):</strong> Shows "ちいさい" (Japanese reading)</li>
+                <li><strong>No flickering</strong> between Japanese and English</li>
+                <li><strong>English tooltip stays visible</strong> (higher z-index)</li>
+            </ul>
+            
+            <p><strong>❌ Bug symptoms:</strong></p>
+            <ul>
+                <li>Bottom tooltip shows Japanese text instead of English</li>
+                <li>Brief flash of correct content before wrong content appears</li>
+                <li>Multiple tooltips stacking on each other</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Add some debug info
+        console.log('WaniKanify Test Page loaded');
+        console.log('Look for WaniKanify replacement elements after hover:', document.querySelectorAll('.wanikanify-replacement'));
+        
+        // Log when page is ready for testing
+        setTimeout(() => {
+            console.log('Page ready for WaniKanify testing');
+        }, 1000);
+    </script>
+</body>
+</html>
