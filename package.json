@@ -11,7 +11,7 @@
 		"test": "jest",
 		"test:watch": "jest --watch",
 		"test:e2e": "playwright test",
-		"build:all": "plasmo build --target=chrome-mv3,firefox-mv3 && plasmo package"
+		"build:all": "plasmo build --zip --target=chrome-mv3 && plasmo build --zip --target=firefox-mv3"
 	},
 	"dependencies": {
 		"@emotion/cache": "11.11.0",
