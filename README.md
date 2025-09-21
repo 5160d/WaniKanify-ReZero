@@ -59,7 +59,7 @@ WaniKanify ReZero helps you practice Japanese vocabulary in context by automatic
 
 4. **Load the extension in your browser**
    - Chrome: Load the `build/chrome-mv3-dev` directory in Developer Mode
-   - Firefox: Load the `build/firefox-mv2-dev` directory
+   - Firefox: Load the `build/firefox-mv3-dev` directory
    - Edge: Load the `build/chrome-mv3-dev` directory in Developer Mode
 
 ### Building for Production
