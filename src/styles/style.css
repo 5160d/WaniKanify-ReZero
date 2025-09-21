@@ -25,21 +25,46 @@
 
 .wanikanify-replacement::after {
   content: attr(data-wanikanify-original);
-  position: absolute;
-  left: 50%;
-  top: calc(100% + 0.4rem);
-  transform: translate(-50%, 0);
+  position: fixed;
   background-color: rgba(33, 33, 33, 0.95);
+  backdrop-filter: blur(4px);
   color: #fff;
-  padding: 4px 8px;
+  padding: 6px 10px;
   border-radius: 6px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
   font-size: 0.75em;
+  font-weight: 500;
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.2s ease, transform 0.2s ease;
   z-index: 2147483647;
+  max-width: min(90vw, 300px);
+  word-wrap: break-word;
+  text-align: center;
+  
+  /* Default positioning */
+  left: 50%;
+  top: calc(100% + 0.4rem);
+  transform: translate(-50%, 0);
+}
+
+/* Dynamic positioning classes */
+.wanikanify-replacement.tooltip-bottom-top::after {
+  bottom: calc(100% + 0.4rem);
+  top: auto;
+  transform: translate(-50%, 0);
+}
+
+.wanikanify-replacement.tooltip-align-left::after {
+  left: 0;
+  transform: translateY(0);
+}
+
+.wanikanify-replacement.tooltip-align-right::after {
+  left: auto;
+  right: 0;
+  transform: translateY(0);
 }
 
 .wanikanify-replacement:hover::after {
@@ -49,20 +74,46 @@
 
 .wanikanify-replacement::before {
   content: attr(data-wanikanify-reading);
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 0.2rem);
-  transform: translate(-50%, 0);
+  position: fixed;
   font-size: 0.65em;
+  font-weight: 500;
   color: #212121;
-  background-color: rgba(255, 255, 255, 0.95);
-  padding: 2px 6px;
+  background-color: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(4px);
+  padding: 4px 8px;
   border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.05);
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 2147483648;
+  max-width: min(90vw, 250px);
+  word-wrap: break-word;
+  text-align: center;
+  
+  /* Default positioning */
+  left: 50%;
+  bottom: calc(100% + 0.2rem);
+  transform: translate(-50%, 0);
+}
+
+/* Dynamic positioning for reading tooltip */
+.wanikanify-replacement.tooltip-top-bottom::before {
+  top: calc(100% + 0.2rem);
+  bottom: auto;
+  transform: translate(-50%, 0);
+}
+
+.wanikanify-replacement.tooltip-align-left::before {
+  left: 0;
+  transform: translateY(0);
+}
+
+.wanikanify-replacement.tooltip-align-right::before {
+  left: auto;
+  right: 0;
+  transform: translateY(0);
 }
 
 .wanikanify-replacement:hover::before {
@@ -77,6 +128,36 @@
 
 .wanikanify-replacement[data-wanikanify-original=""]::after {
   display: none;
+}
+
+/* Ensure tooltips don't get clipped by parent containers */
+.wanikanify-replacement {
+  position: relative;
+  z-index: 1;
+}
+
+/* Dynamic positioning using CSS custom properties */
+.wanikanify-replacement::after {
+  left: var(--tooltip-x, 50%);
+  top: var(--tooltip-bottom-y, calc(100% + 0.4rem));
+  transform: var(--tooltip-transform, translate(-50%, 0));
+}
+
+.wanikanify-replacement::before {
+  left: var(--tooltip-x, 50%);
+  top: var(--tooltip-top-y, calc(100% - 0.2rem - 100%));
+  transform: var(--tooltip-transform, translate(-50%, -100%));
+}
+
+/* Fallback for elements positioned above/below */
+.wanikanify-replacement.tooltip-bottom-top::after {
+  top: var(--tooltip-bottom-y, auto);
+  bottom: auto;
+}
+
+.wanikanify-replacement.tooltip-top-bottom::before {
+  top: var(--tooltip-top-y, auto);
+  bottom: auto;
 }
 
 .wanikanify-tooltips-disabled .wanikanify-replacement::before,

@@ -17,7 +17,7 @@ import {
 import { SiteFilter } from "~src/services/siteFilter"
 import { AudioService, type AudioVocabularyItem } from "~src/services/audio"
 import type { VocabularyCachePayload, VocabularyEntry } from "~src/services/vocabulary/types"
-import { toggleTooltipVisibility } from "~src/services/tooltips"
+import { toggleTooltipVisibility, initializeTooltipPositioning } from "~src/services/tooltips"
 import { ensureSafeRuntimeConnect } from "~src/utils/runtimeConnect"
 import "./styles/style.css"
 
@@ -115,6 +115,9 @@ class ContentScriptController {
     this.updateReplacerConfig()
     this.refreshReplacerVocabulary()
     this.registerStorageListener()
+
+    // Initialize tooltip positioning for better visibility
+    initializeTooltipPositioning(document)
 
     if (this.shouldRun()) {
       this.start()
