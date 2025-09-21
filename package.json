@@ -10,7 +10,8 @@
 		"package": "plasmo package",
 		"test": "jest",
 		"test:watch": "jest --watch",
-		"test:e2e": "playwright test"
+		"test:e2e": "playwright test",
+		"build:all": "plasmo build --target=chrome-mv3,firefox-mv3 && plasmo package"
 	},
 	"dependencies": {
 		"@emotion/cache": "11.11.0",
@@ -64,9 +65,14 @@
 		"host_permissions": [
 			"https://*/*"
 		],
+		"short_name": "WaniKanify",
+		"action": {
+			"default_title": "WaniKanify ReZero"
+		},
 		"browser_specific_settings": {
 			"gecko": {
-				"id": "5463b340-00a7-4cd1-b5d4-09503e6c2ac3"
+				"id": "5463b340-00a7-4cd1-b5d4-09503e6c2ac3",
+				"strict_min_version": "115.0"
 			}
 		}
 	}

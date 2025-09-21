@@ -14,3 +14,10 @@ export const HELP_TEXT = {
         'Reading is optional (for audio)'
     ]
 };
+
+// Soft cap on number of unique English terms (map entries) a user can define.
+// This protects browser sync storage quota (settings are synced) and keeps
+// replacement performance predictable. Typical users rarely exceed a few
+// hundred custom terms; 1000 provides generous headroom while remaining
+// well below risk thresholds.
+export const CUSTOM_VOCAB_MAX_ENTRIES = 1000;

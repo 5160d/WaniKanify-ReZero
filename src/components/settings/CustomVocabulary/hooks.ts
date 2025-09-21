@@ -8,6 +8,7 @@
 import { useCallback, useState } from "react";
 import type { CustomVocabularyMap } from "../types";
 import { parseCustomVocabulary } from './utils';
+import { CUSTOM_VOCAB_MAX_ENTRIES } from './constants';
 
 /**
  * Hook for parsing and validating custom vocabulary entries
@@ -38,7 +39,13 @@ export const useToCustomVocabularyMap = () => {
             return new Map();
         }
 
-        setError('');
+        // Enforce entry count soft limit
+        if (vocabularyMap.size > CUSTOM_VOCAB_MAX_ENTRIES) {
+            setError(`Too many entries: ${vocabularyMap.size} / ${CUSTOM_VOCAB_MAX_ENTRIES}`);
+        } else {
+            setError('');
+        }
+
         return vocabularyMap;
     }, []);
 

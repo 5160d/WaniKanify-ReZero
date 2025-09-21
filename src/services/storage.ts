@@ -12,7 +12,6 @@ export interface CompressedPayload<T> {
   compressed: string
   checksum: string
   updatedAt: string
-  metadata?: Record<string, unknown>
 }
 
 export interface StorageUsage {
@@ -123,7 +122,7 @@ export class ExtensionStorageService<T = Record<string, unknown>> {
     await this.storage.set(key, value)
   }
 
-  async saveCompressed(key: string, payload: T, version = 1, metadata?: Record<string, unknown>): Promise<void> {
+  async saveCompressed(key: string, payload: T, version = 1): Promise<void> {
     const serialized = JSON.stringify(payload)
     const compressed = await compress(serialized)
     const checksum = await hashString(serialized)
@@ -131,8 +130,7 @@ export class ExtensionStorageService<T = Record<string, unknown>> {
       version,
       compressed,
       checksum,
-      updatedAt: new Date().toISOString(),
-      metadata
+      updatedAt: new Date().toISOString()
     }
     await this.storage.set(key, record)
 
@@ -142,7 +140,7 @@ export class ExtensionStorageService<T = Record<string, unknown>> {
     }
   }
 
-  async loadCompressed(key: string): Promise<{ data: T; metadata?: Record<string, unknown> } | null> {
+  async loadCompressed(key: string): Promise<{ data: T } | null> {
     const record = await this.storage.get<CompressedPayload<T>>(key)
     if (!record) {
       return null
@@ -156,7 +154,7 @@ export class ExtensionStorageService<T = Record<string, unknown>> {
 
     const parsed: T = JSON.parse(decompressed)
     const migrated = await this.applyMigrations(parsed, record.version)
-    return { data: migrated.data, metadata: record.metadata }
+    return { data: migrated.data }
   }
 
   async getUsage(): Promise<StorageUsage> {
@@ -167,6 +165,24 @@ export class ExtensionStorageService<T = Record<string, unknown>> {
       bytes,
       quota: this.quotaBytes,
       percentage: Number(((bytes / this.quotaBytes) * 100).toFixed(2))
+    }
+  }
+
+  async remove(key: string): Promise<void> {
+    // provide a safe remove wrapper; if not supported silently ignore
+    try {
+      if (typeof this.storage.remove === 'function') {
+        await this.storage.remove(key)
+      } else if (typeof (this.storage as any).removeItem === 'function') {
+        await (this.storage as any).removeItem(key)
+      } else {
+        const all = await this.storage.getAll()
+        if (key in all) {
+          delete (all as any)[key]
+        }
+      }
+    } catch {
+      // swallow errors – cache clearing is best-effort
     }
   }
 

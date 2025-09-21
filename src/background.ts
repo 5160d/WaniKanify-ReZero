@@ -38,6 +38,7 @@ type BackgroundMessage =
   | { type: "wanikanify:refresh-vocabulary"; payload?: { force?: boolean } }
   | { type: "wanikanify:performance"; payload: { processedNodes: number; averageMs: number; longestMs?: number } }
   | { type: "wanikanify:refresh-imported-vocabulary" }
+  | { type: "wanikanify:clear-cache" }
 
 type BackgroundResponse =
   | { type: "wanikanify:state"; payload: ExtensionState }
@@ -103,9 +104,10 @@ class BackgroundController {
   })
 
   private vocabularyStorage = (() => {
+    // Store vocabulary cache only in local storage to avoid sync quota pressure.
     const service = new ExtensionStorageService<VocabularyCachePayload>({
-      area: isDev ? 'local' : 'sync',
-      quotaBytes: isDev ? 5_242_880 : 102_400,
+      area: 'local',
+      quotaBytes: 5_242_880,
       namespace: 'wanikanify-vocabulary'
     })
 
@@ -175,17 +177,6 @@ class BackgroundController {
 
     let cachedVocabulary = compressedVocabulary?.data
 
-    if (!cachedVocabulary) {
-      cachedVocabulary = await this.storage.get<VocabularyCachePayload>(VOCABULARY_STORAGE_KEY)
-      if (cachedVocabulary) {
-        await this.vocabularyStorage.saveCompressed(
-          VOCABULARY_STORAGE_KEY,
-          cachedVocabulary,
-          1,
-          { migratedFrom: 'legacy' }
-        )
-      }
-    }
 
     if (storedSettings) {
       this.settings = storedSettings
@@ -347,6 +338,9 @@ class BackgroundController {
         void this.refreshVocabulary(Boolean(message.payload?.force))
 
         return { type: "wanikanify:refresh-started" }
+      case "wanikanify:clear-cache":
+        await this.clearVocabularyCache()
+        return { type: 'wanikanify:state', payload: this.buildState() }
       case "wanikanify:performance":
         if (!this.settings.performanceTelemetry || !message.payload) {
           return
@@ -530,6 +524,14 @@ class BackgroundController {
       1
     )
     this.broadcast({ type: "wanikanify:state", payload: this.buildState() })
+  }
+
+  private async clearVocabularyCache(): Promise<void> {
+    this.vocabularyCache = null
+    await this.vocabularyStorage.remove(VOCABULARY_STORAGE_KEY)
+    // Attempt to remove any lingering sync key
+    try { chrome.storage.sync?.remove?.(VOCABULARY_STORAGE_KEY) } catch (_) { /* ignore */ }
+    this.broadcast({ type: 'wanikanify:state', payload: this.buildState() })
   }
 
   private scheduleRefreshAlarm(): void {

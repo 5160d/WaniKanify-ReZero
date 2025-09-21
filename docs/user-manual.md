@@ -45,7 +45,7 @@ If you encounter issues, consult `docs/troubleshooting.md` or open the browser c
 
 Soft caps keep sync storage usage and replacement performance predictable:
 
-- Custom Vocabulary: 1000 unique English entry groups (left side before first colon). Counter + error when exceeded.
+- Custom Vocabulary: 1000 unique English terms (after splitting comma-separated synonyms). Counter + error when exceeded.
 - Blacklisted Vocabulary: 1000 unique tokens (duplicates collapsed). Over limit shows an error and blocks saving until reduced.
 
 Duplicates are ignored in counting; e.g. `apple;apple;banana` counts as 2. Textareas still display all raw input so you can edit back below the cap.
