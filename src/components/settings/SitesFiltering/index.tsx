@@ -39,7 +39,7 @@ export const SitesFilteringTable: React.FC<ChangingProps<string[]>> = ({ value, 
                     title={
                         <WaniTooltip title="Filtered Websites">
                             <Typography variant="body2" sx={{ mb: 2 }}>
-                                Block WaniKanify on these websites.
+                                Block WaniKanify on these websites using Adblock Plus patterns.
                             </Typography>
                             <Box sx={{
                                 bgcolor: 'background.paper',
@@ -48,9 +48,17 @@ export const SitesFilteringTable: React.FC<ChangingProps<string[]>> = ({ value, 
                                 border: 1,
                                 borderColor: 'divider'
                             }}>
+                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                    <strong>Pattern types:</strong>
+                                </Typography>
+                                <Typography variant="body2" sx={{ mb: 0.5 }}>
+                                    • <code>||domain.com^</code> - Block domain and subdomains
+                                </Typography>
+                                <Typography variant="body2" sx={{ mb: 0.5 }}>
+                                    • <code>|http://exact-url.com/|</code> - Block exact URL only  
+                                </Typography>
                                 <Typography variant="body2">
-                                    Enter URL patterns using regular expressions.
-                                    WaniKanify will not run on matching sites.
+                                    • <code>/path/*/file^</code> - Block address parts with wildcards
                                 </Typography>
                             </Box>
                         </WaniTooltip>

@@ -4,7 +4,9 @@ import {
     FormControlLabel,
     Divider,
     RadioGroup,
-    Radio
+    Radio,
+    Slider,
+    Typography
 } from '@mui/material';
 import { BaseToggle } from '~src/components/common/toggles';
 import type { AudioMode, AudioToggleProps } from './types';
@@ -12,8 +14,10 @@ import type { AudioMode, AudioToggleProps } from './types';
 export const AudioToggle: React.FC<AudioToggleProps> = ({
     enabled,
     mode,
+    volume,
     onEnabledChange,
-    onModeChange
+    onModeChange,
+    onVolumeChange
 }) => {
     return (
         <Stack display="flex" direction="row" spacing={2} alignItems="center">
@@ -43,6 +47,21 @@ export const AudioToggle: React.FC<AudioToggleProps> = ({
                     label="Hover"
                 />
             </RadioGroup>
+            <Stack width={180} px={2} spacing={1} alignItems="flex-start">
+                <Typography variant="body2" color="text.secondary">
+                    Volume
+                </Typography>
+                <Slider
+                    size="small"
+                    value={Math.round(volume * 100)}
+                    disabled={!enabled}
+                    onChange={(_, value) => {
+                        const numericValue = Array.isArray(value) ? value[0] : value
+                        onVolumeChange(Math.max(0, Math.min(100, numericValue)) / 100)
+                    }}
+                    aria-label="Audio volume"
+                />
+            </Stack>
         </Stack>
     );
 };

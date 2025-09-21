@@ -13,7 +13,12 @@ import { WANIKANI_API_TOKEN_URL } from './constants';
 import type { ChangingProps } from 'src/components/common/types';
 
 
-export const APITokenField: React.FC<ChangingProps<string>> = ({ value, onChange }) => {
+interface APITokenFieldProps extends ChangingProps<string> {
+    error?: boolean;
+    helperText?: string;
+}
+
+export const APITokenField: React.FC<APITokenFieldProps> = ({ value, onChange, error = false, helperText }) => {
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newValue = e.target.value;
@@ -30,6 +35,8 @@ export const APITokenField: React.FC<ChangingProps<string>> = ({ value, onChange
                 fullWidth
                 value={value}
                 onChange={handleChange}
+                error={error}
+                helperText={helperText}
                 InputProps={{
                     endAdornment: (
                         <InputAdornment position="end" sx={{ mr: -1 }}>
