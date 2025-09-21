@@ -26,25 +26,12 @@
 
 
 /* Completely disable all pseudo-elements to prevent conflicts */
+/* Disable legacy pseudo-element tooltips (we use real DOM nodes now) */
 .wanikanify-replacement::before,
-.wanikanify-replacement::after {
-  display: none !important;
-  content: none !important;
-}
+.wanikanify-replacement::after { display: none !important; content: none !important; }
 
-/* Ensure tooltips don't get clipped by parent containers */
-.wanikanify-replacement {
-  position: relative;
-  z-index: 1;
-}
-
-/* Dynamic positioning using JavaScript-created elements instead of pseudo-elements */
-
-/* Hide pseudo-element tooltips - we'll use real DOM elements instead */
-.wanikanify-replacement::before,
-.wanikanify-replacement::after {
-  display: none !important;
-}
+/* Ensure replacement spans remain above page text when highlighting */
+.wanikanify-replacement { position: relative; z-index: 1; }
 
 /* Styles for dynamically created tooltip elements */
 .wanikanify-tooltip {

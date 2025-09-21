@@ -1,18 +1,17 @@
 const DISABLED_CLASS = "wanikanify-tooltips-disabled"
 const REPLACEMENT_CONTAINER_SELECTOR = "[data-wanikanify-container='true']"
 
-// Singleton tooltip pair + state
+// Singleton tooltip state
 let singletonEnglish: HTMLElement | null = null
 let singletonReading: HTMLElement | null = null
 let activeElement: HTMLElement | null = null
 let hideTimeout: number | null = null
-let showDelayTimeout: number | null = null // (will be deprecated by immediate show logic)
 let rafLock = false
-let contentFrozenForElement: HTMLElement | null = null
-let mutationObserver: MutationObserver | null = null
+// Minimal freeze & integrity guard (lightweight)
+let frozenForElement: HTMLElement | null = null
 let frozenEnglishValue: string | null = null
 let frozenReadingValue: string | null = null
-let verificationInterval: number | null = null
+let englishObserver: MutationObserver | null = null
 
 const toRootElement = (root: Document | Element | null): Element | null => {
   if (!root) {
@@ -54,26 +53,7 @@ export const toggleTooltipVisibility = (
   containers.forEach((element) => element.classList.add(DISABLED_CLASS))
 }
 
-// Debug function for testing tooltip positioning
-export const debugTooltipPositioning = () => {
-  const elements = document.querySelectorAll('.wanikanify-replacement')
-  console.log(`Found ${elements.length} replacement elements`)
-  elements.forEach((element, index) => {
-    console.log(`Element ${index}:`, {
-      element,
-      rect: element.getBoundingClientRect(),
-      original: element.getAttribute('data-wanikanify-original'),
-      reading: element.getAttribute('data-wanikanify-reading'),
-      classes: Array.from(element.classList)
-    })
-    positionTooltipsForElement(element as HTMLElement)
-  })
-}
-
-// Make it available globally for debugging
-if (typeof window !== 'undefined') {
-  ;(window as any).debugWaniKanifyTooltips = debugTooltipPositioning
-}
+// Debug utilities removed for production cleanup
 
 export const initializeTooltipPositioning = (root: Document | Element | null): void => {
   const rootElement = toRootElement(root)
@@ -88,8 +68,7 @@ export const initializeTooltipPositioning = (root: Document | Element | null): v
     if (!target?.classList?.contains('wanikanify-replacement')) return
     activeElement = target
     if (hideTimeout) { clearTimeout(hideTimeout); hideTimeout = null }
-    if (showDelayTimeout) { clearTimeout(showDelayTimeout); showDelayTimeout = null }
-    // Immediate scheduling without artificial delay
+    // Immediate scheduling
     if (rafLock) return
     rafLock = true
     requestAnimationFrame(() => { rafLock = false; updateAndShowSingletonTooltips(target) })
@@ -102,11 +81,14 @@ export const initializeTooltipPositioning = (root: Document | Element | null): v
       hideTimeout = window.setTimeout(() => {
         hideSingletonTooltips();
         activeElement = null
-        contentFrozenForElement = null
+        // Clear freeze state
+        frozenForElement = null
         frozenEnglishValue = null
         frozenReadingValue = null
-        disconnectMutationObserver()
-        stopVerificationLoop()
+        if (englishObserver) {
+          englishObserver.disconnect()
+          englishObserver = null
+        }
       }, 120)
     }
   }
@@ -153,42 +135,29 @@ function updateAndShowSingletonTooltips(element: HTMLElement) {
   if (!singletonEnglish || !singletonReading) return
   const englishAttr = element.getAttribute('data-wanikanify-original')?.trim() || ''
   const readingAttr = element.getAttribute('data-wanikanify-reading')?.trim() || ''
-  const isSameHover = contentFrozenForElement === element
-  const previousEnglish = singletonEnglish.textContent
-  const previousReading = singletonReading.textContent
-  const elementTextNow = element.textContent
-  const debugSnapshot = {
-    elementText: elementTextNow,
-    englishAttr: englishAttr,
-    readingAttr: readingAttr,
-    prevEnglish: previousEnglish,
-    prevReading: previousReading,
-    isSameHover
-  }
-  console.log('WaniKanify Tooltip Update Begin:', debugSnapshot)
   if (!englishAttr && !readingAttr) { hideSingletonTooltips(); return }
-  if (!isSameHover) {
+
+  const isNewHover = element !== frozenForElement
+  if (isNewHover) {
     singletonEnglish.textContent = englishAttr
     singletonReading.textContent = readingAttr
-    contentFrozenForElement = element
+    frozenForElement = element
     frozenEnglishValue = englishAttr
     frozenReadingValue = readingAttr
-    observeBothTooltips()
-    startVerificationLoop()
+    // Observe only the English tooltip (the critical one) for unexpected mutation
+    if (englishObserver) englishObserver.disconnect()
+    englishObserver = new MutationObserver(() => {
+      if (singletonEnglish && frozenEnglishValue !== null && singletonEnglish.textContent !== frozenEnglishValue) {
+        singletonEnglish.textContent = frozenEnglishValue
+      }
+    })
+    englishObserver.observe(singletonEnglish, { characterData: true, childList: true, subtree: true })
   } else {
-    // Verify integrity on reposition cycles
-    if (frozenEnglishValue !== null && singletonEnglish.textContent !== frozenEnglishValue) {
-      console.warn('WaniKanify English tooltip mismatch detected, restoring', { expected: frozenEnglishValue, actual: singletonEnglish.textContent })
-      singletonEnglish.textContent = frozenEnglishValue
-    }
-    if (frozenReadingValue !== null && singletonReading.textContent !== frozenReadingValue) {
-      console.warn('WaniKanify Reading tooltip mismatch detected, restoring', { expected: frozenReadingValue, actual: singletonReading.textContent })
-      singletonReading.textContent = frozenReadingValue
-    }
+    // Do not reassign text during same hover; only reposition.
   }
 
-  // Pre-measure
-  const prep = (el: HTMLElement) => { el.style.left = '-9999px'; el.style.top = '-9999px'; el.style.opacity = '0'; el.style.willChange = 'transform, left, top'; }
+  // Pre-measure hidden off-screen
+  const prep = (el: HTMLElement) => { el.style.left = '-9999px'; el.style.top = '-9999px'; el.style.opacity = '0'; }
   if (englishAttr) prep(singletonEnglish)
   if (readingAttr) prep(singletonReading)
 
@@ -251,7 +220,7 @@ function updateAndShowSingletonTooltips(element: HTMLElement) {
       singletonReading.style.left = `${leftR}px`; singletonReading.style.top = `${topR}px`; singletonReading.style.opacity = '1'
     } else singletonReading.style.opacity = '0'
   }
-  console.log('WaniKanify Singleton Layout:', { layout, english: englishAttr, reading: readingAttr, engOpacity: singletonEnglish.style.opacity, readOpacity: singletonReading.style.opacity })
+  // Layout complete; no debug logging in production
 }
 
 function hideSingletonTooltips() {
@@ -259,59 +228,6 @@ function hideSingletonTooltips() {
   if (singletonReading) singletonReading.style.opacity = '0'
 }
 
-function observeBothTooltips() {
-  disconnectMutationObserver()
-  if (!singletonEnglish || !singletonReading) return
-  mutationObserver = new MutationObserver(() => {
-    if (singletonEnglish && frozenEnglishValue !== null && singletonEnglish.textContent !== frozenEnglishValue) {
-      console.warn('WaniKanify MutationObserver restoring english', { expected: frozenEnglishValue, actual: singletonEnglish.textContent })
-      singletonEnglish.textContent = frozenEnglishValue
-    }
-    if (singletonReading && frozenReadingValue !== null && singletonReading.textContent !== frozenReadingValue) {
-      console.warn('WaniKanify MutationObserver restoring reading', { expected: frozenReadingValue, actual: singletonReading.textContent })
-      singletonReading.textContent = frozenReadingValue
-    }
-  })
-  mutationObserver.observe(singletonEnglish, { characterData: true, childList: true, subtree: true })
-  mutationObserver.observe(singletonReading, { characterData: true, childList: true, subtree: true })
-}
+// Removed mutation observer & verification loop (no longer needed after stabilization)
 
-function startVerificationLoop() {
-  if (verificationInterval) return
-  verificationInterval = window.setInterval(() => {
-    if (!activeElement) { stopVerificationLoop(); return }
-    if (singletonEnglish && frozenEnglishValue !== null && singletonEnglish.textContent !== frozenEnglishValue) {
-      console.warn('WaniKanify Interval restore english', { expected: frozenEnglishValue, actual: singletonEnglish.textContent })
-      singletonEnglish.textContent = frozenEnglishValue
-    }
-    if (singletonReading && frozenReadingValue !== null && singletonReading.textContent !== frozenReadingValue) {
-      console.warn('WaniKanify Interval restore reading', { expected: frozenReadingValue, actual: singletonReading.textContent })
-      singletonReading.textContent = frozenReadingValue
-    }
-  }, 120)
-}
-
-function stopVerificationLoop() {
-  if (verificationInterval) {
-    clearInterval(verificationInterval)
-    verificationInterval = null
-  }
-}
-
-function disconnectMutationObserver() {
-  if (mutationObserver) {
-    mutationObserver.disconnect()
-    mutationObserver = null
-  }
-}
-
-// Legacy function retained for compatibility (no-op under singleton system)
-const createOrUpdateTooltip = () => null
-
-// Legacy single-tooltip positioning removed; unified logic above handles both tooltips together.
-const positionTooltip = () => { /* no-op (singleton handles positioning) */ }
-
-const showTooltipsForElement = () => { /* no-op */ }
-const hideTooltipsForElement = () => { /* no-op */ }
-
-const cleanupTooltipsForElement = () => { /* no-op */ }
+// Removed legacy no-op exports
