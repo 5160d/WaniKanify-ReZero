@@ -61,11 +61,9 @@ Refer to the individual service files for deeper details.
 
 ## Custom / Blacklist Data Constraints
 
-Soft caps guard against excessive sync storage consumption and large automaton build times:
+Soft caps guard against excessive sync storage consumption:
 
 | List | Representation | De-duplication | Soft Cap | Notes |
 |------|----------------|----------------|----------|-------|
-| Custom Vocabulary | Map<english, { japanese, reading? }> | English keys unique; multiple synonyms per Japanese term serialize back into comma groups | 1000 unique English keys | Keeps trie size and compile latency stable |
+| Custom Vocabulary | Map<english, { japanese, reading? }> | English keys unique; multiple synonyms per Japanese term serialize back into comma groups | 1000 unique English keys | Keeps trie size stable |
 | Blacklisted Vocabulary | Set<string> | Automatic via Set | 1000 unique tokens | Fast membership tests & bounded memory |
-
-Validation occurs in the options UI; exceeding a limit produces an inline error and prevents saving. Future telemetry may justify higher thresholds.
