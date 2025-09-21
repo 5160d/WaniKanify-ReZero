@@ -106,7 +106,7 @@ All production bundles are tree‑shaken and minified by Plasmo. No manual manif
 
 ### Generating Marketing Assets
 
-Generate professional screenshots and promotional images for store listings:
+Generate screenshots and promotional images for store listings:
 
 ```bash
 # Quick generation (PowerShell)
