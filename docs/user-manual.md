@@ -26,6 +26,12 @@ This preview does not require a saved API token—custom vocabulary and numbers 
 2. Add the sheet ID, tab name, and column headers in the import table.
 3. Press "Import" to fetch vocabulary. Progress and warnings appear inline; history records can be restored or deleted later.
 
+## Vocabulary refresh cadence
+- The extension refreshes WaniKani vocabulary automatically every 6 hours (Chrome alarms based) with a small initial delay after install/startup.
+- Each successful refresh sets a 6‑hour TTL; if a refresh fails, a temporary 5‑minute error cache is stored so a retry can occur sooner.
+- Changing your API token or clearing the cache forces the next access to perform a fresh fetch immediately.
+- Typical delay before newly added WaniKani words appear: average ~3 hours, worst case <6 hours unless you manually clear the cache.
+
 ## Audio playback
 - Enable audio in the Behavior tab and choose click or hover playback.
 - Playback respects per-site overrides and the audio volume slider.
@@ -34,3 +40,12 @@ This preview does not require a saved API token—custom vocabulary and numbers 
 
 ## Support
 If you encounter issues, consult `docs/troubleshooting.md` or open the browser console to review logs from the background worker and content script.
+
+## Custom & Blacklisted Vocabulary Limits
+
+Soft caps keep sync storage usage and replacement performance predictable:
+
+- Custom Vocabulary: 1000 unique English entry groups (left side before first colon). Counter + error when exceeded.
+- Blacklisted Vocabulary: 1000 unique tokens (duplicates collapsed). Over limit shows an error and blocks saving until reduced.
+
+Duplicates are ignored in counting; e.g. `apple;apple;banana` counts as 2. Textareas still display all raw input so you can edit back below the cap.

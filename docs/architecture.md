@@ -8,6 +8,7 @@ WaniKanify ReZero follows a standard Chrome MV3 architecture built on top of the
   - Manages WaniKani API interactions, vocabulary caching, spreadsheet imports, and settings synchronisation.
   - Uses `ExtensionStorageService` for compressed storage and listens for storage changes to refresh vocabulary.
   - Broadcasts state (settings, cache, performance metrics) to interested clients.
+  - Schedules a periodic vocabulary refresh alarm every 6 hours (1‑minute initial delay) and also refreshes immediately when the API token changes or the existing cache is expired/missing. Manual cache clearing triggers a rebuild on next access.
 
 - **Content script (`src/content.ts`)**
   - Loads user settings, site overrides, and vocabulary from the background worker.
@@ -36,6 +37,19 @@ WaniKanify ReZero follows a standard Chrome MV3 architecture built on top of the
 2. **Content script** loads settings + vocabulary, applies filters via `SiteFilter`, and uses `TextReplacementEngine` to modify the DOM.
 3. When settings change, both background and content scripts respond via storage listeners to update their local state.
 4. The popup and options UI interact with the background worker through `chrome.runtime.sendMessage` (e.g., fetching state, requesting refreshes).
+5. A Chrome alarms entry (`wanikanify:vocabulary-refresh`) fires every 6 hours; on trigger the background checks the current cache TTL and only performs a network fetch if the stored `expiresAt` has passed.
+
+### Vocabulary cache lifecycle
+
+| Event | Action | Resulting TTL |
+|-------|--------|---------------|
+| Install / Update / Browser startup | Alarm scheduled (first run after 1 min) | 6h period maintained |
+| Successful refresh | Cache stored with `expiresAt = now + 6h` | 6h |
+| Network/API error | Error cache stored with `expiresAt = now + 5m` | 5m (retry sooner) |
+| API token changed | Forced refresh bypassing TTL | 6h from success |
+| Manual Clear Cache button | Cache removed; next usage forces refresh (if token present) | 6h from next success |
+
+Worst‑case latency for newly released WaniKani vocabulary to appear (without manual actions) is just under 6 hours; average expected latency ~3 hours. Users wanting faster updates can clear the cache or (future enhancement) click a manual Refresh button.
 
 ## Performance considerations
 
@@ -44,3 +58,14 @@ WaniKanify ReZero follows a standard Chrome MV3 architecture built on top of the
 - Spreadsheet imports run off the main UI thread and store aggregated results for reuse.
 
 Refer to the individual service files for deeper details.
+
+## Custom / Blacklist Data Constraints
+
+Soft caps guard against excessive sync storage consumption and large automaton build times:
+
+| List | Representation | De-duplication | Soft Cap | Notes |
+|------|----------------|----------------|----------|-------|
+| Custom Vocabulary | Map<english, { japanese, reading? }> | English keys unique; multiple synonyms per Japanese term serialize back into comma groups | 1000 unique English keys | Keeps trie size and compile latency stable |
+| Blacklisted Vocabulary | Set<string> | Automatic via Set | 1000 unique tokens | Fast membership tests & bounded memory |
+
+Validation occurs in the options UI; exceeding a limit produces an inline error and prevents saving. Future telemetry may justify higher thresholds.
