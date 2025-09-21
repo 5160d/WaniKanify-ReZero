@@ -23,6 +23,7 @@ import {
 } from "~src/services/spreadsheetImport"
 import { ExtensionStorageService } from "~src/services/storage"
 import { log } from '~src/utils/log'
+import { computeMaxUpdatedAt } from '~src/services/wanikani/computeMaxUpdatedAt'
 
 const structuredCloneSafe = <T>(value: T): T => {
   if (typeof structuredClone === "function") {
@@ -301,11 +302,11 @@ class BackgroundController {
   }
 
   private async ensureInitialVocabulary(): Promise<void> {
-    if (isCacheValid(this.vocabularyCache)) {
+    if (!this.settings.apiToken) {
       return
     }
-
-    if (!this.settings.apiToken) {
+    
+    if (isCacheValid(this.vocabularyCache)) {
       return
     }
 
@@ -391,11 +392,53 @@ class BackgroundController {
 
     try {
       this.client.setToken(this.settings.apiToken ?? "")
+      // Decide whether to perform full or incremental subject fetch
+      const canIncremental = Boolean(this.vocabularyCache?.wanikaniSubjects?.length) && !this.vocabularyCache?.error
+      let subjects: WaniKaniSubject[] = []
+      let incremental = false
+      let lastSubjectsUpdatedAt = this.vocabularyCache?.lastSubjectsUpdatedAt
 
-      const [subjects, assignments] = await Promise.all([
-        this.fetchVocabularySubjects(),
-        this.fetchAssignments()
-      ])
+      if (!canIncremental) {
+        // Full fetch baseline
+        subjects = await this.fetchVocabularySubjects()
+        lastSubjectsUpdatedAt = computeMaxUpdatedAt(subjects)
+      } else {
+        // Use stored timestamp or derive from cached subjects if absent
+        const baselineTimestamp = lastSubjectsUpdatedAt || computeMaxUpdatedAt(this.vocabularyCache!.wanikaniSubjects)
+        const updatedSubjects = await this.fetchVocabularySubjects({ updated_after: baselineTimestamp })
+        if (updatedSubjects.length === 0) {
+          subjects = this.vocabularyCache!.wanikaniSubjects
+          lastSubjectsUpdatedAt = baselineTimestamp
+        } else {
+          incremental = true
+          // Merge by id (replace on conflict)
+          const map = new Map<number, WaniKaniSubject>()
+          this.vocabularyCache!.wanikaniSubjects.forEach((s) => map.set(s.id, s))
+            
+          updatedSubjects.forEach((s) => map.set(s.id, s))
+          subjects = Array.from(map.values())
+          const newlyUpdatedMax = computeMaxUpdatedAt(updatedSubjects)
+          if (!baselineTimestamp) {
+            lastSubjectsUpdatedAt = newlyUpdatedMax
+          } else if (!newlyUpdatedMax) {
+            lastSubjectsUpdatedAt = baselineTimestamp
+          } else {
+            const prevMillis = Date.parse(baselineTimestamp)
+            const newMillis = Date.parse(newlyUpdatedMax)
+            if (newMillis > prevMillis) {
+              lastSubjectsUpdatedAt = newlyUpdatedMax
+            } else if (newMillis < prevMillis) {
+              lastSubjectsUpdatedAt = baselineTimestamp
+            } else {
+              // Same millisecond; keep lexicographically larger (likely higher fractional precision)
+              lastSubjectsUpdatedAt = newlyUpdatedMax > baselineTimestamp ? newlyUpdatedMax : baselineTimestamp
+            }
+          }
+        }
+      }
+
+      // Always fetch assignments fully (no updated_after supported), we may optimize later.
+      const assignments = await this.fetchAssignments()
 
       this.vocabularyManager.updateSettings(this.settings)
       this.vocabularyManager.updateWaniKaniData(subjects, assignments)
@@ -406,7 +449,8 @@ class BackgroundController {
         assignments,
         vocabularyEntries: this.vocabularyManager
           .build()
-          .entries
+          .entries,
+        lastSubjectsUpdatedAt
       }
 
       this.vocabularyCache = cache
@@ -442,9 +486,9 @@ class BackgroundController {
     }
   }
 
-  private async fetchVocabularySubjects(): Promise<WaniKaniSubject[]> {
+  private async fetchVocabularySubjects(params: Record<string, string | undefined> = {}): Promise<WaniKaniSubject[]> {
     try {
-      return await this.client.fetchAllVocabularySubjects()
+      return await this.client.fetchAllVocabularySubjects(params)
     } catch (error) {
       throw error
     }
@@ -602,6 +646,17 @@ class BackgroundController {
   hasValidToken(): boolean {
     return Boolean(this.settings.apiToken)
   }
+
+  // Test helper (non-production usage ok while extension not live)
+  public __getVocabularyCacheForTest(): VocabularyCachePayload | null {
+    // Expose internal cache only when running under test or non-production builds.
+    // In production builds this returns null to avoid leaking internal state.
+    const env = (process.env.NODE_ENV || 'production').toLowerCase()
+    if (env === 'test' || env === 'development') {
+      return this.vocabularyCache
+    }
+    return null
+  }
 }
 
 const controller = new BackgroundController()
@@ -629,7 +684,18 @@ chrome.action.onClicked.addListener(async (tab) => {
   })
 })
 
-export {}
+// Utility to compute max updated timestamp among subjects
+const computeMaxUpdatedAt = (subjects: WaniKaniSubject[] | undefined): string | undefined => {
+  if (!subjects || !subjects.length) return undefined
+  let max = 0
+  subjects.forEach(s => {
+    const ts = new Date(s.data_updated_at).getTime()
+    if (ts > max) max = ts
+  })
+  return max ? new Date(max).toISOString() : undefined
+}
+
+export { controller }
 
 
 

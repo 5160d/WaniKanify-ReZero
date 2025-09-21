@@ -154,6 +154,52 @@ This is a [Plasmo](https://docs.plasmo.com/) extension project with the followin
 - `docs/store-listing.md` – draft Chrome Web Store listing copy.
 - `docs/privacy-policy.md` – privacy policy draft for store submission.
 
+### Testing (Unit vs Live API)
+
+The default Jest test suite uses mocked network requests and does NOT contact the real WaniKani API.
+
+Optional live API smoke/incremental tests are provided under `__tests__/services/*live*.test.ts`. These are disabled by default and only run when you explicitly opt in.
+
+Run them sparingly – they make real HTTPS requests to the official WaniKani API and therefore:
+* Count against your personal rate limits (the client spaces requests but repeated runs still add up)
+* Depend on your account's data (subjects, assignments) and may have variable timing
+* Are slower (network + pagination)
+
+Enable live tests by setting two environment variables:
+
+PowerShell (Windows):
+```powershell
+$env:WK_LIVE = '1'; $env:WANIKANI_API_TOKEN = '<your-token>'; npm test -- -- wanikani.live.test.ts
+```
+
+Unix shells:
+```bash
+WK_LIVE=1 WANIKANI_API_TOKEN=<your-token> npm test -- wanikani.live.test.ts
+```
+
+Available live test files:
+* `wanikani.live.test.ts` – basic subjects + assignments smoke
+* `wanikani.incremental.live.test.ts` – incremental `updated_after` behavior and diagnostics
+* `background.live.test.ts` – simplified end‑to‑end vocabulary refresh simulation
+
+You can pass multiple file names after `--` to run more than one. Avoid running the full live suite repeatedly; once per development session is usually sufficient.
+
+To silence a noisy (non-fatal) React Testing Library deprecation warning about `ReactDOMTestUtils.act`, you may set:
+
+```powershell
+$env:SUPPRESS_ACT_WARNING='1'; npm test
+```
+
+### Environment Variables
+
+| Variable | Purpose | Default Behavior |
+|----------|---------|------------------|
+| `WK_LIVE` | When set to `1`, enables live WaniKani API tests. | Disabled (tests skipped) |
+| `WANIKANI_API_TOKEN` | Personal access token used by live tests and (optionally) manual scripts. | Not required for unit tests |
+| `SUPPRESS_ACT_WARNING` | When `1`, suppresses deprecated `ReactDOMTestUtils.act` console warnings during tests. | Warnings shown |
+
+Never commit your WaniKani API token. Prefer setting it in a temporary shell session or using a local `.env` file excluded by `.gitignore` (if added).
+
 ## Technology Stack
 
 - **Framework**: [Plasmo](https://docs.plasmo.com/) - Modern browser extension framework

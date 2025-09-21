@@ -3,11 +3,13 @@ import { WaniKaniClient } from '~src/services/wanikani'
 describe('WaniKaniClient', () => {
   const token = 'fake-token'
   let client: WaniKaniClient
+  let originalFetch: any
 
   beforeEach(() => {
+    originalFetch = global.fetch
+    global.fetch = jest.fn()
     client = new WaniKaniClient({ token, cacheTtlMs: 1000 })
-    const fetchMock = global.fetch as jest.Mock
-    fetchMock.mockResolvedValue({
+    ;(global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => ({
         data: [],
@@ -21,8 +23,10 @@ describe('WaniKaniClient', () => {
   })
 
   afterEach(() => {
-    const fetchMock = global.fetch as jest.Mock
-    fetchMock.mockReset()
+    if ((global.fetch as any)?.mockReset) {
+      try { (global.fetch as jest.Mock).mockReset() } catch (_) {}
+    }
+    global.fetch = originalFetch
   })
 
   it('throws when token is missing', async () => {

@@ -1,6 +1,5 @@
 /** @jest-environment jsdom */
-import { render } from '@testing-library/react'
-import { act } from 'react'
+import { render, screen } from '@testing-library/react'
 import React from 'react'
 
 import SettingsPreview from '~src/components/settings/Preview'
@@ -14,21 +13,19 @@ const buildForm = () => {
   return form
 }
 
-const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
+// Using findBy* queries will internally handle act; no manual flush needed.
 
 describe('SettingsPreview', () => {
   it('renders preview with Japanese replacement and data attributes', async () => {
     const form = buildForm()
     let container: HTMLElement
-    await act(async () => {
-      ;({ container } = render(<SettingsPreview settingsForm={form} />))
-      await flush()
-    })
-    // Look for Japanese replacement 狐 and its tooltip data attribute
-    const text = container.textContent || ''
-    expect(text).toContain('狐')
-    const span = container.querySelector('span.wanikanify-replacement[data-wanikanify-original="fox"]')
-    expect(span).not.toBeNull()
-    expect(span?.getAttribute('data-wanikanify-reading')).toBe('きつね')
+    render(<SettingsPreview settingsForm={form} />)
+    // Use findBy to wait for the span to appear
+    const span = await screen.findByText('狐')
+    expect(span).toBeInTheDocument()
+    const replacement = span.closest('span.wanikanify-replacement') as HTMLElement | null
+    expect(replacement).not.toBeNull()
+    expect(replacement?.getAttribute('data-wanikanify-original')).toBe('fox')
+    expect(replacement?.getAttribute('data-wanikanify-reading')).toBe('きつね')
   })
 })

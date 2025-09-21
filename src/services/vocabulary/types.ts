@@ -21,5 +21,7 @@ export type VocabularyCachePayload = {
   wanikaniSubjects: WaniKaniSubject[]
   assignments: WaniKaniAssignment[]
   vocabularyEntries: VocabularyEntry[]
+  // Highest data_updated_at among wanikaniSubjects at time of caching.
+  lastSubjectsUpdatedAt?: string
   error?: string
 }

@@ -68,4 +68,40 @@ plasmo package
 
 ## Environment Variables
 
-- `WANIKANIFY_API_TOKEN` - optional token used during manual testing to avoid re-entering credentials
+These can be set ad-hoc in your shell before running commands. Do not commit secrets.
+
+| Name | Purpose | When to Use | Default |
+|------|---------|------------|---------|
+| `WANIKANI_API_TOKEN` | Personal WaniKani API token used by the extension at runtime (entered in UI) and by optional live tests. | Supplying live tests or prefilling dev environment. | Not required for unit tests. |
+| `WK_LIVE` | Enables live API Jest tests (`*live*.test.ts`). | When you want to verify real network integration (sparingly). | Off (tests skipped). |
+| `SUPPRESS_ACT_WARNING` | Suppresses deprecated `ReactDOMTestUtils.act` console warnings in Jest output. | If warning noise obscures failures. | Off (warnings visible). |
+
+### Running Live Tests (Use Sparingly)
+
+Live tests make real HTTPS calls to the WaniKani API and therefore consume your personal rate limit quota. They are intentionally opt‑in.
+
+PowerShell example:
+```powershell
+$env:WK_LIVE='1'; $env:WANIKANI_API_TOKEN='<your-token>'; npm test -- -- wanikani.live.test.ts
+```
+
+Bash/Zsh example:
+```bash
+WK_LIVE=1 WANIKANI_API_TOKEN=<your-token> npm test -- wanikani.live.test.ts
+```
+
+Common live test files:
+* `wanikani.live.test.ts` – smoke: fetch subjects + assignments
+* `wanikani.incremental.live.test.ts` – validates `updated_after` incremental fetch merging
+* `background.live.test.ts` – minimal background refresh simulation
+
+Guidelines:
+* Run no more than occasionally (e.g. before a release) unless actively debugging API behavior.
+* Avoid parallelizing multiple live test runs; let one finish to stay within rate limits.
+* If you see duplicate IDs in incremental logs, this is expected due to API inclusivity at the boundary timestamp and is handled by merge logic.
+
+To suppress the non-fatal React Testing Library act deprecation warning during local runs:
+```powershell
+$env:SUPPRESS_ACT_WARNING='1'; npm test
+```
+Leave it unset in CI if you prefer visibility.

@@ -15,18 +15,22 @@ describe('spreadsheetImport', () => {
 cat,猫,ねこ
 dog,犬,いぬ`
 
+  let originalFetch: any
+
   beforeEach(() => {
-    const fetchMock = global.fetch as jest.Mock
-    fetchMock.mockResolvedValue({
+    originalFetch = global.fetch
+    global.fetch = jest.fn()
+    ;(global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       text: async () => csvContent
     })
   })
 
   afterEach(async () => {
-    const fetchMock = global.fetch as jest.Mock
-    fetchMock.mockReset()
-
+    if ((global.fetch as any)?.mockReset) {
+      try { (global.fetch as jest.Mock).mockReset() } catch (_) {}
+    }
+    global.fetch = originalFetch
     const history = await getImportHistory()
     for (const entry of history) {
       await deleteHistoryEntry(entry.id)

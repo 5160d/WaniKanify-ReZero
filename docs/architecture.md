@@ -39,6 +39,10 @@ WaniKanify ReZero follows a standard Chrome MV3 architecture built on top of the
 4. The popup and options UI interact with the background worker through `chrome.runtime.sendMessage` (e.g., fetching state, requesting refreshes).
 5. A Chrome alarms entry (`wanikanify:vocabulary-refresh`) fires every 6 hours; on trigger the background checks the current cache TTL and only performs a network fetch if the stored `expiresAt` has passed.
 
+#### Incremental subject synchronization
+
+The background script records `lastSubjectsUpdatedAt` (max `data_updated_at` among cached WaniKani vocabulary subjects). On subsequent refresh cycles, it calls the WaniKani `/subjects` endpoint with `updated_after=<lastSubjectsUpdatedAt>` to fetch only changed or newly added vocabulary subjects. Returned subjects are merged (replacing entries with the same `id`) and the timestamp is advanced. If no cache exists (first run or after a manual clear) a full fetch seeds the baseline. Assignments are fetched fully (endpoint does not support `updated_after`). This approach aligns with WaniKani API best practices by minimizing redundant data transfer and reducing rate‑limit pressure.
+
 ### Vocabulary cache lifecycle
 
 | Event | Action | Resulting TTL |
