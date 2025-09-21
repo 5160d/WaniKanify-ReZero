@@ -44,6 +44,9 @@ npx playwright install
 ## Manual Testing for Other Browsers
 
 For Firefox, Edge, and Safari compatibility validation:
-1. Build the extension: `npm run build`
-2. Load the appropriate build (`firefox-mv3-prod`, `chrome-mv3-prod`) manually in each browser
-3. Test core functionality: options page, popup, content processing on various websites
+1. Build the extension: `npm run build:all` (recommended) or `npm run build` for a single Chrome-target build
+2. Load the appropriate unpacked folder:
+	- Chrome/Edge: `build/chrome-mv3-prod/`
+	- Firefox: `build/firefox-mv3-prod/`
+3. (Optional) Use the packaged zips (`chrome-mv3-prod.zip`, `firefox-mv3-prod.zip`) for store submission tests
+4. Test core functionality: options page, popup, content processing on various websites

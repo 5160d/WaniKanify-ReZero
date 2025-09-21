@@ -7,7 +7,7 @@ Prerequisites:
 Setup steps:
 1. Clone the repository.
 2. Install dependencies with `npm install` (or `pnpm install`).
-3. Run `npm run dev` to start the development server or `npm run build` to create a production bundle.
+3. Run `npm run dev` to start the development server. For production artifacts use `npm run build:all` (recommended) which builds & packages Chrome + Firefox bundles.
 4. Execute `npm test` for unit tests. For Playwright end-to-end tests, run `npx playwright install` once and then `npm run test:e2e`.
 5. To reset extension data during development, clear the `WaniSettings` key via the browser extension storage inspector.
 
@@ -23,8 +23,9 @@ Setup steps:
 
 ### Development Commands
 - `npm run dev` - start Plasmo in watch mode
-- `npm run build` - create production bundles in `build/`  
-- `npm run package` - produce store-ready archives in `build/`
+- `npm run build:all` - create Chrome + Firefox production directories and ZIP archives
+- `npm run build` - build only (current default target: chrome-mv3)
+- `npm run package` - package whatever targets were last built
 
 ## Test Coverage
 
@@ -38,14 +39,32 @@ The project uses Playwright extension tests:
 
 ## Packaging for release
 
-### Chrome / Edge (Chromium)
-1. Run `npm run package`.
-2. Upload the generated `build/chrome-mv3-prod.zip` to the Chrome Web Store.
-3. Reuse the same ZIP for Microsoft Edge (rename the file if you prefer to keep a separate copy).
+### Recommended (all targets in one step)
+1. Run `npm run build:all`.
+2. Artifacts produced in `build/`:
+	- `chrome-mv3-prod/` + `chrome-mv3-prod.zip`
+	- `firefox-mv3-prod/` + `firefox-mv3-prod.zip`
+3. Upload:
+	- Chrome Web Store / Edge Add-ons: `chrome-mv3-prod.zip`
+	- Firefox AMO: `firefox-mv3-prod.zip`
 
-### Firefox
-1. Build the Firefox bundle: `plasmo build --zip --target=firefox-mv3`.
-3. Submit the resulting ZIP to AMO.
+### Advanced / single target
+If you only need Chrome/Edge:
+```bash
+npm run build
+npm run package
+```
+For Firefox only:
+```bash
+plasmo build --target=firefox-mv3
+plasmo package
+```
+Or specify multiple targets manually:
+```bash
+plasmo build --target=chrome-mv3,firefox-mv3
+plasmo package
+```
+`npm run build:all` is a convenience wrapper for the multi-target build + package sequence.
 
 ## Environment Variables
 
