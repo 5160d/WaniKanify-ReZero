@@ -45,3 +45,4 @@ keys.json
 # vscode
 .vscode
 package-lock.json
+test-results/*
