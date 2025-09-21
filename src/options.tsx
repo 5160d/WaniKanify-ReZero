@@ -370,9 +370,6 @@ export default function Options(): ReactElement {
 
                 {section === 'Debug' && (
                   <>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Enable telemetry to log matcher timing details to your local console for troubleshooting. No data leaves the browser.
-                    </Typography>
                     <PerformanceTelemetryToggle
                       value={settingsForm.performanceTelemetry}
                       onChange={(newValue) => updateSettingsForm({ performanceTelemetry: newValue })}
