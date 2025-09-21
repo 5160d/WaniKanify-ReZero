@@ -1,5 +1,5 @@
 // External Libraries
-import React, { useCallback, useEffect, useState, type ReactElement } from "react";
+import React, { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 import { GitHub, HelpOutline } from "@mui/icons-material";
 import {
   Box,
@@ -16,11 +16,24 @@ import { ThemeProvider } from '@mui/material/styles';
 
 // Components
 import {
-  APITokenField, AutoRunToggle, AudioToggle,
-  ClearCacheButton, CustomVocabularyTextArea, DEFAULT_SETTINGS_FORM_ERRORS, NumbersReplacementToggle,
-  SaveButton, SRSCheckboxes, SitesFilteringTable, SpreadsheetImportTable,
-  useWaniSettings, VocabularyBlacklistTextArea,
+  APITokenField,
+  AutoRunToggle,
+  AudioToggle,
+  ClearCacheButton,
+  CustomVocabularyTextArea,
+  DEFAULT_SETTINGS_FORM_ERRORS,
+  NumbersReplacementToggle,
+  SaveButton,
+  SRSCheckboxes,
+  SitesFilteringTable,
+  SpreadsheetImportTable,
+  TooltipsToggle,
+  PerformanceTelemetryToggle,
+  useWaniSettings,
+  VocabularyBlacklistTextArea
 } from "src/components/settings";
+import SettingsTools from "~src/components/settings/SettingsTools";
+import SettingsPreview from "~src/components/settings/Preview";
 
 // Hooks and Utils
 import { useSystemTheme } from "~src/hooks";
@@ -142,19 +155,39 @@ const Footer: React.FC<FooterProps> = ({ githubUrl }) => (
 
 export default function Options(): ReactElement {
   const mode = useSystemTheme();
-  const { settingsForm, updateSettingsForm, saveToStorage, isDirty, saveStatus } = useWaniSettings();
-  const [errors, setErrors] = useState(DEFAULT_SETTINGS_FORM_ERRORS);
+  const {
+    settingsForm,
+    updateSettingsForm,
+    saveToStorage,
+    resetToDefaults,
+    applyImportedSettings,
+    forceSyncFromCloud,
+    isDirty,
+    saveStatus
+  } = useWaniSettings();
+  const [errors, setErrors] = useState({ ...DEFAULT_SETTINGS_FORM_ERRORS });
+  const hasErrors = useMemo(() => Object.values(errors).some(Boolean), [errors]);
+  const sections = ['General', 'Behavior', 'Vocabulary', 'Tools', 'Debug'] as const;
 
   // Reset errors when form is clean
   useEffect(() => {
-    if(!isDirty) {
-      setErrors(DEFAULT_SETTINGS_FORM_ERRORS);
+    if (!isDirty) {
+      setErrors({ ...DEFAULT_SETTINGS_FORM_ERRORS });
     }
     return () => {
       // Cleanup errors when component unmounts
-      setErrors(DEFAULT_SETTINGS_FORM_ERRORS);
+      setErrors({ ...DEFAULT_SETTINGS_FORM_ERRORS });
     };
-  }, [isDirty, setErrors, DEFAULT_SETTINGS_FORM_ERRORS]);
+  }, [isDirty, setErrors]);
+
+  useEffect(() => {
+    const rawToken = settingsForm.apiToken?.trim() ?? "";
+    const tokenPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    const hasTokenError = rawToken.length > 0 && !tokenPattern.test(rawToken);
+
+    setErrors((prev) => (prev.apiToken === hasTokenError ? prev : { ...prev, apiToken: hasTokenError }));
+  }, [settingsForm.apiToken]);
 
   // Use useCallback for event handlers
   const handleSave = useCallback(() => {
@@ -171,7 +204,7 @@ export default function Options(): ReactElement {
         <Header logo={waniLogo} />
         <Box p={4} sx={{ maxWidth: 1200, mx: 'auto' }}>
           {/* Sections */}
-          {['General', 'Behavior', 'Vocabulary'].map((section, index) => (
+          {sections.map((section, index) => (
             <Card key={section} sx={{ mb: 4 }}>
               <CardContent>
                 {section === 'Vocabulary' ? (
@@ -256,6 +289,8 @@ export default function Options(): ReactElement {
                       <APITokenField
                         value={settingsForm.apiToken}
                         onChange={(newValue) => updateSettingsForm({ apiToken: newValue })}
+                        error={errors.apiToken}
+                        helperText={errors.apiToken ? 'Token should match XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX format' : ''}
                       />
                     </Box>
                     <Box mt={3}>
@@ -273,14 +308,23 @@ export default function Options(): ReactElement {
                     <AudioToggle
                       enabled={settingsForm.audio.enabled}
                       mode={settingsForm.audio.mode}
+                      volume={settingsForm.audio.volume}
                       onEnabledChange={(enabled) => updateSettingsForm({ audio: { ...settingsForm.audio, enabled } })}
                       onModeChange={(mode) => updateSettingsForm({ audio: { ...settingsForm.audio, mode } })}
+                      onVolumeChange={(volume) => updateSettingsForm({ audio: { ...settingsForm.audio, volume } })}
+                    />
+                    <TooltipsToggle
+                      value={settingsForm.showReplacementTooltips}
+                      onChange={(newValue) => updateSettingsForm({ showReplacementTooltips: newValue })}
                     />
                     <Box mt={3} width="50%">
                       <SitesFilteringTable
                         value={settingsForm.sitesFiltering}
                         onChange={(newValue) => updateSettingsForm({ sitesFiltering: newValue })}
                       />
+                    </Box>
+                    <Box mt={3}>
+                      <SettingsPreview settingsForm={settingsForm} />
                     </Box>
                   </>
                 )}
@@ -300,14 +344,14 @@ export default function Options(): ReactElement {
                       />
                     </Box>
                     <Box mt={3}>
-                      <CustomVocabularyTextArea
-                        value={settingsForm.customVocabulary}
-                        onChange={(newValue) => {
-                          updateSettingsForm({ customVocabulary: newValue });
-                        }}
-                        onErrorHandled={(error) => setErrors({ ...errors, customVocabulary: error })}
-                      />
-                    </Box>
+                    <CustomVocabularyTextArea
+                      value={settingsForm.customVocabulary}
+                      onChange={(newValue) => {
+                        updateSettingsForm({ customVocabulary: newValue });
+                      }}
+                      onErrorHandled={(error) => setErrors((prev) => ({ ...prev, customVocabulary: error }))}
+                    />
+                  </Box>
                     <Box mt={3}>
                       <VocabularyBlacklistTextArea
                         value={settingsForm.vocabularyBlacklist}
@@ -321,6 +365,33 @@ export default function Options(): ReactElement {
                       />
                     </Box>
                   </>
+                )}
+
+                {section === 'Debug' && (
+                  <>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Enable telemetry to log matcher timing details to your local console for troubleshooting. No data leaves the browser.
+                    </Typography>
+                    <PerformanceTelemetryToggle
+                      value={settingsForm.performanceTelemetry}
+                      onChange={(newValue) => updateSettingsForm({ performanceTelemetry: newValue })}
+                    />
+                  </>
+                )}
+
+                {section === 'Tools' && (
+                  <SettingsTools
+                    settingsForm={settingsForm}
+                    onImportSettings={(settings) => applyImportedSettings(settings)}
+                    onValidationReset={() => setErrors({ ...DEFAULT_SETTINGS_FORM_ERRORS })}
+                    onResetDefaults={() => {
+                      resetToDefaults();
+                      setErrors({ ...DEFAULT_SETTINGS_FORM_ERRORS });
+                    }}
+                    onSyncFromCloud={async () => {
+                      await forceSyncFromCloud();
+                    }}
+                  />
                 )}
               </CardContent>
             </Card>
@@ -337,7 +408,7 @@ export default function Options(): ReactElement {
           >
             <SaveButton
               status={saveStatus}
-              hasErrors={Object.values(errors).some(error => error)}
+              hasErrors={hasErrors}
               isDirty={isDirty}
               onClick={handleSave}
             />
@@ -348,3 +419,4 @@ export default function Options(): ReactElement {
     </ThemeProvider>
   );
 }
+
