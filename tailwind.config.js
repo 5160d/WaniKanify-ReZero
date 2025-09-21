@@ -2,7 +2,10 @@
 module.exports = {
   mode: "jit",
   darkMode: "class",
-  content: ["./**/*.tsx"],
+  content: [
+    "./src/**/*.{ts,tsx}",
+    "./src/*.{ts,tsx}"
+  ],
   corePlugins: { preflight: true },
   important: "#__plasmo",
   plugins: []

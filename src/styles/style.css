@@ -1,3 +1,89 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.wanikanify-replacement-container {
+  display: inline;
+}
+
+.wanikanify-replacement {
+  position: relative;
+  display: inline-block;
+  padding: 0 0.1em;
+  border-radius: 4px;
+  background-color: rgba(253, 216, 53, 0.25);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.wanikanify-replacement:hover {
+  background-color: rgba(255, 193, 7, 0.35);
+  box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.2);
+}
+
+.wanikanify-replacement::after {
+  content: attr(data-wanikanify-original);
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 0.4rem);
+  transform: translate(-50%, 0);
+  background-color: rgba(33, 33, 33, 0.95);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  font-size: 0.75em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 2147483647;
+}
+
+.wanikanify-replacement:hover::after {
+  opacity: 1;
+  transform: translate(-50%, 0.2rem);
+}
+
+.wanikanify-replacement::before {
+  content: attr(data-wanikanify-reading);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.2rem);
+  transform: translate(-50%, 0);
+  font-size: 0.65em;
+  color: #212121;
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 2px 6px;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.wanikanify-replacement:hover::before {
+  opacity: 1;
+  transform: translate(-50%, -0.1rem);
+}
+
+.wanikanify-replacement:not([data-wanikanify-reading])::before,
+.wanikanify-replacement[data-wanikanify-reading=""]::before {
+  display: none;
+}
+
+.wanikanify-replacement[data-wanikanify-original=""]::after {
+  display: none;
+}
+
+.wanikanify-tooltips-disabled .wanikanify-replacement::before,
+.wanikanify-tooltips-disabled .wanikanify-replacement::after {
+  display: none !important;
+}
+
+.wanikanify-tooltips-disabled .wanikanify-replacement {
+  text-decoration: none;
+}
