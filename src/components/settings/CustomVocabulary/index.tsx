@@ -1,8 +1,8 @@
-import { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import { Box, Typography, TextField, Tooltip, IconButton } from '@mui/material';
 import { HelpOutline } from '@mui/icons-material';
 import { WaniTooltip } from '../../common/WaniTooltip';
-import { EXAMPLES, HELP_TEXT } from './constants';
+import { EXAMPLES, HELP_TEXT, CUSTOM_VOCAB_MAX_ENTRIES } from './constants';
 import type { ChangingWithErrorHandlingProps } from '~src/components/common/types';
 import { useToCustomVocabularyMap } from './hooks';
 
@@ -12,6 +12,7 @@ export const CustomVocabularyTextArea: React.FC<ChangingWithErrorHandlingProps<s
     onErrorHandled
 }) => {
     const { error: validationError, entryParse: parseVocab } = useToCustomVocabularyMap();
+    const [entryCount, setEntryCount] = useState(0);
 
     // provide error state to parent component once validationError changes
     useEffect(() => {
@@ -21,10 +22,18 @@ export const CustomVocabularyTextArea: React.FC<ChangingWithErrorHandlingProps<s
     // Verify input and update error state
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newValue = e.target.value;
-
-        parseVocab(newValue);
+        const map = parseVocab(newValue);
+        setEntryCount(map.size);
         onChange(newValue);
     };
+
+    // Initialize count on mount (covers pre-loaded form values)
+    useEffect(() => {
+        const map = parseVocab(value);
+        setEntryCount(map.size);
+        // intentionally only run on mount / value initial load
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <Box width="100%">
@@ -105,6 +114,15 @@ export const CustomVocabularyTextArea: React.FC<ChangingWithErrorHandlingProps<s
                     }
                 }}
             />
+            <Box mt={0.5}>
+                <Typography
+                    variant="body2"
+                    color={entryCount > CUSTOM_VOCAB_MAX_ENTRIES ? 'error.main' : 'text.secondary'}
+                    sx={{ fontFamily: 'monospace' }}
+                >
+                    {entryCount} / {CUSTOM_VOCAB_MAX_ENTRIES} words
+                </Typography>
+            </Box>
         </Box>
     );
 };

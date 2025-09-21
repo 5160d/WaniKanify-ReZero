@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import {
     Box,
     Typography,
@@ -8,6 +8,7 @@ import {
 } from '@mui/material';
 import { HelpOutline } from '@mui/icons-material';
 import { WaniTooltip } from '../../common/WaniTooltip';
+import { BLACKLIST_MAX_ENTRIES } from './constants';
 import type { ChangingProps } from '~src/components/common/types';
 
 export const VocabularyBlacklistTextArea: React.FC<ChangingProps<string>> = ({
@@ -75,14 +76,18 @@ export const VocabularyBlacklistTextArea: React.FC<ChangingProps<string>> = ({
                     }
                 }}
             />
-            <Typography
-                variant="body2"
-                color="primary"
-                sx={{ mt: 1 }}
-            >
-                {/* Make sure to exclude redoundant semicolons from the count */}
-                {value.split(';').filter(Boolean).length} words
-            </Typography>
+            {(() => {
+                const count = value.split(';').filter(Boolean).length;
+                return (
+                    <Typography
+                        variant="body2"
+                        sx={{ mt: 1, fontFamily: 'monospace' }}
+                        color={count > BLACKLIST_MAX_ENTRIES ? 'error.main' : 'text.secondary'}
+                    >
+                        {count} / {BLACKLIST_MAX_ENTRIES} words
+                    </Typography>
+                );
+            })()}
         </Box>
     );
 };
