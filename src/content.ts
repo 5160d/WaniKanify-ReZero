@@ -433,6 +433,11 @@ class ContentScriptController {
   private applyVocabularyState(vocabulary: VocabularyCachePayload | null | undefined): void {
     this.vocabularyEntries = vocabulary?.vocabularyEntries ?? []
     this.refreshReplacerVocabulary()
+    // Ensure that after vocabulary loads from background we process already-present nodes
+    // with the freshly compiled automaton to avoid missing early static content.
+    if (this.isRunning) {
+      this.enqueueFullDocument(true)
+    }
   }
 
   private async loadBackgroundState(): Promise<void> {
@@ -774,7 +779,19 @@ class ContentScriptController {
     if (this.nodeQueue.length >= MAX_NODE_QUEUE_LENGTH) {
       const removed = this.nodeQueue.shift()
       if (removed) {
+        // Instead of silently discarding the oldest node (which can cause missed
+        // replacements on very content‑dense pages like Wiktionary), attempt a
+        // fast inline processing pass. We guard with basic safety checks to
+        // avoid heavy synchronous work in pathological cases.
         this.queuedNodes.delete(removed)
+        if (removed.isConnected && removed.length < 2000) {
+          // Process immediately without scheduling so we don't lose the node.
+            try {
+              this.processTextNode(removed)
+            } catch {
+              // Swallow any unexpected errors; worst case the node is skipped.
+            }
+        }
       }
     }
     this.nodeQueue.push(node)

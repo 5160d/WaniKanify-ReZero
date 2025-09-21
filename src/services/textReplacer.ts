@@ -98,6 +98,7 @@ export class TextReplacementEngine {
     new Map()
   private trackedNodes: Set<Text> = new Set()
   private pendingCompileHandle: number | ReturnType<typeof setTimeout> | null = null
+  private hasCompiledOnce = false
 
   updateConfig(config: Partial<TextReplacementConfig>): void {
     this.config = { ...this.config, ...config }
@@ -109,7 +110,14 @@ export class TextReplacementEngine {
     this.rawVocabulary = vocabulary
     this.blacklistSource = new Set(blacklist ?? [])
     this.rebuildBlacklist()
-    this.scheduleCompile()
+    // On the very first vocabulary load, compile synchronously so early DOM processing
+    // (e.g. initial text nodes on content-dense pages) does not miss replacements.
+    if (!this.hasCompiledOnce) {
+      this.compileRules()
+      this.hasCompiledOnce = true
+    } else {
+      this.scheduleCompile()
+    }
   }
 
   setFromEntries(entries: VocabularyEntry[], blacklist: Set<string>): void {
