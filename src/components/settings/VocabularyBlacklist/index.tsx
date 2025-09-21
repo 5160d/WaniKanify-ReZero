@@ -9,16 +9,32 @@ import {
 import { HelpOutline } from '@mui/icons-material';
 import { WaniTooltip } from '../../common/WaniTooltip';
 import { BLACKLIST_MAX_ENTRIES } from './constants';
-import type { ChangingProps } from '~src/components/common/types';
+import type { ChangingWithErrorHandlingProps } from '~src/components/common/types';
+import { useParseBlacklist } from './hooks';
 
-export const VocabularyBlacklistTextArea: React.FC<ChangingProps<string>> = ({
+export const VocabularyBlacklistTextArea: React.FC<ChangingWithErrorHandlingProps<string>> = ({
     value,
-    onChange
+    onChange,
+    onErrorHandled
 }) => {
+    const { parse, error } = useParseBlacklist();
+    const [count, setCount] = React.useState(0);
 
     const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-        onChange(event.target.value);
+        const next = event.target.value;
+        const set = parse(next);
+        setCount(set.size);
+        onChange(next);
+        onErrorHandled(Boolean(error));
     };
+
+    // initialize on mount
+    React.useEffect(() => {
+        const set = parse(value);
+        setCount(set.size);
+        onErrorHandled(Boolean(error));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <Box width="100%">
@@ -76,18 +92,18 @@ export const VocabularyBlacklistTextArea: React.FC<ChangingProps<string>> = ({
                     }
                 }}
             />
-            {(() => {
-                const count = value.split(';').filter(Boolean).length;
-                return (
-                    <Typography
-                        variant="body2"
-                        sx={{ mt: 1, fontFamily: 'monospace' }}
-                        color={count > BLACKLIST_MAX_ENTRIES ? 'error.main' : 'text.secondary'}
-                    >
-                        {count} / {BLACKLIST_MAX_ENTRIES} words
-                    </Typography>
-                );
-            })()}
+            <Typography
+                variant="body2"
+                sx={{ mt: 1, fontFamily: 'monospace' }}
+                color={count > BLACKLIST_MAX_ENTRIES ? 'error.main' : 'text.secondary'}
+            >
+                {count} / {BLACKLIST_MAX_ENTRIES} words
+            </Typography>
+            {error && (
+                <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+                    {error}
+                </Typography>
+            )}
         </Box>
     );
 };

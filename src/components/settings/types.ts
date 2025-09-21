@@ -186,4 +186,5 @@ export class WaniSettingsFormImpl implements WaniSettingsForm {
 export interface WaniSettingsFormErrors {
     apiToken: boolean;
     customVocabulary: boolean;
+    vocabularyBlacklist: boolean;
 }

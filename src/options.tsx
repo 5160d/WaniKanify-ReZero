@@ -356,6 +356,7 @@ export default function Options(): ReactElement {
                       <VocabularyBlacklistTextArea
                         value={settingsForm.vocabularyBlacklist}
                         onChange={(newValue) => updateSettingsForm({ vocabularyBlacklist: newValue })}
+                        onErrorHandled={(error) => setErrors((prev) => ({ ...prev, vocabularyBlacklist: error }))}
                       />
                     </Box>
                     <Box mt={3}>
