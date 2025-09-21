@@ -45,7 +45,10 @@ export const ensureSafeRuntimeConnect = (runtime: RuntimeLike = chrome?.runtime)
       return originalConnect.apply(runtime, args)
     } catch (error) {
       if (isContextInvalidatedError(error)) {
-        console.debug("WaniKanify: runtime connect skipped", error)
+  // Lazy require to avoid circular import during early script eval
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { log } = require('~src/utils/log') as typeof import('~src/utils/log')
+  log.debug("WaniKanify: runtime connect skipped", error)
         return createPortStub()
       }
 

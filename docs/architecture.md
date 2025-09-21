@@ -11,11 +11,13 @@ WaniKanify ReZero follows a standard Chrome MV3 architecture built on top of the
 
 - **Content script (`src/content.ts`)**
   - Loads user settings, site overrides, and vocabulary from the background worker.
-  - Utilises `TextReplacementEngine` to walk DOM text nodes, replace content, track statistics, and trigger audio playback.
+  - Utilises `TextReplacementEngine` to walk DOM text nodes, replace content, track statistics, and (when enabled) trigger audio playback.
   - Observes DOM mutations, debounces large updates, and coordinates site exclusion logic.
+  - Performs an immediate first compile of the vocabulary automaton so early DOM (e.g. page titles) receives replacements without waiting for idle callbacks; a full reprocess is scheduled after background vocabulary state loads.
 
 - **UI surfaces (`src/options.tsx`, `src/popup.tsx`)**
   - Options page provides full settings management, import/export utilities, live preview, and spreadsheet import tooling.
+  - Live Preview mirrors runtime behaviour: tooltip enable/disable, number replacement wrapping, and audio click / hover playback use the same service code paths. Audio listeners are cleaned up via `AudioService.dispose()` on unmount to avoid test flakiness and stray handlers.
   - Popup offers quick API token entry, save feedback, and replacement statistics.
 
 - **Services layer (under `src/services/`)**
@@ -26,6 +28,7 @@ WaniKanify ReZero follows a standard Chrome MV3 architecture built on top of the
   - `spreadsheetImport.ts`: fetches published Google Sheets CSV data, validates columns, and records import history.
   - `storage.ts`: wraps Plasmo storage with compression, migrations, and quota utilities.
   - `audio.ts`: handles audio playback modes and caching.
+    - Exposes `dispose()` to deterministically remove event listeners (used by Live Preview and tests).
 
 ## Data flow summary
 

@@ -19,6 +19,7 @@ import { AudioService, type AudioVocabularyItem } from "~src/services/audio"
 import type { VocabularyCachePayload, VocabularyEntry } from "~src/services/vocabulary/types"
 import { toggleTooltipVisibility, initializeTooltipPositioning } from "~src/services/tooltips"
 import { ensureSafeRuntimeConnect } from "~src/utils/runtimeConnect"
+import { log } from '~src/utils/log'
 import "./styles/style.css"
 
 ensureSafeRuntimeConnect()
@@ -448,7 +449,7 @@ class ContentScriptController {
         this.applyVocabularyState(response.payload?.vocabulary)
       }
     } catch (error) {
-      console.debug("WaniKanify: unable to fetch background state", error)
+      log.debug("WaniKanify: unable to fetch background state", error)
     }
   }
 
@@ -869,7 +870,7 @@ class ContentScriptController {
 
     if ((isDev || this.settings.performanceTelemetry) && duration > this.lastLoggedLongestNode) {
       this.lastLoggedLongestNode = duration
-      console.debug('WaniKanify: longest replaceNode duration', duration.toFixed(2), 'ms', '(node length:', node.length, ')')
+  log.debug('WaniKanify: longest replaceNode duration', duration.toFixed(2), 'ms', '(node length:', node.length, ')')
     }
 
     if (result.matches.length) {

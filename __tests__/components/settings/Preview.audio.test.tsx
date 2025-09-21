@@ -1,6 +1,7 @@
 /** @jest-environment jsdom */
 import React from 'react'
 import { render, fireEvent } from '@testing-library/react'
+import { act } from 'react'
 import SettingsPreview from '~src/components/settings/Preview'
 import { WaniSettingsFormImpl } from '~src/components/settings/types'
 import { DEFAULT_SETTINGS } from '~src/components/settings/constants'
@@ -25,21 +26,31 @@ describe('SettingsPreview audio integration', () => {
   afterEach(() => {
     speakMock.mockClear()
   })
-  it('invokes speech synthesis on click when audio enabled', () => {
+  it('invokes speech synthesis on click when audio enabled', async () => {
     const form = buildForm()
-    const { container } = render(<SettingsPreview settingsForm={form} />)
+    let container: HTMLElement
+    await act(async () => {
+      ;({ container } = render(<SettingsPreview settingsForm={form} />))
+    })
     const replacement = container.querySelector('.wanikanify-replacement') as HTMLElement
     expect(replacement).not.toBeNull()
-    fireEvent.click(replacement)
+    await act(async () => {
+      fireEvent.click(replacement)
+    })
     expect(speakMock).toHaveBeenCalled()
   })
 
-  it('does not invoke speech synthesis when audio disabled initially', () => {
+  it('does not invoke speech synthesis when audio disabled initially', async () => {
     const form = buildForm()
     form.audio.enabled = false
-    const { container } = render(<SettingsPreview settingsForm={form} />)
+    let container: HTMLElement
+    await act(async () => {
+      ;({ container } = render(<SettingsPreview settingsForm={form} />))
+    })
     const replacement = container.querySelector('.wanikanify-replacement') as HTMLElement
-    fireEvent.click(replacement)
+    await act(async () => {
+      fireEvent.click(replacement)
+    })
     expect(speakMock).not.toHaveBeenCalled()
   })
 })

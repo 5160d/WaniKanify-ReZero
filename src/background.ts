@@ -22,6 +22,7 @@ import {
   SPREADSHEET_DATA_STORAGE_KEY
 } from "~src/services/spreadsheetImport"
 import { ExtensionStorageService } from "~src/services/storage"
+import { log } from '~src/utils/log'
 
 const structuredCloneSafe = <T>(value: T): T => {
   if (typeof structuredClone === "function") {
@@ -485,12 +486,12 @@ class BackgroundController {
         const isNoReceiver = message.includes("Receiving end does not exist")
 
         if (!isNoReceiver && isDev) {
-          console.debug("WaniKanify: broadcast message failed", message)
+          log.debug("WaniKanify: broadcast message failed", message)
         }
       })
     } catch (error) {
       if (isDev) {
-        console.debug("WaniKanify: failed to dispatch broadcast", error)
+  log.debug("WaniKanify: failed to dispatch broadcast", error)
       }
     }
   }
@@ -592,7 +593,7 @@ class BackgroundController {
     try {
       chrome.action.setPopup({ popup: settings.apiToken ? "" : "popup.html" })
     } catch (error) {
-      console.debug("WaniKanify: unable to update action popup", error)
+  log.debug("WaniKanify: unable to update action popup", error)
     }
   }
 

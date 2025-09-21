@@ -1,5 +1,6 @@
 /** @jest-environment jsdom */
 import { render } from '@testing-library/react'
+import { act } from 'react'
 import React from 'react'
 
 import SettingsPreview from '~src/components/settings/Preview'
@@ -18,8 +19,11 @@ const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 describe('SettingsPreview', () => {
   it('renders preview with Japanese replacement and data attributes', async () => {
     const form = buildForm()
-    const { container } = render(<SettingsPreview settingsForm={form} />)
-    await flush()
+    let container: HTMLElement
+    await act(async () => {
+      ;({ container } = render(<SettingsPreview settingsForm={form} />))
+      await flush()
+    })
     // Look for Japanese replacement 狐 and its tooltip data attribute
     const text = container.textContent || ''
     expect(text).toContain('狐')
