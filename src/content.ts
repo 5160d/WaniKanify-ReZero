@@ -932,6 +932,31 @@ class ContentScriptController {
       return true
     }
 
+    // Heuristic: avoid interfering with dynamic documentation search overlays (e.g. Algolia DocSearch)
+    // which perform their own virtual DOM diffing and can break if internal text nodes are mutated.
+    // We check common container classnames / attributes. This specifically addresses an observed
+    // "Cancel rendering route" client-side exception on docs.plasmo.com when interacting with the
+    // search dialog while Auto Run is enabled.
+    try {
+      if (
+        element.closest('.DocSearch-Container, .DocSearch-Modal, [data-docsearch-root]') ||
+        // Generic safeguard: heavy dynamic search widgets often mark root with role="search"
+        element.closest('[role="search"]')
+      ) {
+        return true
+      }
+      // Avoid touching nodes inside elements with class containing these substrings
+      const cls = element.className || ''
+      if (typeof cls === 'string') {
+        const lowered = cls.toLowerCase()
+        if (lowered.includes('docsearch') || lowered.includes('algolia') || lowered.includes('searchbox')) {
+          return true
+        }
+      }
+    } catch {
+      // Defensive: DOM exceptions should not break processing
+    }
+
     return false
   }
 
