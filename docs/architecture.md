@@ -43,6 +43,16 @@ WaniKanify ReZero follows a standard Chrome MV3 architecture built on top of the
 
 The background script records `lastSubjectsUpdatedAt` (max `data_updated_at` among cached WaniKani vocabulary subjects). On subsequent refresh cycles, it calls the WaniKani `/subjects` endpoint with `updated_after=<lastSubjectsUpdatedAt>` to fetch only changed or newly added vocabulary subjects. Returned subjects are merged (replacing entries with the same `id`) and the timestamp is advanced. If no cache exists (first run or after a manual clear) a full fetch seeds the baseline. Assignments are fetched fully (endpoint does not support `updated_after`). This approach aligns with WaniKani API best practices by minimizing redundant data transfer and reducing rate‑limit pressure.
 
+#### Conditional requests (assignments & subjects)
+
+`/assignments` responses can be large but often do not change between refresh cycles. The client records the `Last-Modified` response header for assignments and sends it via `If-Modified-Since` on subsequent requests. A `304 Not Modified` causes the previously cached assignments collection (kept in a stale store independent of normal TTL eviction) to be reused with zero network payload beyond headers.
+
+For `/subjects`, incremental sync already minimizes payload via the `updated_after` parameter. We still add conditional support so that when there are no changes the server can respond `304` instead of returning an empty collection body. Special handling returns an empty delta (rather than replaying the stale full dataset) when a 304 is received for an incremental (`updated_after`) request. This avoids unnecessary reprocessing work.
+
+#### Persisted Last-Modified metadata
+
+The background cache (`VocabularyCachePayload`) now stores `lastModifiedSubjects` and `lastModifiedAssignments`. On extension startup these values (plus the last full subject/assignment datasets) seed the client’s conditional metadata and stale value maps. This enables immediate conditional (`If-Modified-Since`) requests after a browser restart and allows 304 responses to short‑circuit large JSON bodies on the very first refresh of a new session.
+
 ### Vocabulary cache lifecycle
 
 | Event | Action | Resulting TTL |

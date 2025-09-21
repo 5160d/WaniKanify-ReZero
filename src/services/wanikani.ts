@@ -123,6 +123,10 @@ export class WaniKaniClient {
   private cache = new Map<string, CachedResponse<unknown>>()
   private lastRequestAt = 0
   private pendingRequests = new Map<string, Promise<unknown>>()
+  // Stores Last-Modified header values per cacheKey (persists beyond TTL expiry for conditional requests)
+  private lastModified = new Map<string, string>()
+  // Stores most recent successful response value (even past TTL) for 304 fallback
+  private staleValues = new Map<string, unknown>()
 
   constructor(options: WaniKaniClientOptions = {}) {
     this.token = options.token?.trim() ?? ""
@@ -143,6 +147,9 @@ export class WaniKaniClient {
 
   clearCache(): void {
     this.cache.clear()
+    // Also clear conditional metadata when cache cleared (e.g., token change)
+    this.lastModified.clear()
+    this.staleValues.clear()
   }
 
   hasToken(): boolean {
@@ -212,10 +219,19 @@ export class WaniKaniClient {
       return inflight
     }
 
-    const requestPromise = this.performRequest<T>(url)
-      .then((data) => {
-        this.setCache(cacheKey, data)
-        return data
+    const requestPromise = this.performRequest<T>(url, cacheKey)
+      .then((result) => {
+        if (result.from304) {
+          // 304: return stale value (should exist if conditional request used properly)
+          return result.value as T
+        }
+        // 200: cache and record metadata
+        this.setCache(cacheKey, result.value as T)
+        if (result.lastModified) {
+          this.lastModified.set(cacheKey, result.lastModified)
+        }
+        this.staleValues.set(cacheKey, result.value)
+        return result.value as T
       })
       .finally(() => {
         this.pendingRequests.delete(cacheKey)
@@ -250,25 +266,60 @@ export class WaniKaniClient {
     })
   }
 
-  private async performRequest<T>(url: URL): Promise<T> {
+  private async performRequest<T>(url: URL, cacheKey: string): Promise<{ value?: T; lastModified?: string; from304?: boolean }> {
     const elapsed = Date.now() - this.lastRequestAt
     if (elapsed < this.minRequestIntervalMs) {
       await wait(this.minRequestIntervalMs - elapsed)
     }
 
-    const response = await fetch(url.toString(), {
-      headers: {
-        Authorization: `Bearer ${this.token}`,
-        "Content-Type": "application/json"
-      }
-    })
+  // Determine if endpoint is eligible for conditional requests (assignments + subjects)
+  const isAssignments = /\/assignments$/.test(url.pathname)
+  const isSubjects = /\/subjects$/.test(url.pathname)
+  const conditionalValue = (isAssignments || isSubjects) ? this.lastModified.get(cacheKey) : undefined
+
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${this.token}`,
+      "Content-Type": "application/json"
+    }
+    if (conditionalValue) {
+      headers["If-Modified-Since"] = conditionalValue
+    }
+
+    const response = await fetch(url.toString(), { headers })
 
     this.lastRequestAt = Date.now()
 
     if (response.status === WaniKaniErrorCode.TooManyRequests) {
       const retryAfter = Number(response.headers.get("Retry-After")) || 1
       await wait(retryAfter * 1000)
-      return this.performRequest<T>(url)
+      return this.performRequest<T>(url, cacheKey)
+    }
+
+    if (response.status === 304) {
+      // Special handling: for subjects + updated_after we want an empty delta, not a replay of stale full dataset.
+      const hasUpdatedAfter = url.searchParams.has('updated_after')
+      const isSubjects = /\/subjects$/.test(url.pathname)
+      if (process.env.WK_DEBUG === '1' || process.env.WK_LIVE) {
+        try { console.info('[wanikani-client] 304 Not Modified for', cacheKey, isSubjects && hasUpdatedAfter ? '(subjects incremental empty delta)' : '') } catch (_) { /* noop */ }
+      }
+      if (isSubjects && hasUpdatedAfter) {
+        // Return an empty collection shape compatible with PaginatedResponse<T>
+        const empty = {
+          object: 'collection',
+          url: url.toString(),
+          data_updated_at: this.lastModified.get(cacheKey) || '',
+          data: [],
+          pages: { per_page: 500, next_url: null, previous_url: null },
+          total_count: 0
+        } as unknown as T
+        return { value: empty, from304: true }
+      }
+      // Fallback: use stale full value
+      const stale = this.staleValues.get(cacheKey)
+      if (stale === undefined) {
+        throw new WaniKaniError('Received 304 but no stale value cached', response.status)
+      }
+      return { value: stale as T, from304: true }
     }
 
     if (!response.ok) {
@@ -284,7 +335,78 @@ export class WaniKaniClient {
       throw new WaniKaniError(parsedMessage, response.status)
     }
 
-    return (await response.json()) as T
+    const json = (await response.json()) as T
+    const lm = response.headers?.get?.("Last-Modified") || undefined
+    return { value: json, lastModified: lm }
+  }
+
+  // ---- Last-Modified helpers (for persistence across extension restarts) ----
+  /**
+   * Retrieve Last-Modified value for baseline subjects or an incremental query.
+   * Pass updated_after if the last fetch used incremental mode.
+   */
+  public getLastModifiedForSubjects(updated_after?: string): string | undefined {
+    const url = this.buildUrl('subjects', { types: 'vocabulary', ...(updated_after ? { updated_after } : {}) })
+    const cacheKey = `subjects?${url.searchParams.toString()}`
+    return this.lastModified.get(cacheKey)
+  }
+
+  /** Retrieve Last-Modified value for assignments (vocabulary). */
+  public getLastModifiedForAssignments(): string | undefined {
+    const url = this.buildUrl('assignments', { subject_types: 'vocabulary' })
+    const cacheKey = `assignments?${url.searchParams.toString()}`
+    return this.lastModified.get(cacheKey)
+  }
+
+  /** Seed Last-Modified for baseline subjects query (no updated_after). */
+  public seedLastModifiedForSubjects(value: string | undefined, updated_after?: string): void {
+    if (!value) return
+    const url = this.buildUrl('subjects', { types: 'vocabulary', ...(updated_after ? { updated_after } : {}) })
+    const cacheKey = `subjects?${url.searchParams.toString()}`
+    this.lastModified.set(cacheKey, value)
+  }
+
+  /** Seed Last-Modified for assignments (vocabulary) query. */
+  public seedLastModifiedForAssignments(value: string | undefined): void {
+    if (!value) return
+    const url = this.buildUrl('assignments', { subject_types: 'vocabulary' })
+    const cacheKey = `assignments?${url.searchParams.toString()}`
+    this.lastModified.set(cacheKey, value)
+  }
+
+  /** Seed baseline subjects dataset (vocabulary only) with Last-Modified and stale value for 304 reuse after restart. */
+  public seedBaselineSubjects(subjects: WaniKaniSubject[] | undefined, lastModified?: string): void {
+    if (!subjects) return
+    const url = this.buildUrl('subjects', { types: 'vocabulary' })
+    const cacheKey = `subjects?${url.searchParams.toString()}`
+    if (lastModified) this.lastModified.set(cacheKey, lastModified)
+    // Build a minimal PaginatedResponse shape for stale re-use
+    const value = {
+      object: 'collection',
+      url: url.toString(),
+      data_updated_at: subjects.reduce((max, s) => (s.data_updated_at > max ? s.data_updated_at : max), subjects[0]?.data_updated_at || ''),
+      data: subjects,
+      pages: { per_page: subjects.length, next_url: null, previous_url: null },
+      total_count: subjects.length
+    }
+    this.staleValues.set(cacheKey, value)
+  }
+
+  /** Seed baseline assignments dataset with Last-Modified and stale value for 304 reuse after restart. */
+  public seedBaselineAssignments(assignments: WaniKaniAssignment[] | undefined, lastModified?: string): void {
+    if (!assignments) return
+    const url = this.buildUrl('assignments', { subject_types: 'vocabulary' })
+    const cacheKey = `assignments?${url.searchParams.toString()}`
+    if (lastModified) this.lastModified.set(cacheKey, lastModified)
+    const value = {
+      object: 'collection',
+      url: url.toString(),
+      data_updated_at: new Date().toISOString(),
+      data: assignments,
+      pages: { per_page: assignments.length, next_url: null, previous_url: null },
+      total_count: assignments.length
+    }
+    this.staleValues.set(cacheKey, value)
   }
 }
 

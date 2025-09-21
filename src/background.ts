@@ -194,6 +194,19 @@ class BackgroundController {
         cachedVocabulary.wanikaniSubjects ?? [],
         cachedVocabulary.assignments ?? []
       )
+      // Seed Last-Modified conditional metadata so first refresh after restart can leverage 304s.
+      try {
+        if (cachedVocabulary.wanikaniSubjects?.length) {
+          this.client.seedBaselineSubjects(cachedVocabulary.wanikaniSubjects, cachedVocabulary.lastModifiedSubjects)
+        } else if (cachedVocabulary.lastModifiedSubjects) {
+          this.client.seedLastModifiedForSubjects(cachedVocabulary.lastModifiedSubjects)
+        }
+        if (cachedVocabulary.assignments?.length) {
+          this.client.seedBaselineAssignments(cachedVocabulary.assignments, cachedVocabulary.lastModifiedAssignments)
+        } else if (cachedVocabulary.lastModifiedAssignments) {
+          this.client.seedLastModifiedForAssignments(cachedVocabulary.lastModifiedAssignments)
+        }
+      } catch (_) { /* non-fatal */ }
     } else {
       this.vocabularyCache = null
     }
@@ -440,6 +453,10 @@ class BackgroundController {
       // Always fetch assignments fully (no updated_after supported), we may optimize later.
       const assignments = await this.fetchAssignments()
 
+  // Capture Last-Modified metadata for persistence.
+  const lastModifiedSubjects = this.client.getLastModifiedForSubjects(incremental ? lastSubjectsUpdatedAt : undefined) || this.client.getLastModifiedForSubjects()
+  const lastModifiedAssignments = this.client.getLastModifiedForAssignments()
+
       this.vocabularyManager.updateSettings(this.settings)
       this.vocabularyManager.updateWaniKaniData(subjects, assignments)
       const cache: VocabularyCachePayload = {
@@ -450,7 +467,9 @@ class BackgroundController {
         vocabularyEntries: this.vocabularyManager
           .build()
           .entries,
-        lastSubjectsUpdatedAt
+        lastSubjectsUpdatedAt,
+        lastModifiedSubjects,
+        lastModifiedAssignments
       }
 
       this.vocabularyCache = cache
@@ -683,17 +702,6 @@ chrome.action.onClicked.addListener(async (tab) => {
     return response
   })
 })
-
-// Utility to compute max updated timestamp among subjects
-const computeMaxUpdatedAt = (subjects: WaniKaniSubject[] | undefined): string | undefined => {
-  if (!subjects || !subjects.length) return undefined
-  let max = 0
-  subjects.forEach(s => {
-    const ts = new Date(s.data_updated_at).getTime()
-    if (ts > max) max = ts
-  })
-  return max ? new Date(max).toISOString() : undefined
-}
 
 export { controller }
 
