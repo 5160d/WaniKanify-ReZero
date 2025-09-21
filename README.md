@@ -64,21 +64,45 @@ WaniKanify ReZero helps you practice Japanese vocabulary in context by automatic
 
 ### Building for Production
 
-1. **Create production build**
+Recommended (multi-browser, zipped artifacts in one step):
+
+1. Run the cross-browser build & package pipeline (Chrome + Firefox MV3):
    ```bash
-   pnpm build
+   pnpm build:all
    # or
-   npm run build
+   npm run build:all
+   ```
+   This performs:
+   - `plasmo build --target=chrome-mv3,firefox-mv3` (generates optimized prod directories)
+   - `plasmo package` (creates zip archives alongside the build folders)
+
+2. Inspect output in `build/`:
+   - `build/chrome-mv3-prod/` (unpacked Chrome/Edge submission folder)
+   - `build/firefox-mv3-prod/` (unpacked Firefox submission folder)
+   - `build/chrome-mv3-prod.zip`
+   - `build/firefox-mv3-prod.zip`
+
+3. (Optional) Run the test suite before submitting:
+   ```bash
+   pnpm test
    ```
 
-2. **Package for distribution**
-   ```bash
-   pnpm package
-   # or
-   npm run package
-   ```
+Single‑target (advanced / custom):
+```bash
+# Build only (outputs unpacked chrome-mv3-prod directory)
+pnpm build
 
-The production files will be generated in the `build/` directory, ready for browser store submission.
+# Then optionally package just that target
+pnpm package
+```
+Artifacts for additional targets can be produced by adding them to the `--target` list (see Plasmo docs) or by re-running `plasmo build` with a different target set, then invoking `plasmo package` again.
+
+Submission Notes:
+- Chrome Web Store & Edge Add-ons: upload `chrome-mv3-prod.zip`.
+- Firefox Add-ons: upload `firefox-mv3-prod.zip` (contains `browser_specific_settings.gecko` with id + `strict_min_version`).
+- If you modify manifest permissions or icons, re-run `pnpm build:all` to regenerate both zips.
+
+All production bundles are tree‑shaken and minified by Plasmo. No manual manifest editing is required for standard updates.
 
 ### Generating Marketing Assets
 
