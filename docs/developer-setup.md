@@ -69,11 +69,19 @@ plasmo package
 ## Environment Variables
 
 ## Pre-commit Quality Gate
-The repository includes a Husky `pre-commit` hook that enforces:
-1. ESLint (includes custom i18n rules: hardcoded-ui-string, duplicate-message-values, no-unregistered-internal-token, no-raw-console)
-2. Full Jest test suite
+The repository includes a Husky `pre-commit` hook that enforces (in order):
+1. ESLint (custom i18n + logging rules: `hardcoded-ui-string`, `duplicate-message-values`, `no-unregistered-internal-token`, `no-raw-console`)
+2. Unused localization key scan (`scripts/find-unreferenced-locale-keys.cjs`) – commit is blocked if any keys are unused
+3. Full Jest test suite
 
-If either step fails, the commit is aborted.
+If any step fails, the commit is aborted.
+
+Remediating unused localization keys:
+* Remove the stale entries from `locales/en/messages.json` OR
+* Add actual usages (e.g. wire UI component to new key) if the key is legitimately needed.
+* Re-run `pnpm i18n:unused` locally to verify it reports zero unused keys.
+
+Temporary bypass (discouraged) with `--no-verify` only for large refactors; follow-up cleanup is required before merging.
 
 Skip temporarily (discouraged) by passing `--no-verify` to `git commit`.
 
@@ -82,14 +90,11 @@ To install hooks after a fresh clone (if not already run by package manager):
 pnpm prepare
 ```
 
-To adjust performance locally you can edit `.husky/pre-commit` to:
-- Use `pnpm test -- --changedSince=origin/main` (Jest feature) for partial runs.
-- Add the unused key audit (currently informational):
-	```bash
-	node scripts/find-unreferenced-locale-keys.cjs --allow-exit-zero
-	```
+Performance tuning tips (edit `.husky/pre-commit` locally if needed, but do not commit performance downgrades):
+* Replace full test run with `pnpm test -- --changedSince=origin/main` for incremental iteration (restore before pushing shared changes).
+* If working on a branch with intentional temporary unused keys, consider deleting those keys until the feature is ready rather than bypassing the gate.
 
-Do not remove the ESLint invocation; it is the authoritative enforcement layer for localization & logging standards.
+Do not remove the ESLint or unused key steps; they are the authoritative enforcement layers for localization & logging standards.
 
 These can be set ad-hoc in your shell before running commands. Do not commit secrets.
 

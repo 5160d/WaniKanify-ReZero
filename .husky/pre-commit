@@ -8,11 +8,18 @@ set -e
 echo "[pre-commit] Running ESLint..."
 pnpm lint
 
-# 2. Run tests (full regression) - can be optimized later with changed files selection
+# 2. Unused localization key scan (must pass to commit)
+echo "[pre-commit] Checking for unused localization keys..."
+if ! pnpm i18n:unused > /tmp/unused-locale-keys.log 2>&1; then
+	echo "[pre-commit] ❌ Unused localization keys detected:" >&2
+	cat /tmp/unused-locale-keys.log >&2
+	echo "[pre-commit] To proceed: remove unused keys from locales/en/messages.json or add references." >&2
+	echo "[pre-commit] (If performing a large refactor, temporarily bypass with --no-verify, but follow up with cleanup.)" >&2
+	exit 1
+fi
+
+# 3. Run tests (full regression) - can be optimized later with changed files selection
 echo "[pre-commit] Running Jest test suite..."
 pnpm test -- --runInBand
-
-# 3. Optional: unused localization key check (informational, non-blocking now)
-# node scripts/find-unreferenced-locale-keys.cjs --allow-exit-zero || true
 
 echo "[pre-commit] All checks passed."
