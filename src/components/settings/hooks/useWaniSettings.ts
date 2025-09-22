@@ -4,7 +4,7 @@
  * @license GPL-3.0
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { log } from '~src/utils/log'
 import { useStorage } from "@plasmohq/storage/hook"
 import { Storage } from "@plasmohq/storage"
@@ -102,6 +102,8 @@ export const useWaniSettings = () => {
     // Track if form has modifications not yet saved
     const [isDirty, setIsDirty] = useState(false);
     const [saveStatus, setSaveStatus] = useState<SaveStatus>({ status: "idle", message: "" });
+    // Tracks whether the most recent storage change originated from an explicit save action
+    const pendingSaveRef = useRef(false)
 
     // Sync form state with storage changes
     useEffect(() => {
@@ -112,19 +114,20 @@ export const useWaniSettings = () => {
             return
         }
 
+        // Only re-sync form from persisted storage when the storage itself changed
         setSettingsForm(settingsToSettingsForm(normalized))
 
-        // used to differentiate between initial load and actual save
-        if(isDirty) {
-            setSaveStatus({ status: 'success' , message: SAVE_SUCCESS_KEY });
-            // we fired the mesaage, now reset it
-            setTimeout(() => {
-                setSaveStatus({ status: 'idle', message: '' });
-            }, 30);
+        if (pendingSaveRef.current) {
+            // Complete save lifecycle: mark success then quickly return to idle so button state resets
+            setSaveStatus({ status: 'success', message: SAVE_SUCCESS_KEY })
+            setTimeout(() => setSaveStatus({ status: 'idle', message: '' }), 30)
+            pendingSaveRef.current = false
         }
 
-        setIsDirty(false);
-    }, [savedSettings, isDirty, setSavedSettings])
+        // After any storage change, the in-memory form now matches persisted state
+        setIsDirty(false)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [savedSettings, setSavedSettings])
 
     /**
      * Updates settings form with new values while preserving saved settings
@@ -145,11 +148,12 @@ export const useWaniSettings = () => {
      */
     const saveToStorage = () => {
         try {
-            setSaveStatus({ status: 'pending', message: '' });
-            setSavedSettings(settingsForm.toWaniSettings());
+            pendingSaveRef.current = true
+            setSaveStatus({ status: 'pending', message: '' })
+            setSavedSettings(settingsForm.toWaniSettings())
         } catch (error) {
-            setSaveStatus({ status: "error", message: SAVE_ERROR_KEY });
-            // Log using localized prefix for consistency (though console output is dev-facing)
+            pendingSaveRef.current = false
+            setSaveStatus({ status: 'error', message: SAVE_ERROR_KEY })
             log.error('save to storage failed', error)
         }
     };
