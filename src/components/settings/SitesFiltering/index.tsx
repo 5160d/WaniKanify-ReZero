@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { Delete, HelpOutline } from '@mui/icons-material';
 import { WaniTooltip } from '../../common/WaniTooltip';
+import { t } from '~src/utils/i18n';
 import type { ChangingProps } from '~src/components/common/types';
 
 
@@ -33,13 +34,13 @@ export const SitesFilteringTable: React.FC<ChangingProps<string[]>> = ({ value, 
         <Box>
             <Box display="flex" alignItems="center" gap={2} mb={2}>
                 <Typography variant="h6" fontWeight="lg">
-                    Filtered Websites
+                    {t('sites_filtering_heading_internal')}
                 </Typography>
                 <Tooltip
                     title={
-                        <WaniTooltip title="Filtered Websites">
+                        <WaniTooltip title={t('sites_filtering_tooltip_title')}>
                             <Typography variant="body2" sx={{ mb: 2 }}>
-                                Block WaniKanify on these websites using Adblock Plus patterns.
+                                {t('sites_filtering_tooltip_line1')}
                             </Typography>
                             <Box sx={{
                                 bgcolor: 'background.paper',
@@ -49,16 +50,16 @@ export const SitesFilteringTable: React.FC<ChangingProps<string[]>> = ({ value, 
                                 borderColor: 'divider'
                             }}>
                                 <Typography variant="body2" sx={{ mb: 1 }}>
-                                    <strong>Pattern types:</strong>
+                                    <strong>{t('sites_filtering_tooltip_pattern_types')}</strong>
                                 </Typography>
                                 <Typography variant="body2" sx={{ mb: 0.5 }}>
-                                    • <code>||domain.com^</code> - Block domain and subdomains
+                                    • <code>{t('sites_filtering_tooltip_pattern_domain').split(' - ')[0]}</code> {t('sites_filtering_tooltip_pattern_domain').split(' - ').slice(1).join(' - ')}
                                 </Typography>
                                 <Typography variant="body2" sx={{ mb: 0.5 }}>
-                                    • <code>|http://exact-url.com/|</code> - Block exact URL only  
+                                    • <code>|http://exact-url.com/|</code> {t('sites_filtering_tooltip_pattern_exact').replace('|http://exact-url.com/| - ', '')}
                                 </Typography>
                                 <Typography variant="body2">
-                                    • <code>/path/*/file^</code> - Block address parts with wildcards
+                                    • <code>/path/*/file^</code> {t('sites_filtering_tooltip_pattern_wildcard').replace('/path/*/file^ - ', '')}
                                 </Typography>
                             </Box>
                         </WaniTooltip>
@@ -109,7 +110,7 @@ export const SitesFilteringTable: React.FC<ChangingProps<string[]>> = ({ value, 
                                         fullWidth
                                         value={newRegex}
                                         onChange={(e) => setNewRegex(e.target.value)}
-                                        placeholder="Enter URL pattern (regex)"
+                                        placeholder={t('sites_filtering_placeholder_pattern')}
                                     />
                                 </TableCell>
                                 <TableCell align="right">
@@ -119,7 +120,7 @@ export const SitesFilteringTable: React.FC<ChangingProps<string[]>> = ({ value, 
                                         onClick={handleAddRegex}
                                         disabled={!newRegex.trim()}
                                     >
-                                        Add
+                                        {t('sites_filtering_button_add')}
                                     </Button>
                                 </TableCell>
                             </TableRow>
@@ -132,7 +133,7 @@ export const SitesFilteringTable: React.FC<ChangingProps<string[]>> = ({ value, 
                                             size="small"
                                             color="error"
                                             onClick={() => handleDeleteRegex(index)}
-                                            aria-label="Delete"
+                                            aria-label={t('sites_filtering_delete_aria')}
                                         >
                                             <Delete />
                                         </IconButton>

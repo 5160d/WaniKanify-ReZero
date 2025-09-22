@@ -1,7 +1,10 @@
+import React from 'react';
 import { Button, type ButtonProps, Alert, Fade, Box } from '@mui/material';
 import { saveButtonStyle } from './style';
+import { t } from 'src/utils/i18n';
 import { useState, useEffect } from 'react';
 import type { SaveStatus, AlertState } from './types';
+import type { MessageKey } from '~src/locales/message-keys';
 
 interface SaveButtonProps extends ButtonProps {
     hasErrors: boolean;
@@ -31,7 +34,7 @@ export const SaveButton: React.FC<SaveButtonProps> = ({ hasErrors, isDirty, stat
   return (
     <Box position="relative">
       <Fade in={alert.open} timeout={ { enter: 1000, exit: 1200 }} >
-        <Alert 
+  <Alert 
           severity={alert.severity}
           sx={{
             position: 'absolute',
@@ -42,7 +45,7 @@ export const SaveButton: React.FC<SaveButtonProps> = ({ hasErrors, isDirty, stat
             boxShadow: 2,
           }}
         >
-          {alert.message}
+          {t(alert.message as MessageKey)}
         </Alert>
       </Fade>
       <Button
@@ -57,7 +60,7 @@ export const SaveButton: React.FC<SaveButtonProps> = ({ hasErrors, isDirty, stat
         }}
         {...props}
       >
-        Save
+  {t('settings_save_button')}
       </Button>
     </Box>
   );

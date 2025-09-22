@@ -1,5 +1,6 @@
 // External Libraries
 import React, { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
+import { t } from 'src/utils/i18n';
 import { GitHub, HelpOutline } from "@mui/icons-material";
 import {
   Box,
@@ -64,14 +65,14 @@ const Header = ({ logo }: HeaderProps): ReactElement => (
     }}>
     <img
       src={logo}
-      alt="WaniKanify Logo"
+      alt={t('extension_name') + ' ' + t('options_logo_alt')}
       style={{ width: 96, height: 96 }}
     />
     <Typography
       variant="h4"
       fontWeight="bold"
       sx={{ color: 'primary.main' }}>
-      WaniKanify Settings
+      {t('options_header_title')}
     </Typography>
   </Stack>
 );
@@ -94,7 +95,7 @@ const Footer: React.FC<FooterProps> = ({ githubUrl }) => (
     }}
   >
     <Tooltip
-      title="View on GitHub"
+      title={t('options_footer_github_tooltip')}
       TransitionComponent={Zoom}
       arrow
       PopperProps={{
@@ -121,7 +122,7 @@ const Footer: React.FC<FooterProps> = ({ githubUrl }) => (
     >
       <IconButton
         onClick={() => window.open(githubUrl, '_blank', 'noopener')}
-        aria-label="View source on GitHub"
+  aria-label={t('options_footer_github_aria')}
         sx={{
           position: 'relative',
           transition: 'all 0.3s ease',
@@ -167,7 +168,13 @@ export default function Options(): ReactElement {
   } = useWaniSettings();
   const [errors, setErrors] = useState({ ...DEFAULT_SETTINGS_FORM_ERRORS });
   const hasErrors = useMemo(() => Object.values(errors).some(Boolean), [errors]);
-  const sections = ['General', 'Behavior', 'Vocabulary', 'Tools', 'Debug'] as const;
+  const sections = [
+    'general',
+    'behavior',
+    'vocabulary',
+    'tools',
+    'debug'
+  ] as const;
 
   // Reset errors when form is clean
   useEffect(() => {
@@ -207,7 +214,7 @@ export default function Options(): ReactElement {
           {sections.map((section, index) => (
             <Card key={section} sx={{ mb: 4 }}>
               <CardContent>
-                {section === 'Vocabulary' ? (
+                {section === 'vocabulary' ? (
                   <Box display="flex" alignItems="center" gap={2} mb={2}>
                     <Typography
                       variant="h6"
@@ -220,13 +227,13 @@ export default function Options(): ReactElement {
                         gap: 1
                       }}
                     >
-                      {`${index + 1}. ${section}`}
+                      {`${index + 1}. ${t('options_sections_' + section)}`}
                     </Typography>
                     <Tooltip
                       title={
-                        <WaniTooltip title="Vocabulary">
+                        <WaniTooltip title={t('options_sections_vocabulary')}>
                           <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-                            Section to customize the vocabulary replacement rules.
+                            {t('vocabulary_section_tooltip_line1')}
                           </Typography>
                           <Box sx={{
                           bgcolor: 'background.paper',
@@ -238,13 +245,13 @@ export default function Options(): ReactElement {
                           wordWrap: 'break-word'
                           }}>
                           <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                            Filters are applied in order:<br/>
+                            {t('vocabulary_section_tooltip_line2_intro')}<br/>
                             <code style={{ display: 'block', marginTop: '8px', backgroundColor: 'action.hover', padding: '2px 2px' }}>
-                            Wanikanify Numbers &gt;<br/>
-                            Blacklisted Vocabulary &gt;<br/>
-                            Custom Vocabulary &gt;<br/>
-                            Imported Vocabulary &gt;<br/>
-                            SRS Groups
+                            {t('toggle_numbers_label')} &gt;<br/>
+                            {t('blacklist_tooltip_title')} &gt;<br/>
+                            {t('settings_custom_vocab_heading')} &gt;<br/>
+                            {t('import_heading_imported_vocab')} &gt;<br/>
+                            {t('settings_srs_section_heading')}
                             </code>
                           </Typography>
                           </Box>
@@ -283,14 +290,14 @@ export default function Options(): ReactElement {
                 )}
                 <Divider sx={{ mb: 3 }} />
 
-                {section === 'General' && (
+                {section === 'general' && (
                   <>
                     <Box display="flex" alignItems="center" width="70%">
                       <APITokenField
                         value={settingsForm.apiToken}
                         onChange={(newValue) => updateSettingsForm({ apiToken: newValue })}
                         error={errors.apiToken}
-                        helperText={errors.apiToken ? 'Token should match XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX format' : ''}
+                        helperText={errors.apiToken ? t('validation_api_token_format') : ''}
                       />
                     </Box>
                     <Box mt={3}>
@@ -299,7 +306,7 @@ export default function Options(): ReactElement {
                   </>
                 )}
 
-                {section === 'Behavior' && (
+                {section === 'behavior' && (
                   <>
                     <AutoRunToggle
                       value={settingsForm.autoRun}
@@ -329,7 +336,7 @@ export default function Options(): ReactElement {
                   </>
                 )}
 
-                {section === 'Vocabulary' && (
+                {section === 'vocabulary' && (
                   <>
                     <NumbersReplacementToggle
                       value={settingsForm.numbersReplacement}
@@ -368,7 +375,7 @@ export default function Options(): ReactElement {
                   </>
                 )}
 
-                {section === 'Debug' && (
+                {section === 'debug' && (
                   <>
                     <PerformanceTelemetryToggle
                       value={settingsForm.performanceTelemetry}
@@ -377,7 +384,7 @@ export default function Options(): ReactElement {
                   </>
                 )}
 
-                {section === 'Tools' && (
+                {section === 'tools' && (
                   <SettingsTools
                     settingsForm={settingsForm}
                     onImportSettings={(settings) => applyImportedSettings(settings)}

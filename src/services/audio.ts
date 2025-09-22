@@ -1,5 +1,7 @@
 import type { AudioMode } from "~src/components/settings/toggles/types"
-import type { ReplacementDetail } from "~src/services/textReplacer"
+import { t } from '~src/utils/i18n'
+import { __WK_CLASS_REPLACEMENT } from '~src/internal/tokens'
+import { log } from '~src/utils/log'
 
 const PUNCTUATION_EDGE_REGEX = /^[\p{P}\p{Zs}]+|[\p{P}\p{Zs}]+$/gu
 
@@ -86,7 +88,7 @@ export class AudioService {
     })
   }
 
-  handleReplacements(_matches: ReplacementDetail[]): void {
+  handleReplacements(): void { // replacements no longer used; method kept for interface compatibility
     // Audio playback now only responds to direct user interaction (click/hover)
   }
 
@@ -168,7 +170,7 @@ export class AudioService {
       return null
     }
 
-    const replacementElement = target.closest<HTMLElement>(".wanikanify-replacement")
+    const replacementElement = target.closest<HTMLElement>(`.${__WK_CLASS_REPLACEMENT}`)
     if (!replacementElement) {
       return null
     }
@@ -198,7 +200,7 @@ export class AudioService {
           await this.playAudioUrl(url)
           return
         } catch (error) {
-          console.warn("WaniKanify: failed to play audio", error)
+          log.warn('failed to play audio', error)
           continue
         }
       }
@@ -211,7 +213,7 @@ export class AudioService {
 
   private async playAudioUrl(url: string): Promise<void> {
     if (!url) {
-      throw new Error("Invalid audio URL")
+      throw new Error(t('audio_error_invalid_url'))
     }
 
     const cacheEntry = await this.loadAudio(url)

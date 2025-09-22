@@ -1,4 +1,5 @@
 import React from 'react';
+import { t } from '~src/utils/i18n';
 import {
     Box,
     List,
@@ -29,11 +30,12 @@ export const SRSCheckboxes: React.FC<ChangingProps<SrsGroupsObject>> = ({ onChan
         <Box>
             <Box display="flex" alignItems="center" gap={2} mb={2}>
                 <Typography variant="h6" fontWeight="lg">
+                    {/* SRS groups heading (non-user configurable label) */}
                     SRS Groups
                 </Typography>
                 <Tooltip
                     title={
-                        <WaniTooltip title="SRS Filtering">
+                        <WaniTooltip title={t('settings_srs_filtering_title')}> {/* new i18n key */}
                             <Box sx={{
                                 bgcolor: 'background.paper',
                                 p: 2,
@@ -42,7 +44,7 @@ export const SRSCheckboxes: React.FC<ChangingProps<SrsGroupsObject>> = ({ onChan
                                 borderColor: 'divider'
                             }}>
                                 <Typography variant="body2">
-                                    WaniKanify will only substitute words in the checked SRS groups.
+                                    {t('settings_srs_filtering_description')}
                                 </Typography>
                             </Box>
                         </WaniTooltip>

@@ -1,3 +1,3 @@
-export const SAVE_SUCCESS = "Settings saved!";
-export const SAVE_ERROR_API_TOKEN = "Failed to save settings: Invalid API token";
-export const SAVE_ERROR = "Failed to save settings";
+export const SAVE_SUCCESS_KEY = 'settings_save_success';
+export const SAVE_ERROR_API_TOKEN_KEY = 'settings_save_error_api_token';
+export const SAVE_ERROR_KEY = 'settings_save_error_generic';

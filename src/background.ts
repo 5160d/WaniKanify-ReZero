@@ -24,6 +24,21 @@ import {
 import { ExtensionStorageService } from "~src/services/storage"
 import { log } from '~src/utils/log'
 import { computeMaxUpdatedAt } from '~src/services/wanikani/computeMaxUpdatedAt'
+import {
+  __WK_EVT_GET_STATE,
+  __WK_EVT_GET_SETTINGS,
+  __WK_EVT_REFRESH_VOCAB,
+  __WK_EVT_REFRESH_IMPORTED_VOCAB,
+  __WK_EVT_REFRESH_STARTED,
+  __WK_EVT_CLEAR_CACHE,
+  __WK_EVT_PERFORMANCE,
+  __WK_EVT_STATE,
+  __WK_EVT_SETTINGS,
+  __WK_EVT_ERROR,
+  __WK_EVT_TOGGLE_RUNTIME,
+  __WK_ALARM_VOCAB_REFRESH,
+  __WK_NS_VOCABULARY
+} from '~src/internal/tokens'
 
 const structuredCloneSafe = <T>(value: T): T => {
   if (typeof structuredClone === "function") {
@@ -33,21 +48,23 @@ const structuredCloneSafe = <T>(value: T): T => {
   return JSON.parse(JSON.stringify(value))
 }
 
+// Updated message / response types using sentinel constants
+// (Keeps strong string literal typing referencing a single source of truth.)
 type BackgroundMessage =
-  | { type: "wanikanify:get-state" }
-  | { type: "wanikanify:get-settings" }
-  | { type: "wanikanify:refresh-vocabulary"; payload?: { force?: boolean } }
-  | { type: "wanikanify:performance"; payload: { processedNodes: number; averageMs: number; longestMs?: number } }
-  | { type: "wanikanify:refresh-imported-vocabulary" }
-  | { type: "wanikanify:clear-cache" }
+  | { type: typeof __WK_EVT_GET_STATE }
+  | { type: typeof __WK_EVT_GET_SETTINGS }
+  | { type: typeof __WK_EVT_REFRESH_VOCAB; payload?: { force?: boolean } }
+  | { type: typeof __WK_EVT_PERFORMANCE; payload: { processedNodes: number; averageMs: number; longestMs?: number } }
+  | { type: typeof __WK_EVT_REFRESH_IMPORTED_VOCAB }
+  | { type: typeof __WK_EVT_CLEAR_CACHE }
 
 type BackgroundResponse =
-  | { type: "wanikanify:state"; payload: ExtensionState }
-  | { type: "wanikanify:settings"; payload: WaniSettings }
-  | { type: "wanikanify:refresh-started" }
-  | { type: "wanikanify:error"; error: string }
+  | { type: typeof __WK_EVT_STATE; payload: ExtensionState }
+  | { type: typeof __WK_EVT_SETTINGS; payload: WaniSettings }
+  | { type: typeof __WK_EVT_REFRESH_STARTED }
+  | { type: typeof __WK_EVT_ERROR; error: string }
 
-type ExtensionState = {
+ type ExtensionState = {
   settings: WaniSettings
   vocabulary: VocabularyCachePayload | null
   isRefreshing: boolean
@@ -60,7 +77,7 @@ type ExtensionState = {
 
 const SETTINGS_STORAGE_KEY = "WaniSettings"
 const VOCABULARY_STORAGE_KEY = "WaniVocabularyCache"
-const VOCABULARY_REFRESH_ALARM = "wanikanify:vocabulary-refresh"
+const VOCABULARY_REFRESH_ALARM = __WK_ALARM_VOCAB_REFRESH
 const DEFAULT_REFRESH_INTERVAL_MINUTES = 60 * 6
 const CACHE_TTL_MS = 1000 * 60 * 60 * 6
 
@@ -109,7 +126,7 @@ class BackgroundController {
     const service = new ExtensionStorageService<VocabularyCachePayload>({
       area: 'local',
       quotaBytes: 5_242_880,
-      namespace: 'wanikanify-vocabulary'
+      namespace: __WK_NS_VOCABULARY
     })
 
     service.registerMigration({
@@ -206,7 +223,7 @@ class BackgroundController {
         } else if (cachedVocabulary.lastModifiedAssignments) {
           this.client.seedLastModifiedForAssignments(cachedVocabulary.lastModifiedAssignments)
         }
-      } catch (_) { /* non-fatal */ }
+  } catch { /* non-fatal */ }
     } else {
       this.vocabularyCache = null
     }
@@ -248,7 +265,7 @@ class BackgroundController {
         this.updateActionBehavior(this.settings)
 
         this.broadcast({
-          type: "wanikanify:settings",
+          type: __WK_EVT_SETTINGS,
           payload: this.settings
         })
 
@@ -266,7 +283,7 @@ class BackgroundController {
 
         this.vocabularyCache = newCache ?? null
         this.broadcast({
-          type: "wanikanify:state",
+          type: __WK_EVT_STATE,
           payload: this.buildState()
         })
       }
@@ -296,7 +313,7 @@ class BackgroundController {
         })
         .catch((error) => {
           sendResponse({
-            type: "wanikanify:error",
+            type: __WK_EVT_ERROR,
             error: error instanceof Error ? error.message : String(error)
           })
         })
@@ -328,34 +345,34 @@ class BackgroundController {
 
   private async handleMessage(message: BackgroundMessage): Promise<BackgroundResponse | void> {
     switch (message.type) {
-      case "wanikanify:get-state":
+      case __WK_EVT_GET_STATE:
         return {
-          type: "wanikanify:state",
+          type: __WK_EVT_STATE,
           payload: this.buildState()
         }
 
-      case "wanikanify:get-settings":
+      case __WK_EVT_GET_SETTINGS:
         return {
-          type: "wanikanify:settings",
+          type: __WK_EVT_SETTINGS,
           payload: this.settings
         }
 
-      case "wanikanify:refresh-imported-vocabulary":
+      case __WK_EVT_REFRESH_IMPORTED_VOCAB:
         await this.loadImportedVocabulary()
         await this.recalculateVocabularyEntriesFromCache()
-        return { type: "wanikanify:state", payload: this.buildState() }
-      case "wanikanify:refresh-vocabulary":
+        return { type: __WK_EVT_STATE, payload: this.buildState() }
+      case __WK_EVT_REFRESH_VOCAB:
         if (this.isRefreshing) {
-          return { type: "wanikanify:refresh-started" }
+          return { type: __WK_EVT_REFRESH_STARTED }
         }
 
         void this.refreshVocabulary(Boolean(message.payload?.force))
 
-        return { type: "wanikanify:refresh-started" }
-      case "wanikanify:clear-cache":
+        return { type: __WK_EVT_REFRESH_STARTED }
+      case __WK_EVT_CLEAR_CACHE:
         await this.clearVocabularyCache()
-        return { type: 'wanikanify:state', payload: this.buildState() }
-      case "wanikanify:performance":
+        return { type: __WK_EVT_STATE, payload: this.buildState() }
+      case __WK_EVT_PERFORMANCE:
         if (!this.settings.performanceTelemetry || !message.payload) {
           return
         }
@@ -369,7 +386,7 @@ class BackgroundController {
         )
         }
 
-        this.broadcast({ type: "wanikanify:state", payload: this.buildState() })
+        this.broadcast({ type: __WK_EVT_STATE, payload: this.buildState() })
         return
     }
   }
@@ -389,7 +406,7 @@ class BackgroundController {
 
     this.refreshPromise = this.performVocabularyRefresh()
       .catch((error) => {
-        console.error("WaniKanify: vocabulary refresh failed", error)
+  log.error('vocabulary refresh failed', error)
         throw error
       })
       .finally(() => {
@@ -401,7 +418,7 @@ class BackgroundController {
 
   private async performVocabularyRefresh(): Promise<VocabularyCachePayload | null> {
     this.isRefreshing = true
-    this.broadcast({ type: "wanikanify:state", payload: this.buildState() })
+    this.broadcast({ type: __WK_EVT_STATE, payload: this.buildState() })
 
     try {
       this.client.setToken(this.settings.apiToken ?? "")
@@ -474,7 +491,7 @@ class BackgroundController {
 
       this.vocabularyCache = cache
       await this.vocabularyStorage.saveCompressed(VOCABULARY_STORAGE_KEY, cache, 1)
-      this.broadcast({ type: "wanikanify:state", payload: this.buildState() })
+      this.broadcast({ type: __WK_EVT_STATE, payload: this.buildState() })
       return cache
     } catch (error) {
       const errorMessage =
@@ -496,21 +513,17 @@ class BackgroundController {
       this.vocabularyCache = cache
       await this.vocabularyStorage.saveCompressed(VOCABULARY_STORAGE_KEY, cache, 1)
 
-      this.broadcast({ type: "wanikanify:state", payload: this.buildState() })
+      this.broadcast({ type: __WK_EVT_STATE, payload: this.buildState() })
 
       return null
     } finally {
       this.isRefreshing = false
-      this.broadcast({ type: "wanikanify:state", payload: this.buildState() })
+      this.broadcast({ type: __WK_EVT_STATE, payload: this.buildState() })
     }
   }
 
   private async fetchVocabularySubjects(params: Record<string, string | undefined> = {}): Promise<WaniKaniSubject[]> {
-    try {
-      return await this.client.fetchAllVocabularySubjects(params)
-    } catch (error) {
-      throw error
-    }
+    return this.client.fetchAllVocabularySubjects(params)
   }
 
   private async fetchAssignments(): Promise<WaniKaniAssignment[]> {
@@ -518,10 +531,9 @@ class BackgroundController {
       return await this.client.fetchAssignments({ subject_types: "vocabulary" })
     } catch (error) {
       if (error instanceof WaniKaniError && error.status === 403) {
-        console.warn("WaniKanify: assignments access denied, continuing without SRS data")
+  log.warn('assignments access denied, continuing without SRS data')
         return []
       }
-
       throw error
     }
   }
@@ -543,12 +555,12 @@ class BackgroundController {
         const isNoReceiver = message.includes("Receiving end does not exist")
 
         if (!isNoReceiver && isDev) {
-          log.debug("WaniKanify: broadcast message failed", message)
+          log.debug('broadcast message failed', message)
         }
       })
     } catch (error) {
       if (isDev) {
-  log.debug("WaniKanify: failed to dispatch broadcast", error)
+  log.debug('failed to dispatch broadcast', error)
       }
     }
   }
@@ -565,41 +577,40 @@ class BackgroundController {
     }
 
     const result = this.vocabularyManager.build()
+
     const nextCache: VocabularyCachePayload = this.vocabularyCache
       ? {
           ...this.vocabularyCache,
-          vocabularyEntries: result.entries,
-          updatedAt: nowIso()
+          vocabularyEntries: result.entries
         }
       : {
           updatedAt: nowIso(),
-          expiresAt: nowIso(),
+          expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
           wanikaniSubjects: [],
           assignments: [],
           vocabularyEntries: result.entries
         }
 
     this.vocabularyCache = nextCache
-
     await this.vocabularyStorage.saveCompressed(
       VOCABULARY_STORAGE_KEY,
       nextCache,
       1
     )
-    this.broadcast({ type: "wanikanify:state", payload: this.buildState() })
+    this.broadcast({ type: __WK_EVT_STATE, payload: this.buildState() })
   }
 
   private async clearVocabularyCache(): Promise<void> {
     this.vocabularyCache = null
     await this.vocabularyStorage.remove(VOCABULARY_STORAGE_KEY)
     // Attempt to remove any lingering sync key
-    try { chrome.storage.sync?.remove?.(VOCABULARY_STORAGE_KEY) } catch (_) { /* ignore */ }
-    this.broadcast({ type: 'wanikanify:state', payload: this.buildState() })
+  try { chrome.storage.sync?.remove?.(VOCABULARY_STORAGE_KEY) } catch { /* ignore */ }
+    this.broadcast({ type: __WK_EVT_STATE, payload: this.buildState() })
   }
 
   private scheduleRefreshAlarm(): void {
     if (!chrome?.alarms?.create) {
-      console.warn("WaniKanify: alarms API unavailable, skipping refresh scheduling")
+  log.warn('alarms API unavailable, skipping refresh scheduling')
       return
     }
 
@@ -610,12 +621,12 @@ class BackgroundController {
   }
 
   private onInstall(): void {
-    console.info("WaniKanify: extension installed")
+  log.info('extension installed')
     this.scheduleRefreshAlarm()
   }
 
   private onUpdate(): void {
-    console.info("WaniKanify: extension updated")
+  log.info('extension updated')
     this.scheduleRefreshAlarm()
   }
 
@@ -658,7 +669,7 @@ class BackgroundController {
     try {
       chrome.action.setPopup({ popup: settings.apiToken ? "" : "popup.html" })
     } catch (error) {
-  log.debug("WaniKanify: unable to update action popup", error)
+  log.debug('unable to update action popup', error)
     }
   }
 
@@ -682,7 +693,7 @@ const controller = new BackgroundController()
 
 controller
   .init()
-  .catch((error) => console.error("WaniKanify: background init failed", error))
+  .catch((error) => log.error('background init failed', error))
 
 chrome.action.onClicked.addListener(async (tab) => {
   if (!controller.hasValidToken()) {
@@ -694,7 +705,7 @@ chrome.action.onClicked.addListener(async (tab) => {
     return
   }
 
-  chrome.tabs.sendMessage(tab.id, { type: "wanikanify:toggle-runtime" }, (response) => {
+  chrome.tabs.sendMessage(tab.id, { type: __WK_EVT_TOGGLE_RUNTIME }, (response) => {
     if (chrome.runtime.lastError) {
       return
     }

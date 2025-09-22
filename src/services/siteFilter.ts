@@ -20,7 +20,7 @@ const normalizeUrl = (url: string): string => {
   try {
     const parsed = new URL(url)
     return parsed.href
-  } catch (error) {
+  } catch {
     if (!url.startsWith("http")) {
       try {
         return new URL(`https://${url}`).href

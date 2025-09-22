@@ -1,3 +1,5 @@
+import { t } from '~src/utils/i18n'
+import { log } from '~src/utils/log'
 const wait = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, Math.max(ms, 0)))
 
@@ -209,7 +211,7 @@ export class WaniKaniClient {
 
     if (!this.hasToken()) {
       throw new WaniKaniError(
-        "Missing WaniKani API token",
+        t('wanikani_error_missing_token'),
         WaniKaniErrorCode.Unauthorized
       )
     }
@@ -300,7 +302,7 @@ export class WaniKaniClient {
       const hasUpdatedAfter = url.searchParams.has('updated_after')
       const isSubjects = /\/subjects$/.test(url.pathname)
       if (process.env.WK_DEBUG === '1' || process.env.WK_LIVE) {
-        try { console.info('[wanikani-client] 304 Not Modified for', cacheKey, isSubjects && hasUpdatedAfter ? '(subjects incremental empty delta)' : '') } catch (_) { /* noop */ }
+        log.info('[wanikani-client] 304 Not Modified for', cacheKey, isSubjects && hasUpdatedAfter ? '(subjects incremental empty delta)' : '')
       }
       if (isSubjects && hasUpdatedAfter) {
         // Return an empty collection shape compatible with PaginatedResponse<T>

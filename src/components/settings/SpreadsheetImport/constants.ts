@@ -1,4 +1,5 @@
 import type { SpreadSheet } from './types';
+import { t } from '~src/utils/i18n';
 
 export const EMPTY_SPREADSHEET: SpreadSheet = {
     collectionKey: "",
@@ -10,52 +11,52 @@ export const EMPTY_SPREADSHEET: SpreadSheet = {
 };
 
 export const COLUMNS = [
-    { id: 'collectionKey', label: 'Collection Key', placeholder: '1lIo2calXb_GtaQCMLr989_Ma_hxXlxFsHE0egko-D9k' },
-    { id: 'spreadSheetName', label: 'Sheet Name', placeholder: '6k Pt 1' },
-    { id: 'englishColumn', label: 'English Column', placeholder: 'English' },
-    { id: 'japaneseColumn', label: 'Japanese Column', placeholder: 'Japanese' },
-    { id: 'readingColumn', label: 'Reading Column', placeholder: 'Reading' },
-    { id: 'delimiter', label: 'Delimiter', placeholder: ',' },
+    { id: 'collectionKey', label: t('import_column_collection_key_label'), placeholder: t('import_column_collection_key_placeholder') },
+    { id: 'spreadSheetName', label: t('import_column_spreadsheet_name_label'), placeholder: t('import_column_spreadsheet_name_placeholder') },
+    { id: 'englishColumn', label: t('import_column_english_label'), placeholder: t('import_column_english_placeholder') },
+    { id: 'japaneseColumn', label: t('import_column_japanese_label'), placeholder: t('import_column_japanese_placeholder') },
+    { id: 'readingColumn', label: t('import_column_reading_label'), placeholder: t('import_column_reading_placeholder') },
+    { id: 'delimiter', label: t('import_column_delimiter_label'), placeholder: t('import_column_delimiter_placeholder') },
 ];
 
 export const TOOLTIP_CONTENT = {
-    TITLE: 'Spreadsheet Import',
-    DESCRIPTION: 'Import vocabulary from Google Spreadsheets published on the Web.',
-    PUBLISH_INSTRUCTION: 'To publish the spreadsheet: File->Share->Publish to web',
+    TITLE: t('import_tooltip_title'),
+    DESCRIPTION: t('import_tooltip_description'),
+    PUBLISH_INSTRUCTION: t('import_tooltip_publish_instruction'),
     FIELDS: [
         { 
             id: COLUMNS[0].id,
             label: COLUMNS[0].label,
-            description: 'The spreadsheet collection (group of sheets) unique key. Found in its URL and similar to this:',
-            example: '1lIo2calXb_GtaQCKLr989-Ma_hxXlxFsHE0egko-D9k'
+            description: t('import_tooltip_field_collection_key_description'),
+            example: t('import_column_collection_key_placeholder'),
         },
         {
             id: COLUMNS[1].id,
             label: COLUMNS[1].label,
-            description: 'Name of the selected tab at the bottom of the spreadsheet.'
+            description: t('import_tooltip_field_spreadsheet_name_description')
         },
         {
             id: COLUMNS[2].id,
             label: COLUMNS[2].label,
-            description: 'Name of the column containing english words.'
+            description: t('import_tooltip_field_english_description')
         },
         {
             id: COLUMNS[3].id,
             label: COLUMNS[3].label,
-            description: 'Name of the column containing Kanji/japanese words.'
+            description: t('import_tooltip_field_japanese_description')
         },
         {
             id: COLUMNS[4].id,
             label: COLUMNS[4].label,
-            description: 'Name of the column containing furigana readings.',
+            description: t('import_tooltip_field_reading_description'),
             optional: true
         },
         {
             id: COLUMNS[5].id,
             label: COLUMNS[5].label,
-            description: 'Delimiter for multiple English words (default: comma).',
+            description: t('import_tooltip_field_delimiter_description'),
             optional: true
         }
     ],
-    WARNING: 'Browser Sync synchronizes the list of spreadsheets but not the vocabulary. Click import on each different browser.'
+    WARNING: t('import_tooltip_warning')
 };

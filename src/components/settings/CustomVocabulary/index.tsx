@@ -3,6 +3,7 @@ import { Box, Typography, TextField, Tooltip, IconButton } from '@mui/material';
 import { HelpOutline } from '@mui/icons-material';
 import { WaniTooltip } from '../../common/WaniTooltip';
 import { EXAMPLES, HELP_TEXT, CUSTOM_VOCAB_MAX_ENTRIES } from './constants';
+import { t } from 'src/utils/i18n';
 import type { ChangingWithErrorHandlingProps } from '~src/components/common/types';
 import { useToCustomVocabularyMap } from './hooks';
 
@@ -17,7 +18,7 @@ export const CustomVocabularyTextArea: React.FC<ChangingWithErrorHandlingProps<s
     // provide error state to parent component once validationError changes
     useEffect(() => {
         onErrorHandled(Boolean(validationError));
-    }, [validationError]);
+    }, [validationError, onErrorHandled]);
 
     // Verify input and update error state
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -39,13 +40,13 @@ export const CustomVocabularyTextArea: React.FC<ChangingWithErrorHandlingProps<s
         <Box width="100%">
             <Box display="flex" alignItems="center" gap={2} mb={2}>
                 <Typography variant="h6" fontWeight="lg">
-                    {HELP_TEXT.TITLE}
+                    {t(HELP_TEXT.TITLE_KEY)}
                 </Typography>
                 <Tooltip
                     title={
-                        <WaniTooltip title={HELP_TEXT.TITLE}>
+                        <WaniTooltip title={t(HELP_TEXT.TITLE_KEY)}>
                             <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-                                {HELP_TEXT.DESCRIPTION}
+                                {t(HELP_TEXT.DESCRIPTION_KEY)}
                             </Typography>
                             <Box sx={{
                                 bgcolor: 'background.paper',
@@ -55,13 +56,13 @@ export const CustomVocabularyTextArea: React.FC<ChangingWithErrorHandlingProps<s
                                 borderColor: 'divider'
                             }}>
                                 <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                                    {HELP_TEXT.FORMAT_LABEL}
+                                    {t(HELP_TEXT.FORMAT_LABEL_KEY)}
                                 </Typography>
                                 <Typography variant="body2" sx={{ mb: 1 }}>
                                     {EXAMPLES.FORMAT}
                                 </Typography>
                                 <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                                    {HELP_TEXT.EXAMPLE_LABEL}
+                                    {t(HELP_TEXT.EXAMPLE_LABEL_KEY)}
                                 </Typography>
                                 <Typography variant="body2" sx={{
                                     fontFamily: 'monospace',
@@ -72,9 +73,9 @@ export const CustomVocabularyTextArea: React.FC<ChangingWithErrorHandlingProps<s
                                     {EXAMPLES.ENTRY}
                                 </Typography>
                                 <Typography variant="body2" sx={{ mt: 2 }}>
-                                    {HELP_TEXT.NOTES.map((note, i) => (
+                                    {HELP_TEXT.NOTES_KEYS.map((key, i) => (
                                         <Fragment key={i}>
-                                            • {note}<br />
+                                            • {t(key)}<br />
                                         </Fragment>
                                     ))}
                                 </Typography>

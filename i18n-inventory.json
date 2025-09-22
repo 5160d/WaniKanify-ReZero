@@ -1,0 +1,689 @@
+{
+  "meta": {
+    "generated": "2025-09-21T00:00:00Z",
+    "note": "Phase 1 inventory - initial scaffold; update as more strings are catalogued"
+  },
+  "entries": [
+    {
+      "key": "popup_api_token_label",
+      "defaultMessage": "API Token",
+      "fileRefs": ["src/popup.tsx"],
+      "domain": "popup",
+      "description": "Label for API token input field"
+    },
+    {
+      "key": "popup_save_button",
+      "defaultMessage": "Save",
+      "fileRefs": ["src/popup.tsx"],
+      "domain": "popup",
+      "description": "Button text to save API token"
+    },
+    {
+      "key": "popup_status_not_set",
+      "defaultMessage": "Token not set",
+      "fileRefs": ["src/popup.tsx"],
+      "domain": "popup",
+      "description": "Status text when no token is stored"
+    },
+    {
+      "key": "options_heading_settings",
+      "defaultMessage": "Settings",
+      "fileRefs": ["src/options.tsx"],
+      "domain": "settings",
+      "description": "Main settings page heading"
+    },
+    {
+      "key": "settings_audio_volume_label",
+      "defaultMessage": "Volume",
+      "fileRefs": ["src/components/settings/AudioToggle.tsx"],
+      "domain": "settings",
+      "description": "Audio volume slider label (if present)"
+    },
+    {
+      "key": "settings_audio_enable_label",
+      "defaultMessage": "Enable Audio",
+      "fileRefs": ["src/components/settings/AudioToggle.tsx"],
+      "domain": "settings",
+      "description": "Toggle to enable or disable audio playback"
+    },
+    {
+      "key": "settings_tooltips_enable_label",
+      "defaultMessage": "Show Tooltips",
+      "fileRefs": ["src/components/settings/toggles/TooltipsToggle.tsx"],
+      "domain": "settings",
+      "description": "Toggle to show vocabulary replacement tooltips"
+    },
+    {
+      "key": "settings_numbers_enable_label",
+      "defaultMessage": "Replace Numbers",
+      "fileRefs": ["src/components/settings/toggles/NumbersToggle.tsx"],
+      "domain": "settings",
+      "description": "Toggle for number kanji replacement"
+    },
+    {
+      "key": "settings_performance_telemetry_label",
+      "defaultMessage": "Performance Telemetry",
+      "fileRefs": ["src/components/settings/toggles/PerformanceTelemetryToggle.tsx"],
+      "domain": "settings",
+      "description": "Toggle for collecting performance metrics"
+    },
+    {
+      "key": "settings_autorun_label",
+      "defaultMessage": "Auto Run",
+      "fileRefs": ["src/components/settings/toggles/AutoRunToggle.tsx"],
+      "domain": "settings",
+      "description": "Toggle to automatically process pages"
+    },
+    {
+      "key": "settings_srs_section_heading",
+      "defaultMessage": "SRS Stages",
+      "fileRefs": ["src/components/settings/SRSCheckboxes/index.tsx"],
+      "domain": "settings",
+      "description": "Heading for SRS stage selection"
+    },
+    {
+      "key": "settings_save_button",
+      "defaultMessage": "Save Settings",
+      "fileRefs": ["src/components/settings/SaveButton/index.tsx"],
+      "domain": "settings",
+      "description": "Button to persist settings changes"
+    },
+    {
+      "key": "settings_clear_cache_button",
+      "defaultMessage": "Clear Cache",
+      "fileRefs": ["src/components/settings/ClearCacheButton/index.tsx"],
+      "domain": "settings",
+      "description": "Button label for clearing vocabulary cache"
+    },
+    {
+      "key": "settings_import_section_heading",
+      "defaultMessage": "Spreadsheet Import",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Heading for spreadsheet import tools"
+    },
+    {
+      "key": "settings_custom_vocab_heading",
+      "defaultMessage": "Custom Vocabulary",
+      "fileRefs": ["src/components/settings/CustomVocabulary/index.tsx"],
+      "domain": "settings",
+      "description": "Section heading for custom vocabulary input"
+    },
+    {
+      "key": "settings_blacklist_heading",
+      "defaultMessage": "Vocabulary Blacklist",
+      "fileRefs": ["src/components/settings/VocabularyBlacklist/index.tsx"],
+      "domain": "settings",
+      "description": "Heading for blacklist input"
+    },
+    {
+      "key": "settings_sites_filtering_heading",
+      "defaultMessage": "Sites Filtering",
+      "fileRefs": ["src/components/settings/SitesFiltering/index.tsx"],
+      "domain": "settings",
+      "description": "Heading for site filtering configuration"
+    },
+    {
+      "key": "import_validation_missing_column",
+      "defaultMessage": "Missing required column",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Error displayed when a required CSV column is absent"
+    },
+    {
+      "key": "error_audio_playback_failed",
+      "defaultMessage": "Failed to play audio",
+      "fileRefs": ["src/services/audio.ts"],
+      "domain": "audio",
+      "description": "Log / warning when audio element fails to play"
+    },
+    {
+      "key": "error_generic_network",
+      "defaultMessage": "Network error",
+      "fileRefs": ["src/background.ts"],
+      "domain": "errors",
+      "description": "Generic network error surfaced to UI"
+    }
+    ,
+    {
+      "key": "options_header_title",
+      "defaultMessage": "WaniKanify Settings",
+      "fileRefs": ["src/options.tsx"],
+      "domain": "options",
+      "description": "Main options page title heading"
+    },
+    {
+      "key": "options_footer_github_tooltip",
+      "defaultMessage": "View on GitHub",
+      "fileRefs": ["src/options.tsx"],
+      "domain": "options",
+      "description": "Tooltip for GitHub repository icon button"
+    },
+    {
+      "key": "options_footer_github_aria",
+      "defaultMessage": "View source on GitHub",
+      "fileRefs": ["src/options.tsx"],
+      "domain": "options",
+      "description": "ARIA label for GitHub icon button"
+    },
+    {
+      "key": "options_sections_general",
+      "defaultMessage": "General",
+      "fileRefs": ["src/options.tsx"],
+      "domain": "options",
+      "description": "Section label General"
+    },
+    {
+      "key": "options_sections_behavior",
+      "defaultMessage": "Behavior",
+      "fileRefs": ["src/options.tsx"],
+      "domain": "options",
+      "description": "Section label Behavior"
+    },
+    {
+      "key": "options_sections_vocabulary",
+      "defaultMessage": "Vocabulary",
+      "fileRefs": ["src/options.tsx"],
+      "domain": "options",
+      "description": "Section label Vocabulary"
+    },
+    {
+      "key": "options_sections_tools",
+      "defaultMessage": "Tools",
+      "fileRefs": ["src/options.tsx"],
+      "domain": "options",
+      "description": "Section label Tools"
+    },
+    {
+      "key": "options_sections_debug",
+      "defaultMessage": "Debug",
+      "fileRefs": ["src/options.tsx"],
+      "domain": "options",
+      "description": "Section label Debug"
+    },
+    {
+      "key": "validation_api_token_format",
+      "defaultMessage": "Token should match XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX format",
+      "fileRefs": ["src/options.tsx"],
+      "domain": "validation",
+      "description": "Helper text for invalid API token format"
+    },
+    {
+      "key": "toggle_autorun_label",
+      "defaultMessage": "Auto Run",
+      "fileRefs": ["src/components/settings/toggles/AutoRunToggle.tsx"],
+      "domain": "settings",
+      "description": "Label for auto run toggle (duplicate of settings_autorun_label if merging later)"
+    },
+    {
+      "key": "toggle_autorun_tooltip_title",
+      "defaultMessage": "Auto Run",
+      "fileRefs": ["src/components/settings/toggles/AutoRunToggle.tsx"],
+      "domain": "settings",
+      "description": "Tooltip header for auto run toggle"
+    },
+    {
+      "key": "toggle_autorun_tooltip_line1",
+      "defaultMessage": "You may have WaniKanify run automatically after a page loads. Otherwise, click on the extension icon to run it.",
+      "fileRefs": ["src/components/settings/toggles/AutoRunToggle.tsx"],
+      "domain": "settings",
+      "description": "Auto run tooltip first explanatory sentence"
+    },
+    {
+      "key": "toggle_autorun_tooltip_line2",
+      "defaultMessage": "With both settings, clicking the extension will return the page to its original state.",
+      "fileRefs": ["src/components/settings/toggles/AutoRunToggle.tsx"],
+      "domain": "settings",
+      "description": "Auto run tooltip second explanatory sentence"
+    },
+    {
+      "key": "toggle_tooltips_label",
+      "defaultMessage": "Show Furigana Tooltips",
+      "fileRefs": ["src/components/settings/toggles/TooltipsToggle.tsx"],
+      "domain": "settings",
+      "description": "Label for tooltips toggle"
+    },
+    {
+      "key": "toggle_tooltips_title",
+      "defaultMessage": "Furigana Tooltips",
+      "fileRefs": ["src/components/settings/toggles/TooltipsToggle.tsx"],
+      "domain": "settings",
+      "description": "Tooltip title for tooltips toggle"
+    },
+    {
+      "key": "toggle_tooltips_description",
+      "defaultMessage": "Toggle off to hide the original English and furigana tooltips that appear when hovering over replaced words.",
+      "fileRefs": ["src/components/settings/toggles/TooltipsToggle.tsx"],
+      "domain": "settings",
+      "description": "Tooltip body text for tooltips toggle"
+    },
+    {
+      "key": "toggle_numbers_label",
+      "defaultMessage": "WaniKanify Numbers",
+      "fileRefs": ["src/components/settings/toggles/NumbersToggle.tsx"],
+      "domain": "settings",
+      "description": "Label for numbers replacement toggle"
+    },
+    {
+      "key": "toggle_numbers_title",
+      "defaultMessage": "WaniKanify Numbers",
+      "fileRefs": ["src/components/settings/toggles/NumbersToggle.tsx"],
+      "domain": "settings",
+      "description": "Tooltip title for numbers toggle"
+    },
+    {
+      "key": "toggle_numbers_description",
+      "defaultMessage": "Toggle on for numerical numbers to be replaced with Kanji as well.",
+      "fileRefs": ["src/components/settings/toggles/NumbersToggle.tsx"],
+      "domain": "settings",
+      "description": "Tooltip body for numbers toggle"
+    },
+    {
+      "key": "toggle_performance_label",
+      "defaultMessage": "Performance Telemetry",
+      "fileRefs": ["src/components/settings/toggles/PerformanceTelemetryToggle.tsx"],
+      "domain": "settings",
+      "description": "Label for performance telemetry toggle"
+    },
+    {
+      "key": "toggle_performance_title",
+      "defaultMessage": "Local Debug Telemetry",
+      "fileRefs": ["src/components/settings/toggles/PerformanceTelemetryToggle.tsx"],
+      "domain": "settings",
+      "description": "Tooltip title for performance telemetry toggle"
+    },
+    {
+      "key": "toggle_performance_line1",
+      "defaultMessage": "Enable this to surface matcher timing breakdowns in your browser console so you can diagnose slow nodes without rebuilding the extension.",
+      "fileRefs": ["src/components/settings/toggles/PerformanceTelemetryToggle.tsx"],
+      "domain": "settings",
+      "description": "First explanatory line performance telemetry"
+    },
+    {
+      "key": "toggle_performance_line2",
+      "defaultMessage": "The data stays on your machine; nothing is transmitted, and disabling the toggle silences the logs.",
+      "fileRefs": ["src/components/settings/toggles/PerformanceTelemetryToggle.tsx"],
+      "domain": "settings",
+      "description": "Second explanatory line performance telemetry"
+    },
+    {
+      "key": "toggle_audio_label",
+      "defaultMessage": "Play Audio",
+      "fileRefs": ["src/components/settings/toggles/AudioToggle.tsx"],
+      "domain": "settings",
+      "description": "Audio toggle label"
+    },
+    {
+      "key": "toggle_audio_title",
+      "defaultMessage": "Optional Audio",
+      "fileRefs": ["src/components/settings/toggles/AudioToggle.tsx"],
+      "domain": "settings",
+      "description": "Tooltip title for audio toggle"
+    },
+    {
+      "key": "toggle_audio_description",
+      "defaultMessage": "Mousing over a word or clicking it will audibly play its pronunciation.",
+      "fileRefs": ["src/components/settings/toggles/AudioToggle.tsx"],
+      "domain": "settings",
+      "description": "Tooltip description for audio toggle"
+    },
+    {
+      "key": "audio_mode_click",
+      "defaultMessage": "Click",
+      "fileRefs": ["src/components/settings/toggles/AudioToggle.tsx"],
+      "domain": "audio",
+      "description": "Label for click audio mode option"
+    },
+    {
+      "key": "audio_mode_hover",
+      "defaultMessage": "Hover",
+      "fileRefs": ["src/components/settings/toggles/AudioToggle.tsx"],
+      "domain": "audio",
+      "description": "Label for hover audio mode option"
+    },
+    {
+      "key": "audio_volume_label",
+      "defaultMessage": "Volume",
+      "fileRefs": ["src/components/settings/toggles/AudioToggle.tsx"],
+      "domain": "audio",
+      "description": "Label for audio volume slider (duplicate of settings_audio_volume_label)"
+    },
+    {
+      "key": "preview_heading",
+      "defaultMessage": "Live Preview",
+      "fileRefs": ["src/components/settings/Preview/index.tsx"],
+      "domain": "preview",
+      "description": "Heading above live preview card"
+    },
+    {
+      "key": "preview_description",
+      "defaultMessage": "See how your current configuration affects sample text. Custom vocabulary, blacklist entries, and number replacement rules are applied instantly.",
+      "fileRefs": ["src/components/settings/Preview/index.tsx"],
+      "domain": "preview",
+      "description": "Description under live preview heading"
+    },
+    {
+      "key": "import_state_not_imported",
+      "defaultMessage": "Not imported yet",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Initial sheet state message"
+    },
+    {
+      "key": "import_validation_fill_required",
+      "defaultMessage": "Fill all required fields before importing.",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Error when required spreadsheet fields missing"
+    },
+    {
+      "key": "import_state_importing",
+      "defaultMessage": "Importing...",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Loading state message during spreadsheet import"
+    },
+    {
+      "key": "import_state_success_template",
+      "defaultMessage": "Imported $ENTRY_COUNT$ entries$WARNINGS$",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Template for success import message with optional warnings placeholder"
+    },
+    {
+      "key": "import_state_success_warnings_fragment",
+      "defaultMessage": " with $WARNING_COUNT$ warnings",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Fragment appended when warnings > 0"
+    },
+    {
+      "key": "import_snackbar_success",
+      "defaultMessage": "Spreadsheet imported successfully",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Snackbar success message after spreadsheet import"
+    },
+    {
+      "key": "import_snackbar_failed",
+      "defaultMessage": "Failed to import spreadsheet",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Snackbar message when import fails"
+    },
+    {
+      "key": "import_state_error_fallback",
+      "defaultMessage": "Import failed",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Fallback error message if error has no message"
+    },
+    {
+      "key": "import_heading_imported_vocab",
+      "defaultMessage": "Imported Vocabulary",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Heading for imported vocabulary table"
+    },
+    {
+      "key": "import_table_actions",
+      "defaultMessage": "Actions",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Column header for action buttons"
+    },
+    {
+      "key": "import_button_import",
+      "defaultMessage": "Import",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Button to import a spreadsheet"
+    },
+    {
+      "key": "import_button_add",
+      "defaultMessage": "Add",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Button to add spreadsheet row"
+    },
+    {
+      "key": "import_history_heading",
+      "defaultMessage": "Import History",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Heading for import history list"
+    },
+    {
+      "key": "import_history_tooltip_show",
+      "defaultMessage": "Show history",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Tooltip to show history"
+    },
+    {
+      "key": "import_history_tooltip_hide",
+      "defaultMessage": "Hide history",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Tooltip to hide history"
+    },
+    {
+      "key": "import_history_snackbar_restore_success",
+      "defaultMessage": "Restored $SHEET_NAME$",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Snackbar message after restoring history entry"
+    },
+    {
+      "key": "import_history_snackbar_restore_failed",
+      "defaultMessage": "Failed to restore backup",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Snackbar failure message for restore"
+    },
+    {
+      "key": "import_history_snackbar_removed",
+      "defaultMessage": "Removed imported data for $SHEET_NAME$",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Snackbar message after deleting history entry"
+    },
+    {
+      "key": "import_history_snackbar_not_found",
+      "defaultMessage": "History entry not found",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Snackbar when attempting to delete missing entry"
+    },
+    {
+      "key": "import_history_snackbar_delete_failed",
+      "defaultMessage": "Failed to delete history entry",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Snackbar message when delete history fails"
+    },
+    {
+      "key": "import_history_empty",
+      "defaultMessage": "No import history available yet.",
+      "fileRefs": ["src/components/settings/SpreadsheetImport/index.tsx"],
+      "domain": "import",
+      "description": "Message when import history list empty"
+    }
+    ,
+    {
+      "key": "settings_tools_heading",
+      "defaultMessage": "Settings Tools",
+      "fileRefs": ["src/components/settings/SettingsTools/index.tsx"],
+      "domain": "tools",
+      "description": "Heading for settings tools card"
+    },
+    {
+      "key": "settings_tools_button_export",
+      "defaultMessage": "Export Settings",
+      "fileRefs": ["src/components/settings/SettingsTools/index.tsx"],
+      "domain": "tools",
+      "description": "Button label to export settings JSON"
+    },
+    {
+      "key": "settings_tools_button_import",
+      "defaultMessage": "Import Settings",
+      "fileRefs": ["src/components/settings/SettingsTools/index.tsx"],
+      "domain": "tools",
+      "description": "Button label to import settings JSON"
+    },
+    {
+      "key": "settings_tools_button_create_backup",
+      "defaultMessage": "Create Backup",
+      "fileRefs": ["src/components/settings/SettingsTools/index.tsx"],
+      "domain": "tools",
+      "description": "Button label to create a local backup"
+    },
+    {
+      "key": "settings_tools_button_reset_defaults",
+      "defaultMessage": "Reset Defaults",
+      "fileRefs": ["src/components/settings/SettingsTools/index.tsx"],
+      "domain": "tools",
+      "description": "Button label to reset settings to default values"
+    },
+    {
+      "key": "settings_tools_button_pull_sync",
+      "defaultMessage": "Pull from Sync",
+      "fileRefs": ["src/components/settings/SettingsTools/index.tsx"],
+      "domain": "tools",
+      "description": "Button label to fetch synced settings"
+    },
+    {
+      "key": "settings_tools_backups_heading",
+      "defaultMessage": "Backups",
+      "fileRefs": ["src/components/settings/SettingsTools/index.tsx"],
+      "domain": "tools",
+      "description": "Heading for backups subsection"
+    },
+    {
+      "key": "settings_tools_no_backups",
+      "defaultMessage": "No backups yet. Create one to capture your current configuration.",
+      "fileRefs": ["src/components/settings/SettingsTools/index.tsx"],
+      "domain": "tools",
+      "description": "Empty state message when there are no backups"
+    },
+    {
+      "key": "settings_tools_snackbar_export_success",
+      "defaultMessage": "Settings exported successfully",
+      "fileRefs": ["src/components/settings/SettingsTools/index.tsx"],
+      "domain": "tools",
+      "description": "Snackbar: export success"
+    },
+    {
+      "key": "settings_tools_snackbar_export_failed",
+      "defaultMessage": "Failed to export settings",
+      "fileRefs": ["src/components/settings/SettingsTools/index.tsx"],
+      "domain": "tools",
+      "description": "Snackbar: export failure"
+    },
+    {
+      "key": "settings_tools_snackbar_import_success",
+      "defaultMessage": "Settings imported",
+      "fileRefs": ["src/components/settings/SettingsTools/index.tsx"],
+      "domain": "tools",
+      "description": "Snackbar: import success"
+    },
+    {
+      "key": "settings_tools_snackbar_import_failed",
+      "defaultMessage": "Failed to import settings",
+      "fileRefs": ["src/components/settings/SettingsTools/index.tsx"],
+      "domain": "tools",
+      "description": "Snackbar: import failure"
+    },
+    {
+      "key": "settings_tools_snackbar_backup_created",
+      "defaultMessage": "Backup created",
+      "fileRefs": ["src/components/settings/SettingsTools/index.tsx"],
+      "domain": "tools",
+      "description": "Snackbar: backup created"
+    },
+    {
+      "key": "settings_tools_snackbar_backup_failed",
+      "defaultMessage": "Failed to create backup",
+      "fileRefs": ["src/components/settings/SettingsTools/index.tsx"],
+      "domain": "tools",
+      "description": "Snackbar: backup creation failed"
+    },
+    {
+      "key": "settings_tools_snackbar_restore_success",
+      "defaultMessage": "Restored $BACKUP_NAME$",
+      "fileRefs": ["src/components/settings/SettingsTools/index.tsx"],
+      "domain": "tools",
+      "description": "Snackbar: restore backup success"
+    },
+    {
+      "key": "settings_tools_snackbar_restore_failed",
+      "defaultMessage": "Failed to restore backup",
+      "fileRefs": ["src/components/settings/SettingsTools/index.tsx"],
+      "domain": "tools",
+      "description": "Snackbar: restore backup failed"
+    },
+    {
+      "key": "settings_tools_snackbar_backup_deleted",
+      "defaultMessage": "Backup deleted",
+      "fileRefs": ["src/components/settings/SettingsTools/index.tsx"],
+      "domain": "tools",
+      "description": "Snackbar: backup deleted"
+    },
+    {
+      "key": "settings_tools_confirm_reset_defaults",
+      "defaultMessage": "Reset all settings to their default values?",
+      "fileRefs": ["src/components/settings/SettingsTools/index.tsx"],
+      "domain": "tools",
+      "description": "Confirmation dialog for resetting defaults"
+    },
+    {
+      "key": "settings_tools_snackbar_reset_defaults",
+      "defaultMessage": "Settings reset to defaults",
+      "fileRefs": ["src/components/settings/SettingsTools/index.tsx"],
+      "domain": "tools",
+      "description": "Snackbar: settings reset confirmation"
+    },
+    {
+      "key": "settings_tools_snackbar_fetch_synced",
+      "defaultMessage": "Fetched latest synced settings",
+      "fileRefs": ["src/components/settings/SettingsTools/index.tsx"],
+      "domain": "tools",
+      "description": "Snackbar: fetched latest synced settings"
+    },
+    {
+      "key": "blacklist_section_heading",
+      "defaultMessage": "Blacklisted Vocabulary",
+      "fileRefs": ["src/components/settings/VocabularyBlacklist/index.tsx"],
+      "domain": "blacklist",
+      "description": "Heading label inside blacklist textarea component"
+    },
+    {
+      "key": "blacklist_tooltip_title",
+      "defaultMessage": "Blacklisted Vocabulary",
+      "fileRefs": ["src/components/settings/VocabularyBlacklist/index.tsx"],
+      "domain": "blacklist",
+      "description": "Tooltip title for blacklist"
+    },
+    {
+      "key": "blacklist_word_count_template",
+      "defaultMessage": "$USED$ / $MAX$ words",
+      "fileRefs": ["src/components/settings/VocabularyBlacklist/index.tsx"],
+      "domain": "blacklist",
+      "description": "Counter showing number of blacklist words vs max"
+    },
+    {
+      "key": "blacklist_error_too_many_entries",
+      "defaultMessage": "Too many entries: $USED$ / $MAX$",
+      "fileRefs": ["src/components/settings/VocabularyBlacklist/hooks.ts"],
+      "domain": "blacklist",
+      "description": "Error message when blacklist exceeds max entries"
+    },
+    {
+      "key": "sites_filtering_delete_aria",
+      "defaultMessage": "Delete",
+      "fileRefs": ["src/components/settings/SitesFiltering/index.tsx"],
+      "domain": "sitesFiltering",
+      "description": "ARIA label for delete site filtering rule button"
+    }
+  ]
+}

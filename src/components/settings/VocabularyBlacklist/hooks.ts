@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { t } from '~src/utils/i18n';
 import { BLACKLIST_MAX_ENTRIES } from './constants';
 
 /**
@@ -25,7 +26,7 @@ export const useParseBlacklist = () => {
         const unique = new Set(tokens);
 
         if (!unique.size) {
-            setError('Invalid list');
+        setError(t('blacklist_invalid_list_error'));
             return unique;
         }
 

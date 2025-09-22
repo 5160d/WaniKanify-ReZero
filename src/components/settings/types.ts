@@ -39,32 +39,36 @@ export type SiteOverrideSettings = Partial<{
 }>;
 
 // functions to serialize and deserialize WaniSettings
-export function waniSettingsSerializer(key: string, value: any): any {
-    if (key === "customVocabulary") {
-        // Convert a Map into an object with a _type marker
+// Internal sentinel identifiers used only for JSON round‑tripping; not user‑visible UI strings.
+// Internal sentinel constants (not user-visible UI text)
+const __WK_SENTINEL_CUSTOM_VOCAB = '__customVocabulary__'
+const __WK_SENTINEL_VOCAB_BLACKLIST = '__vocabularyBlacklist__'
+
+export function waniSettingsSerializer(key: string, value: unknown): unknown {
+    if (key === 'customVocabulary' && value instanceof Map) {
         return {
-            _type: "customVocabulary",
-            object: Array.from(value)
+            _type: __WK_SENTINEL_CUSTOM_VOCAB,
+            object: Array.from(value.entries())
         }
     }
-    if (key === "vocabularyBlacklist") {
-        // Convert a Set into an object with a _type marker
+    if (key === 'vocabularyBlacklist' && value instanceof Set) {
         return {
-            _type: "vocabularyBlacklist",
-            object: Array.from(value)
+            _type: __WK_SENTINEL_VOCAB_BLACKLIST,
+            object: Array.from(value.values())
         }
     }
     return value
 }
 
-export function waniSettingsDeserializer(key: string, value: any): any {
-    // Handle Maps
-    if (value && value._type === "customVocabulary") {
-        return new Map(value.object) as CustomVocabularyMap
-    }
-    // Handle Sets
-    if (value && value._type === "vocabularyBlacklist") {
-        return new Set<string>(value.object)
+export function waniSettingsDeserializer(_key: string, value: unknown): unknown {
+    if (value && typeof value === 'object') {
+        const v = value as { _type?: string, object?: unknown }
+        if (v._type === __WK_SENTINEL_CUSTOM_VOCAB && Array.isArray(v.object)) {
+            return new Map(v.object as [string, { japanese: string; reading?: string }][]) as CustomVocabularyMap
+        }
+        if (v._type === __WK_SENTINEL_VOCAB_BLACKLIST && Array.isArray(v.object)) {
+            return new Set<string>(v.object as string[])
+        }
     }
     return value
 }

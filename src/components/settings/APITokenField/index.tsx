@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import { HelpOutline } from '@mui/icons-material';
 import { WaniTooltip } from '../../common/WaniTooltip';
+import { t } from 'src/utils/i18n';
 import { WANIKANI_API_TOKEN_URL } from './constants';
 import type { ChangingProps } from 'src/components/common/types';
 
@@ -30,7 +31,7 @@ export const APITokenField: React.FC<APITokenFieldProps> = ({ value, onChange, e
             <TextField
                 required
                 id="filled-required"
-                label="API Token"
+                label={t('popup_api_token_label')}
                 variant="filled"
                 fullWidth
                 value={value}
@@ -43,7 +44,7 @@ export const APITokenField: React.FC<APITokenFieldProps> = ({ value, onChange, e
 
                             <Tooltip
                                 title={
-                                    <WaniTooltip title="API Token">
+                                    <WaniTooltip title={t('popup_api_token_label')}>
                                         <Box sx={{
                                             bgcolor: 'background.paper',
                                             p: 2,
@@ -52,18 +53,18 @@ export const APITokenField: React.FC<APITokenFieldProps> = ({ value, onChange, e
                                             borderColor: 'divider'
                                         }}>
                                             <Typography variant="body2" sx={{ mb: 2 }}>
-                                                You can generate a new API token on the{" "}
+                                                {t('popup_api_token_tooltip_line1_part1')}{' '}
                                                 <a
                                                     href={WANIKANI_API_TOKEN_URL}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                 >
-                                                    API Tokens section
-                                                </a>{" "}
-                                                of your WaniKani profile.
+                                                    {t('popup_api_token_tooltip_line1_link')}
+                                                </a>{' '}
+                                                {t('popup_api_token_tooltip_line1_part2')}
                                             </Typography>
                                             <Typography variant="body2" sx={{ mb: 2 }}>
-                                                Your API token is only used to read your vocabulary list.
+                                                {t('popup_api_token_tooltip_line2')}
                                             </Typography>
                                         </Box>
                                     </WaniTooltip>

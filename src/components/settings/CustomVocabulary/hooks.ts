@@ -8,6 +8,7 @@
 import { useCallback, useState } from "react";
 import type { CustomVocabularyMap } from "../types";
 import { parseCustomVocabulary } from './utils';
+import { t } from '~src/utils/i18n';
 import { CUSTOM_VOCAB_MAX_ENTRIES } from './constants';
 
 /**
@@ -35,7 +36,7 @@ export const useToCustomVocabularyMap = () => {
 
         // Validate parsing result
         if (!vocabularyMap.size) {
-            setError('Invalid entry format');
+            setError(t('custom_vocab_invalid_entry_error'));
             return new Map();
         }
 

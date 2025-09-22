@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { log } from '~src/utils/log'
 import { useStorage } from "@plasmohq/storage/hook"
 import { Storage } from "@plasmohq/storage"
 import { type WaniSettings, WaniSettingsFormImpl, waniSettingsSerializer, waniSettingsDeserializer } from '../types';
@@ -14,7 +15,7 @@ import { DEFAULT_SETTINGS, SETTINGS_VERSION } from '../constants';
 import { shouldBackfillSettings } from '../utils/backfill';
 import equal from 'fast-deep-equal/es6/react';
 import type { SaveStatus } from '../SaveButton/types';
-import { SAVE_ERROR, SAVE_SUCCESS } from '../SaveButton/constants';
+import { SAVE_ERROR_KEY, SAVE_SUCCESS_KEY } from '../SaveButton/constants';
 
 /**
  * Creates a new settings form instance from WaniSettings
@@ -115,7 +116,7 @@ export const useWaniSettings = () => {
 
         // used to differentiate between initial load and actual save
         if(isDirty) {
-            setSaveStatus({ status: 'success' , message: SAVE_SUCCESS });
+            setSaveStatus({ status: 'success' , message: SAVE_SUCCESS_KEY });
             // we fired the mesaage, now reset it
             setTimeout(() => {
                 setSaveStatus({ status: 'idle', message: '' });
@@ -123,7 +124,7 @@ export const useWaniSettings = () => {
         }
 
         setIsDirty(false);
-    }, [savedSettings])
+    }, [savedSettings, isDirty, setSavedSettings])
 
     /**
      * Updates settings form with new values while preserving saved settings
@@ -147,8 +148,9 @@ export const useWaniSettings = () => {
             setSaveStatus({ status: 'pending', message: '' });
             setSavedSettings(settingsForm.toWaniSettings());
         } catch (error) {
-            setSaveStatus({ status: "error", message: SAVE_ERROR });
-            console.error('Failed to save settings:', error);
+            setSaveStatus({ status: "error", message: SAVE_ERROR_KEY });
+            // Log using localized prefix for consistency (though console output is dev-facing)
+            log.error('save to storage failed', error)
         }
     };
 
@@ -176,7 +178,7 @@ export const useWaniSettings = () => {
                 applyImportedSettings(result);
             }
         } catch (error) {
-            console.error('WaniKanify: failed to sync settings', error);
+            log.error('force sync settings failed', error)
         }
     };
 

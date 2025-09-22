@@ -9,6 +9,7 @@ import {
     Typography
 } from '@mui/material';
 import { BaseToggle } from '~src/components/common/toggles';
+import { t } from 'src/utils/i18n';
 import type { AudioMode, AudioToggleProps } from './types';
 
 export const AudioToggle: React.FC<AudioToggleProps> = ({
@@ -24,9 +25,9 @@ export const AudioToggle: React.FC<AudioToggleProps> = ({
             <BaseToggle
                 value={enabled}
                 onChange={onEnabledChange}
-                label="Play Audio"
-                tooltipTitle="Optional Audio"
-                tooltipContent="Mousing over a word or clicking it will audibly play its pronunciation."
+                label={t('toggle_audio_label')}
+                tooltipTitle={t('toggle_audio_title')}
+                tooltipContent={t('toggle_audio_description')}
             />
             <Divider orientation="vertical" sx={{ height: "32px" }} />
             <RadioGroup
@@ -39,17 +40,17 @@ export const AudioToggle: React.FC<AudioToggleProps> = ({
                 <FormControlLabel
                     value="click"
                     control={<Radio disabled={!enabled} id="audioClick" />}
-                    label="Click"
+                    label={t('audio_mode_click')}
                 />
                 <FormControlLabel
                     value="hover"
                     control={<Radio disabled={!enabled} id="audioHover" />}
-                    label="Hover"
+                    label={t('audio_mode_hover')}
                 />
             </RadioGroup>
             <Stack width={180} px={2} spacing={1} alignItems="flex-start">
                 <Typography variant="body2" color="text.secondary">
-                    Volume
+                    {t('audio_volume_label')}
                 </Typography>
                 <Slider
                     size="small"
@@ -59,7 +60,7 @@ export const AudioToggle: React.FC<AudioToggleProps> = ({
                         const numericValue = Array.isArray(value) ? value[0] : value
                         onVolumeChange(Math.max(0, Math.min(100, numericValue)) / 100)
                     }}
-                    aria-label="Audio volume"
+                    aria-label={t('audio_volume_label')}
                 />
             </Stack>
         </Stack>

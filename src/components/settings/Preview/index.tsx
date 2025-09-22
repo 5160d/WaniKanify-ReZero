@@ -1,20 +1,22 @@
 import React, { useEffect, useMemo, useRef } from "react"
 import { Card, CardContent, Stack, Typography } from "@mui/material"
+import { t } from '~src/utils/i18n'
 
 import { TextReplacementEngine, type ReplacementResult } from "~src/services/textReplacer"
 import { initializeTooltipPositioning, toggleTooltipVisibility } from "~src/services/tooltips"
 import { AudioService } from "~src/services/audio"
 import type { WaniSettingsFormImpl } from "~src/components/settings/types"
 import { parseCustomVocabulary } from "~src/components/settings/CustomVocabulary/utils"
+import { __WK_CLASS_REPLACEMENT, __WK_CLASS_TOOLTIPS_DISABLED } from '~src/internal/tokens'
 
 type SettingsPreviewProps = {
   settingsForm: WaniSettingsFormImpl
 }
 
 const SAMPLE_TEXTS = [
-  "The quick brown fox jumps over the lazy dog while reading a book in the library.",
-  "Learning with WaniKanify makes vocabulary practice effortless during daily browsing.",
-  "Numbers like 123 or 456 will change when Japanese digits are enabled."
+  t('preview_sample_sentence_1'),
+  t('preview_sample_sentence_2'),
+  t('preview_sample_sentence_3')
 ]
 
 const buildVocabularyFromForm = (settingsForm: WaniSettingsFormImpl) => {
@@ -67,7 +69,7 @@ const renderPreview = (result: ReplacementResult, numbersReplacement: boolean): 
         return (
           <span
             key={`num-${i}-${segment}`}
-            className="wanikanify-replacement"
+            className={__WK_CLASS_REPLACEMENT}
             data-wanikanify-original={segment}
           >
             {segment}
@@ -95,7 +97,7 @@ const renderPreview = (result: ReplacementResult, numbersReplacement: boolean): 
     nodes.push(
       <span
         key={`${match.replacement}-${index}-${cursor}`}
-        className="wanikanify-replacement"
+        className={__WK_CLASS_REPLACEMENT}
         data-wanikanify-original={match.source ?? match.original}
         data-wanikanify-reading={match.reading ?? ""}
       >
@@ -116,7 +118,7 @@ const renderPreview = (result: ReplacementResult, numbersReplacement: boolean): 
           nodes.push(
             <span
               key={`tail-num-${pi}-${piece}`}
-              className="wanikanify-replacement"
+              className={__WK_CLASS_REPLACEMENT}
               data-wanikanify-original={piece}
             >
               {piece}
@@ -135,11 +137,7 @@ const renderPreview = (result: ReplacementResult, numbersReplacement: boolean): 
 }
 
 export const SettingsPreview: React.FC<SettingsPreviewProps> = ({ settingsForm }) => {
-  const engine = useMemo(() => buildVocabularyFromForm(settingsForm), [
-    settingsForm.customVocabulary,
-    settingsForm.vocabularyBlacklist,
-    settingsForm.numbersReplacement
-  ])
+  const engine = useMemo(() => buildVocabularyFromForm(settingsForm), [settingsForm])
   const rootRef = useRef<HTMLDivElement | null>(null)
   const audioRef = useRef<AudioService | null>(null)
 
@@ -197,16 +195,16 @@ export const SettingsPreview: React.FC<SettingsPreviewProps> = ({ settingsForm }
     <Card variant="outlined" sx={{ borderRadius: 3 }}>
       <CardContent
         className={
-          settingsForm.showReplacementTooltips ? undefined : "wanikanify-tooltips-disabled"
+          settingsForm.showReplacementTooltips ? undefined : __WK_CLASS_TOOLTIPS_DISABLED
         }
         ref={rootRef}
       >
         <Stack spacing={2}>
           <Typography variant="h6" color="text.primary">
-            Live Preview
+            {t('preview_heading')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            See how your current configuration affects sample text. Custom vocabulary, blacklist entries, and number replacement rules are applied instantly.
+            {t('preview_description')}
           </Typography>
 
           <Stack spacing={2}>

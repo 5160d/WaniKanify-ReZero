@@ -1,23 +1,25 @@
+import { __WK_PORT_SAFE } from '~src/internal/tokens'
+
 type RuntimeLike = typeof chrome.runtime | undefined
 
-type ChromeEvent = chrome.events.Event<(...args: any[]) => void>
+type ChromeEvent = chrome.events.Event<(...args: unknown[]) => void>
 
 const createEventStub = (): ChromeEvent => {
-  const listeners = new Set<(...args: any[]) => void>()
+  const listeners = new Set<(...args: unknown[]) => void>()
   return {
-    addListener: (listener: (...args: any[]) => void) => {
+    addListener: (listener: (...args: unknown[]) => void) => {
       listeners.add(listener)
     },
-    removeListener: (listener: (...args: any[]) => void) => {
+    removeListener: (listener: (...args: unknown[]) => void) => {
       listeners.delete(listener)
     },
-    hasListener: (listener: (...args: any[]) => void) => listeners.has(listener),
+    hasListener: (listener: (...args: unknown[]) => void) => listeners.has(listener),
     hasListeners: () => listeners.size > 0
   } as ChromeEvent
 }
 
 const createPortStub = (): chrome.runtime.Port => ({
-  name: "wanikanify:safe-port",
+  name: __WK_PORT_SAFE,
   disconnect: () => {},
   postMessage: () => {},
   onDisconnect: createEventStub(),
@@ -45,13 +47,13 @@ export const ensureSafeRuntimeConnect = (runtime: RuntimeLike = chrome?.runtime)
       return originalConnect.apply(runtime, args)
     } catch (error) {
       if (isContextInvalidatedError(error)) {
-  // Lazy require to avoid circular import during early script eval
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { log } = require('~src/utils/log') as typeof import('~src/utils/log')
-  log.debug("WaniKanify: runtime connect skipped", error)
+        // Lazy import to avoid circular dependency and cost when not needed.
+        // Using dynamic import keeps tree-shaking effective.
+        import('~src/utils/log')
+          .then(({ log }) => log.debug('runtime connect skipped', error))
+          .catch(() => {})
         return createPortStub()
       }
-
       throw error
     }
   }

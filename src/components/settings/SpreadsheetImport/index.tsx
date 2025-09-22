@@ -27,6 +27,8 @@ import { Delete, HelpOutline, ExpandLess, ExpandMore, Restore, WarningAmber } fr
 import { orange } from '@mui/material/colors';
 
 import { COLUMNS, EMPTY_SPREADSHEET, TOOLTIP_CONTENT } from './constants';
+import { log } from '~src/utils/log'
+import { t } from '~src/utils/i18n';
 import type { SpreadSheet, SpreadsheetImportProps } from './types';
 import {
     deleteHistoryEntry,
@@ -35,6 +37,7 @@ import {
     restoreHistoryEntry,
     type SpreadsheetImportHistoryEntry
 } from '~src/services/spreadsheetImport';
+import { __WK_EVT_REFRESH_IMPORTED_VOCAB } from '~src/internal/tokens'
 
 const REQUIRED_COLUMNS: Array<keyof SpreadSheet> = [
     'collectionKey',
@@ -78,7 +81,7 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
             const records = await getImportHistory();
             setHistory(records);
         } catch (error) {
-            console.error('WaniKanify: failed to load import history', error);
+            log.error('failed to load import history', error)
         }
     };
 
@@ -103,7 +106,7 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
             ...prev,
             [key]: {
                 status: 'idle',
-                message: 'Not imported yet'
+                message: t('import_state_not_imported')
             }
         }));
         setNewSheet(EMPTY_SPREADSHEET);
@@ -129,7 +132,7 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
         if (!REQUIRED_COLUMNS.every((field) => sanitized[field]?.trim())) {
             setImportState(key, {
                 status: 'error',
-                message: 'Fill all required fields before importing.'
+                message: t('import_validation_fill_required')
             });
             return;
         }
@@ -137,40 +140,43 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
         onChange(value.map((item, i) => (i === index ? sanitized : item)));
 
         try {
-            setImportState(key, { status: 'loading', message: 'Importing...' });
+            setImportState(key, { status: 'loading', message: t('import_state_importing') });
             const { historyEntry } = await importSpreadsheet(sanitized);
+            const warningsFragment = historyEntry.errors.length
+                ? t('import_state_success_warnings_fragment', { WARNING_COUNT: historyEntry.errors.length })
+                : ''
             setImportState(key, {
                 status: 'success',
-                message: `Imported ${historyEntry.entryCount} entries${historyEntry.errors.length ? ` with ${historyEntry.errors.length} warnings` : ''}`,
+                message: t('import_state_success_template', { ENTRY_COUNT: historyEntry.entryCount, WARNINGS: warningsFragment }),
                 entries: historyEntry.entryCount,
                 errors: historyEntry.errors.length
             });
-            setSnackbar({ open: true, message: 'Spreadsheet imported successfully', severity: 'success' });
+            setSnackbar({ open: true, message: t('import_snackbar_success'), severity: 'success' });
             await loadHistory();
             if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
-                chrome.runtime.sendMessage({ type: 'wanikanify:refresh-imported-vocabulary' }).catch(() => {});
+                chrome.runtime.sendMessage({ type: __WK_EVT_REFRESH_IMPORTED_VOCAB }).catch(() => {});
             }
         } catch (error) {
-            console.error('WaniKanify: spreadsheet import failed', error);
+            log.error('spreadsheet import failed', error)
             setImportState(key, {
                 status: 'error',
-                message: error instanceof Error ? error.message : 'Import failed'
+                message: error instanceof Error ? error.message : t('import_state_error_fallback')
             });
-            setSnackbar({ open: true, message: 'Failed to import spreadsheet', severity: 'error' });
+            setSnackbar({ open: true, message: t('import_snackbar_failed'), severity: 'error' });
         }
     };
 
     const handleRestore = async (record: SpreadsheetImportHistoryEntry) => {
         try {
             await restoreHistoryEntry(record.id);
-            setSnackbar({ open: true, message: `Restored ${record.sheet.spreadSheetName}`, severity: 'success' });
+            setSnackbar({ open: true, message: t('import_history_snackbar_restore_success', { SHEET_NAME: record.sheet.spreadSheetName }), severity: 'success' });
             await loadHistory();
             if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
-                chrome.runtime.sendMessage({ type: 'wanikanify:refresh-imported-vocabulary' }).catch(() => {});
+                chrome.runtime.sendMessage({ type: __WK_EVT_REFRESH_IMPORTED_VOCAB }).catch(() => {});
             }
         } catch (error) {
-            console.error('WaniKanify: restore history failed', error);
-            setSnackbar({ open: true, message: 'Failed to restore backup', severity: 'error' });
+            log.error('restore import history failed', error)
+            setSnackbar({ open: true, message: t('import_history_snackbar_restore_failed'), severity: 'error' });
         }
     };
 
@@ -184,17 +190,17 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
                     delete next[removedKey];
                     return next;
                 });
-                setSnackbar({ open: true, message: `Removed imported data for ${removed.sheet.spreadSheetName}`, severity: 'success' });
+                setSnackbar({ open: true, message: t('import_history_snackbar_removed', { SHEET_NAME: removed.sheet.spreadSheetName }), severity: 'success' });
             } else {
-                setSnackbar({ open: true, message: 'History entry not found', severity: 'error' });
+                setSnackbar({ open: true, message: t('import_history_snackbar_not_found'), severity: 'error' });
             }
             await loadHistory();
             if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
-                chrome.runtime.sendMessage({ type: 'wanikanify:refresh-imported-vocabulary' }).catch(() => {});
+                chrome.runtime.sendMessage({ type: __WK_EVT_REFRESH_IMPORTED_VOCAB }).catch(() => {});
             }
         } catch (error) {
-            console.error('WaniKanify: delete history entry failed', error);
-            setSnackbar({ open: true, message: 'Failed to delete history entry', severity: 'error' });
+            log.error('delete import history entry failed', error)
+            setSnackbar({ open: true, message: t('import_history_snackbar_delete_failed'), severity: 'error' });
         }
     };
 
@@ -236,7 +242,7 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
         <Box>
             <Box display="flex" alignItems="center" gap={2} mb={2}>
                 <Typography variant="h6" fontWeight="lg">
-                    Imported Vocabulary
+                    {t('import_heading_imported_vocab')}
                 </Typography>
                 <Tooltip
                     title={
@@ -284,7 +290,7 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
                                         {TOOLTIP_CONTENT.FIELDS.map((field, index) => (
                                             <React.Fragment key={field.id}>
                                                 <strong>
-                                                    {`${index + 1}.`}{field.optional && <Box component="span" color="success.main" display="inline"> Optional </Box>}{` ${field.label}: `}
+                                                    {`${index + 1}.`}{field.optional && <Box component="span" color="success.main" display="inline"> {t('import_tooltip_field_optional_label')} </Box>}{` ${field.label}: `}
                                                 </strong>
                                                 {field.description}
                                                 {field.example && (
@@ -330,7 +336,7 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
                             {COLUMNS.map(column => (
                                 <TableCell key={column.id}>{column.label}</TableCell>
                             ))}
-                            <TableCell align="right">Actions</TableCell>
+                            <TableCell align="right">{t('import_table_actions')}</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -344,7 +350,7 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
                                 <TableCell align="right">
                                     <Stack direction="row" spacing={1}>
                                         <Button size="small" variant="contained" color="primary" onClick={() => handleImport(sheet, index)}>
-                                            Import
+                                            {t('import_button_import')}
                                         </Button>
                                         <IconButton
                                             onClick={() => handleDeleteSpreadsheet(index)}
@@ -378,7 +384,7 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
                                     onClick={handleAddSpreadsheet}
                                     disabled={!canAddNewSheet}
                                 >
-                                    Add
+                                    {t('import_button_add')}
                                 </Button>
                             </TableCell>
                         </TableRow>
@@ -389,11 +395,11 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
             <Box mt={4}>
                 <Stack direction="row" alignItems="center" spacing={1} mb={2}>
                     <Typography variant="h6" fontWeight="lg">
-                        Import History
+                        {t('import_history_heading')}
                     </Typography>
                     <Chip label={history.length} />
                     <Tooltip
-                        title={historyOpen ? 'Hide history' : 'Show history'}
+                        title={historyOpen ? t('import_history_tooltip_hide') : t('import_history_tooltip_show')}
                         componentsProps={{
                             tooltip: {
                                 sx: (theme) =>
@@ -414,16 +420,22 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
                             {history.map((record) => (
                                 <ListItem key={record.id} divider>
                                     <ListItemText
-                                        primary={`${record.sheet.spreadSheetName} (${record.sheet.collectionKey})`}
-                                        secondary={`Imported ${record.entryCount} entries • ${new Date(record.createdAt).toLocaleString()}${record.errors.length ? ` • ${record.errors.length} warnings` : ''}`}
+                                        primary={t('import_history_entry_primary_template', { SHEET_NAME: record.sheet.spreadSheetName, COLLECTION_KEY: record.sheet.collectionKey })}
+                                        secondary={
+                                            t('import_history_entry_secondary_template', {
+                                                ENTRY_COUNT: record.entryCount,
+                                                DATE: new Date(record.createdAt).toLocaleString(),
+                                                WARNINGS: record.errors.length ? t('import_history_entry_secondary_warnings_fragment', { WARNING_COUNT: record.errors.length }) : ''
+                                            })
+                                        }
                                     />
                                     <ListItemSecondaryAction>
-                                        <Tooltip title="Restore">
+                                        <Tooltip title={t('import_history_tooltip_restore')}>
                                             <IconButton edge="end" onClick={() => handleRestore(record)} sx={{ mr: 1 }}>
                                                 <Restore />
                                             </IconButton>
                                         </Tooltip>
-                                        <Tooltip title="Delete">
+                                        <Tooltip title={t('import_history_tooltip_delete')}>
                                             <IconButton edge="end" onClick={() => handleDeleteHistoryEntry(record)}>
                                                 <Delete />
                                             </IconButton>
@@ -434,7 +446,7 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
                         </List>
                     ) : (
                         <Typography variant="body2" color="text.secondary">
-                            No import history available yet.
+                            {t('import_history_empty')}
                         </Typography>
                     )
                 )}

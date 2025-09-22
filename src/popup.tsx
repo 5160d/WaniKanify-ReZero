@@ -1,6 +1,6 @@
 import { Box, Stack } from "@mui/material"
 import { ThemeProvider } from '@mui/material/styles'
-import React, { useState } from "react"
+import React from "react"
 
 import { APITokenField, useWaniSettings, SaveButton } from "src/components/settings"
 import { waniStyle } from "src/styles/wanikanifyStyles"
@@ -27,7 +27,7 @@ const BACKGROUND_STYLES = {
 
 const IndexPopup: React.FC = () => {
   const { settingsForm, updateSettingsForm, saveToStorage, isDirty, saveStatus } = useWaniSettings();
-  const [error, setError] = useState(false);
+  const error = false;
 
   const handleSave = React.useCallback(() => {
     saveToStorage();

@@ -12,7 +12,6 @@ import {
   TextReplacementEngine,
   type ReplacementSource,
   type ReplacementVocabulary,
-  type ReplacementDetail
 } from "~src/services/textReplacer"
 import { SiteFilter } from "~src/services/siteFilter"
 import { AudioService, type AudioVocabularyItem } from "~src/services/audio"
@@ -20,6 +19,16 @@ import type { VocabularyCachePayload, VocabularyEntry } from "~src/services/voca
 import { toggleTooltipVisibility, initializeTooltipPositioning } from "~src/services/tooltips"
 import { ensureSafeRuntimeConnect } from "~src/utils/runtimeConnect"
 import { log } from '~src/utils/log'
+import {
+  __WK_EVT_GET_STATE,
+  __WK_EVT_STATE,
+  __WK_EVT_PERFORMANCE,
+  __WK_EVT_TOGGLE_RUNTIME,
+  __WK_EVT_RUNTIME,
+  __WK_EVT_NAVIGATION,
+  __WK_DATA_CONTAINER,
+  __WK_DATA_SKIP,
+} from '~src/internal/tokens'
 import "./styles/style.css"
 
 ensureSafeRuntimeConnect()
@@ -94,7 +103,7 @@ class ContentScriptController {
 
   private hasNavigationHooks = false
 
-  private lastUrl = location.href
+  private lastUrl = window.location.href
 
   private pendingMutations: MutationRecord[] = []
 
@@ -126,7 +135,7 @@ class ContentScriptController {
   }
 
   private shouldRun(): boolean {
-    this.activeOverride = this.siteFilter.getOverride(location.href)
+  this.activeOverride = this.siteFilter.getOverride(window.location.href)
 
     const defaultAutoRun = Boolean(this.settings.autoRun)
     const overrideAutoRun = this.activeOverride?.autoRun
@@ -139,7 +148,7 @@ class ContentScriptController {
       return false
     }
 
-    if (this.siteFilter.shouldBlock(location.href)) {
+  if (this.siteFilter.shouldBlock(window.location.href)) {
       return false
     }
 
@@ -221,7 +230,7 @@ class ContentScriptController {
         siteOverrides: structuredCloneFallback(storedSettings.siteOverrides ?? {})
       }
     } catch (error) {
-      console.error("WaniKanify: failed to load settings", error)
+      log.error('failed to load settings', error)
       return this.cloneDefaultSettings()
     }
   }
@@ -246,12 +255,12 @@ class ContentScriptController {
 
       switch (message.type) {
 
-        case "wanikanify:toggle-runtime": {
+        case __WK_EVT_TOGGLE_RUNTIME: {
           const running = this.toggleRuntime()
-          sendResponse?.({ type: "wanikanify:runtime", payload: { running } })
+          sendResponse?.({ type: __WK_EVT_RUNTIME, payload: { running } })
           break
         }
-        case "wanikanify:state": {
+        case __WK_EVT_STATE: {
           this.applyVocabularyState(message.payload?.vocabulary)
           break
         }
@@ -443,13 +452,13 @@ class ContentScriptController {
 
   private async loadBackgroundState(): Promise<void> {
     try {
-      const response = await chrome.runtime.sendMessage({ type: "wanikanify:get-state" })
+      const response = await chrome.runtime.sendMessage({ type: __WK_EVT_GET_STATE })
 
-      if (response?.type === "wanikanify:state") {
+      if (response?.type === __WK_EVT_STATE) {
         this.applyVocabularyState(response.payload?.vocabulary)
       }
     } catch (error) {
-      log.debug("WaniKanify: unable to fetch background state", error)
+  log.debug('unable to fetch background state', error)
     }
   }
 
@@ -484,7 +493,7 @@ class ContentScriptController {
 
     chrome.runtime
       .sendMessage({
-        type: "wanikanify:performance",
+        type: __WK_EVT_PERFORMANCE,
         payload: {
           processedNodes: this.performanceStats.processedNodes,
           averageMs: Number(average.toFixed(2)),
@@ -526,7 +535,8 @@ class ContentScriptController {
     })
 
     this.siteFilter.setOverrides(this.settings.siteOverrides ?? {})
-    this.activeOverride = this.siteFilter.getOverride(location.href)
+
+  this.activeOverride = this.siteFilter.getOverride(window.location.href)
     this.updateAudioSettings()
     this.applyTooltipPreference()
   }
@@ -583,7 +593,7 @@ class ContentScriptController {
     }
 
     const dispatchNavigationEvent = () => {
-      window.dispatchEvent(new Event("wanikanify:navigation"))
+      window.dispatchEvent(new Event(__WK_EVT_NAVIGATION))
     }
 
     const wrapHistoryMethod = (method: "pushState" | "replaceState") => {
@@ -601,7 +611,7 @@ class ContentScriptController {
     window.addEventListener("popstate", dispatchNavigationEvent, true)
     window.addEventListener("hashchange", dispatchNavigationEvent, true)
     window.addEventListener(
-      "wanikanify:navigation",
+      __WK_EVT_NAVIGATION,
       this.handleNavigationChange,
       true
     )
@@ -610,11 +620,11 @@ class ContentScriptController {
   }
 
   private handleNavigationChange = (): void => {
-    if (location.href === this.lastUrl) {
+  if (window.location.href === this.lastUrl) {
       return
     }
 
-    this.lastUrl = location.href
+  this.lastUrl = window.location.href
     const shouldRunNow = this.shouldRun()
     this.updateReplacerConfig()
     this.updateAudioSettings()
@@ -870,11 +880,11 @@ class ContentScriptController {
 
     if ((isDev || this.settings.performanceTelemetry) && duration > this.lastLoggedLongestNode) {
       this.lastLoggedLongestNode = duration
-  log.debug('WaniKanify: longest replaceNode duration', duration.toFixed(2), 'ms', '(node length:', node.length, ')')
+  log.debug('longest replaceNode duration', duration.toFixed(2), 'ms', '(node length:', node.length, ')')
     }
 
     if (result.matches.length) {
-      this.audioService.handleReplacements(result.matches)
+      this.audioService.handleReplacements()
     }
 
     this.processedNodes.set(node, node.data)
@@ -892,7 +902,7 @@ class ContentScriptController {
       return true
     }
 
-    if (parent.closest("[data-wanikanify-container]")) {
+    if (parent.closest(`[${__WK_DATA_CONTAINER}]`)) {
       return true
     }
 
@@ -904,19 +914,19 @@ class ContentScriptController {
       return true
     }
 
-    if (element.hasAttribute("data-wanikanify-container")) {
+    if (element.hasAttribute(__WK_DATA_CONTAINER)) {
       return true
     }
 
-    if (element.closest("[data-wanikanify-container]")) {
+    if (element.closest(`[${__WK_DATA_CONTAINER}]`)) {
       return true
     }
 
-    if (element.closest("[data-wanikanify-skip='true']")) {
+    if (element.closest(`[${__WK_DATA_SKIP}='true']`)) {
       return true
     }
 
-    if (element.getAttribute("data-wanikanify-skip") === "true") {
+    if (element.getAttribute(__WK_DATA_SKIP) === "true") {
       return true
     }
 
@@ -1001,7 +1011,7 @@ const controller = new ContentScriptController()
 
 controller
   .init()
-  .catch((error) => console.error("WaniKanify: failed to initialize", error))
+  .catch((error) => log.error('content script failed to initialize', error))
 
 export {}
 

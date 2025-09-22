@@ -1,5 +1,12 @@
 import { AhoCorasick, computeIndexMap, type AutomatonPayload } from "~src/services/textMatcher/ahoCorasick"
 import type { VocabularyEntry } from "~src/services/vocabulary/types"
+import {
+  __WK_CLASS_REPLACEMENT_CONTAINER,
+  __WK_CLASS_REPLACEMENT,
+  __WK_DATA_CONTAINER,
+  __WK_DATA_ORIGINAL,
+  __WK_DATA_READING
+} from '~src/internal/tokens'
 
 export type ReplacementSource = {
   japanese: string
@@ -375,8 +382,8 @@ export class TextReplacementEngine {
     matches: ReplacementDetail[]
   ): HTMLElement {
     const container = document.createElement("span")
-    container.className = "wanikanify-replacement-container"
-    container.setAttribute("data-wanikanify-container", "true")
+    container.className = __WK_CLASS_REPLACEMENT_CONTAINER
+    container.setAttribute(__WK_DATA_CONTAINER, "true")
 
     const fragment = document.createDocumentFragment()
     let cursor = 0
@@ -396,11 +403,11 @@ export class TextReplacementEngine {
       }
 
       const span = document.createElement("span")
-      span.className = "wanikanify-replacement"
+      span.className = __WK_CLASS_REPLACEMENT
       span.textContent = match.replacement
-      span.setAttribute("data-wanikanify-original", match.source ?? match.original)
+      span.setAttribute(__WK_DATA_ORIGINAL, match.source ?? match.original)
       if (match.reading) {
-        span.setAttribute("data-wanikanify-reading", match.reading)
+        span.setAttribute(__WK_DATA_READING, match.reading)
       }
 
       fragment.append(span)

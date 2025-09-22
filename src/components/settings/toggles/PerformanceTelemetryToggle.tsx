@@ -1,5 +1,6 @@
 import React from 'react';
 import { Typography } from '@mui/material';
+import { t } from 'src/utils/i18n';
 
 import { BaseToggle } from '~src/components/common/toggles';
 import type { ChangingProps } from '~src/components/common/types';
@@ -8,15 +9,15 @@ export const PerformanceTelemetryToggle: React.FC<ChangingProps<boolean>> = ({ v
   <BaseToggle
     value={value}
     onChange={onChange}
-    label="Performance Telemetry"
-    tooltipTitle="Local Debug Telemetry"
+    label={t('toggle_performance_label')}
+    tooltipTitle={t('toggle_performance_title')}
     tooltipContent={
       <>
         <Typography variant="body2" sx={{ mt: 1 }}>
-          Enable this to surface matcher timing breakdowns in your browser console so you can diagnose slow nodes without rebuilding the extension.
+          {t('toggle_performance_line1')}
         </Typography>
         <Typography variant="body2" sx={{ mt: 1 }}>
-          The data stays on your machine; nothing is transmitted, and disabling the toggle silences the logs.
+          {t('toggle_performance_line2')}
         </Typography>
       </>
     }

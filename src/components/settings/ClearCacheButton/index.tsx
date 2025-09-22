@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { Button, Tooltip, Typography, Box } from '@mui/material';
 import { WaniTooltip } from '../../common/WaniTooltip';
+import { t } from '../../../utils/i18n';
 import { HelpOutline } from "@mui/icons-material";
+import { log } from '~src/utils/log'
+import { __WK_EVT_CLEAR_CACHE } from '~src/internal/tokens'
 
 export const ClearCacheButton: React.FC = () => {
     const [clearing, setClearing] = useState(false)
@@ -12,13 +15,12 @@ export const ClearCacheButton: React.FC = () => {
         setDone(false)
         try {
             await new Promise<void>((resolve) => {
-                chrome.runtime.sendMessage({ type: 'wanikanify:clear-cache' }, () => resolve())
+                chrome.runtime.sendMessage({ type: __WK_EVT_CLEAR_CACHE }, () => resolve())
             })
             setDone(true)
             setTimeout(() => setDone(false), 2000)
         } catch (error) {
-            // eslint-disable-next-line no-console
-            console.error('WaniKanify: failed to clear cache', error)
+            log.error('failed to clear cache', error)
         } finally {
             setClearing(false)
         }
@@ -34,7 +36,7 @@ export const ClearCacheButton: React.FC = () => {
             endIcon={
                 <Tooltip
                     title={
-                        <WaniTooltip title="Vocabulary Cache">
+                        <WaniTooltip title={t('settings_clear_cache_title')}>
                             <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
                                 Delete the local vocabulary cache.
                             </Typography>
@@ -73,7 +75,11 @@ export const ClearCacheButton: React.FC = () => {
                 </Tooltip>
             }
         >
-            {clearing ? 'Clearing…' : done ? 'Cleared!' : 'Clear Cache'}
+                            {clearing
+                              ? t('settings_clear_cache_progress_clearing')
+                              : done
+                                ? t('settings_clear_cache_progress_cleared')
+                                : t('settings_clear_cache_button')}
         </Button>
     );
 };

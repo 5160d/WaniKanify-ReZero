@@ -16,9 +16,11 @@ import {
   Typography
 } from "@mui/material"
 import { Delete, Download, Restore, Upload, Sync } from "@mui/icons-material"
+import { t } from '~src/utils/i18n'
 import { Storage } from "@plasmohq/storage"
+import { log } from '~src/utils/log'
 
-import type { ChangingProps } from "~src/components/common/types"
+// (Removed unused ChangingProps import)
 import type { WaniSettings, WaniSettingsFormImpl } from "~src/components/settings/types"
 import {
   waniSettingsDeserializer,
@@ -103,10 +105,10 @@ export const SettingsTools: React.FC<SettingsToolsProps> = ({
       const json = serializeSettings(settings)
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
       downloadJson(`wanikanify-settings-${timestamp}.json`, json)
-      showSnackbar("Settings exported successfully")
+      showSnackbar(t('settings_tools_snackbar_export_success'))
     } catch (error) {
-      console.error("WaniKanify: export failed", error)
-      showSnackbar("Failed to export settings", "error")
+  log.error('export failed', error)
+      showSnackbar(t('settings_tools_snackbar_export_failed'), "error")
     }
   }
 
@@ -121,10 +123,10 @@ export const SettingsTools: React.FC<SettingsToolsProps> = ({
       const importedSettings = deserializeSettings(text)
       onImportSettings(importedSettings)
       onValidationReset()
-      showSnackbar("Settings imported")
+      showSnackbar(t('settings_tools_snackbar_import_success'))
     } catch (error) {
-      console.error("WaniKanify: import failed", error)
-      showSnackbar("Failed to import settings", "error")
+  log.error('import failed', error)
+      showSnackbar(t('settings_tools_snackbar_import_failed'), "error")
     } finally {
       event.target.value = ""
     }
@@ -148,10 +150,10 @@ export const SettingsTools: React.FC<SettingsToolsProps> = ({
       const updatedBackups = [newBackup, ...backups].slice(0, 10)
       await backupStorage.set(BACKUP_STORAGE_KEY, updatedBackups)
       setBackups(updatedBackups)
-      showSnackbar("Backup created")
+      showSnackbar(t('settings_tools_snackbar_backup_created'))
     } catch (error) {
-      console.error("WaniKanify: backup failed", error)
-      showSnackbar("Failed to create backup", "error")
+  log.error('backup failed', error)
+      showSnackbar(t('settings_tools_snackbar_backup_failed'), "error")
     }
   }
 
@@ -160,10 +162,10 @@ export const SettingsTools: React.FC<SettingsToolsProps> = ({
       const settings = deserializeSettings(backup.data)
       onImportSettings(settings)
       onValidationReset()
-      showSnackbar(`Restored ${backup.name}`)
+      showSnackbar(t('settings_tools_snackbar_restore_success', { BACKUP_NAME: backup.name }))
     } catch (error) {
-      console.error("WaniKanify: restore failed", error)
-      showSnackbar("Failed to restore backup", "error")
+  log.error('restore failed', error)
+      showSnackbar(t('settings_tools_snackbar_restore_failed'), "error")
     }
   }
 
@@ -171,21 +173,21 @@ export const SettingsTools: React.FC<SettingsToolsProps> = ({
     const updatedBackups = backups.filter((record) => record.id !== backup.id)
     await backupStorage.set(BACKUP_STORAGE_KEY, updatedBackups)
     setBackups(updatedBackups)
-    showSnackbar("Backup deleted")
+    showSnackbar(t('settings_tools_snackbar_backup_deleted'))
   }
 
   const handleResetDefaults = () => {
-    if (confirm('Reset all settings to their default values?')) {
+    if (confirm(t('settings_tools_confirm_reset_defaults'))) {
       onResetDefaults()
       onValidationReset()
-      showSnackbar('Settings reset to defaults')
+      showSnackbar(t('settings_tools_snackbar_reset_defaults'))
     }
   }
 
   const handleSync = async () => {
     await onSyncFromCloud()
     onValidationReset()
-    showSnackbar('Fetched latest synced settings')
+    showSnackbar(t('settings_tools_snackbar_fetch_synced'))
   }
 
   const hasBackups = backups.length > 0
@@ -195,7 +197,7 @@ export const SettingsTools: React.FC<SettingsToolsProps> = ({
       <CardContent>
         <Stack spacing={3}>
           <Typography variant="h6" color="text.primary">
-            Settings Tools
+            {t('settings_tools_heading')}
           </Typography>
 
           <Stack direction="row" spacing={2}>
@@ -204,35 +206,35 @@ export const SettingsTools: React.FC<SettingsToolsProps> = ({
               startIcon={<Download />}
               onClick={handleExport}
             >
-              Export Settings
+              {t('settings_tools_button_export')}
             </Button>
             <Button
               variant="outlined"
               startIcon={<Upload />}
               onClick={handleImportClick}
             >
-              Import Settings
+              {t('settings_tools_button_import')}
             </Button>
             <Button
               variant="outlined"
               startIcon={<Restore />}
               onClick={handleCreateBackup}
             >
-              Create Backup
+              {t('settings_tools_button_create_backup')}
             </Button>
             <Button
               variant="outlined"
               color="warning"
               onClick={handleResetDefaults}
             >
-              Reset Defaults
+              {t('settings_tools_button_reset_defaults')}
             </Button>
             <Button
               variant="text"
               startIcon={<Sync />}
               onClick={handleSync}
             >
-              Pull from Sync
+              {t('settings_tools_button_pull_sync')}
             </Button>
             <input
               type="file"
@@ -245,7 +247,7 @@ export const SettingsTools: React.FC<SettingsToolsProps> = ({
 
           <Box>
             <Stack direction="row" spacing={1} alignItems="center" mb={1}>
-              <Typography variant="subtitle1">Backups</Typography>
+              <Typography variant="subtitle1">{t('settings_tools_backups_heading')}</Typography>
               <Chip label={`${backups.length}`} size="small" />
             </Stack>
             {hasBackups ? (
@@ -257,7 +259,7 @@ export const SettingsTools: React.FC<SettingsToolsProps> = ({
                       secondary={new Date(backup.createdAt).toLocaleString()}
                     />
                     <ListItemSecondaryAction>
-                      <Tooltip title="Restore">
+                      <Tooltip title={t('import_history_tooltip_restore')}>
                         <IconButton
                           edge="end"
                           onClick={() => handleRestoreBackup(backup)}
@@ -266,7 +268,7 @@ export const SettingsTools: React.FC<SettingsToolsProps> = ({
                           <Restore />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Delete">
+                      <Tooltip title={t('import_history_tooltip_delete')}>
                         <IconButton edge="end" onClick={() => handleDeleteBackup(backup)}>
                           <Delete />
                         </IconButton>
@@ -277,7 +279,7 @@ export const SettingsTools: React.FC<SettingsToolsProps> = ({
               </List>
             ) : (
               <Typography variant="body2" color="text.secondary">
-                No backups yet. Create one to capture your current configuration.
+                {t('settings_tools_no_backups')}
               </Typography>
             )}
           </Box>

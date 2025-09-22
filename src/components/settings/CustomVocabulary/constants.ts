@@ -1,17 +1,18 @@
+// These constants previously held English literals; now keys/placeholder examples shift to i18n.
 export const EXAMPLES = {
-    FORMAT: 'eng1,eng2,...:vocab:reading',
+    FORMAT: 'eng1,eng2,...:vocab:reading', // example snippet kept (may be embedded in localized tooltip)
     ENTRY: 'cat,feline:猫:ねこ',
     MULTIPLE: 'cat,feline:猫:ねこ;cold:寒い:さむい'
 };
 
 export const HELP_TEXT = {
-    TITLE: 'Custom Vocabulary',
-    DESCRIPTION: 'This overrides Wanikani vocab.',
-    FORMAT_LABEL: 'Format:',
-    EXAMPLE_LABEL: 'Example:',
-    NOTES: [
-        'Separate entries with ";"',
-        'Reading is optional (for audio)'
+    TITLE_KEY: 'settings_custom_vocab_heading',
+    DESCRIPTION_KEY: 'custom_vocab_description',
+    FORMAT_LABEL_KEY: 'custom_vocab_format_label',
+    EXAMPLE_LABEL_KEY: 'custom_vocab_example_label',
+    NOTES_KEYS: [
+        'custom_vocab_notes_separator',
+        'custom_vocab_notes_reading_optional'
     ]
 };
 

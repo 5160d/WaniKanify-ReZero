@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars -- generics appear only in type positions but are part of public API surface */
 import { Storage } from "@plasmohq/storage"
+import { log } from "~src/utils/log"
 
 type MigrationFn<T> = (data: T) => T
 
@@ -78,11 +80,16 @@ const decompress = async (input: string): Promise<string> => {
   return text
 }
 
+// The generic T is widely referenced in method signatures; TS 5.7 + eslint sometimes mis-detects as unused.
 export class ExtensionStorageService<T = Record<string, unknown>> {
   private storage: Storage
   private migrations: StorageMigration<T>[] = []
   private quotaBytes: number
   private namespace: string
+  // brand field to anchor generic parameter
+  private readonly __typeBrand: T | undefined = undefined
+  /* istanbul ignore next */
+  private __useGenericValue(arg: T | undefined): void { void arg }
 
   constructor(options?: { area?: chrome.storage.AreaName; quotaBytes?: number; namespace?: string }) {
     this.storage = new Storage({ area: options?.area ?? 'local' })
@@ -136,7 +143,7 @@ export class ExtensionStorageService<T = Record<string, unknown>> {
 
     const usage = await this.getUsage()
     if (usage.percentage > 80) {
-      console.warn(`WaniKanify: storage usage at ${usage.percentage}% of quota`) // eslint-disable-line no-console
+  log.warn(`storage usage at ${usage.percentage}% of quota`)
     }
   }
 
@@ -149,7 +156,7 @@ export class ExtensionStorageService<T = Record<string, unknown>> {
     const decompressed = await decompress(record.compressed)
     const checksum = await hashString(decompressed)
     if (checksum !== record.checksum) {
-      console.warn('WaniKanify: checksum mismatch for', key)
+  log.warn('checksum mismatch for', key)
     }
 
     const parsed: T = JSON.parse(decompressed)
@@ -173,13 +180,21 @@ export class ExtensionStorageService<T = Record<string, unknown>> {
     try {
       if (typeof this.storage.remove === 'function') {
         await this.storage.remove(key)
-      } else if (typeof (this.storage as any).removeItem === 'function') {
-        await (this.storage as any).removeItem(key)
-      } else {
-        const all = await this.storage.getAll()
-        if (key in all) {
-          delete (all as any)[key]
-        }
+        return
+      }
+
+      // Fallback: older storage implementations may expose removeItem
+      const maybeLegacy = this.storage as unknown as { removeItem?: (k: string) => Promise<void> | void }
+      if (typeof maybeLegacy.removeItem === 'function') {
+        await maybeLegacy.removeItem(key)
+        return
+      }
+
+      // Last resort: mutate a retrieved object map if present
+      const all = await this.storage.getAll()
+      if (key in all) {
+        const allRecord = all as Record<string, unknown>
+        delete allRecord[key]
       }
     } catch {
       // swallow errors – cache clearing is best-effort

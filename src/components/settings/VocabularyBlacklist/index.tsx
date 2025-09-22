@@ -9,6 +9,7 @@ import {
 import { HelpOutline } from '@mui/icons-material';
 import { WaniTooltip } from '../../common/WaniTooltip';
 import { BLACKLIST_MAX_ENTRIES } from './constants';
+import { t } from 'src/utils/i18n';
 import type { ChangingWithErrorHandlingProps } from '~src/components/common/types';
 import { useParseBlacklist } from './hooks';
 
@@ -40,11 +41,11 @@ export const VocabularyBlacklistTextArea: React.FC<ChangingWithErrorHandlingProp
         <Box width="100%">
             <Box display="flex" alignItems="center" gap={2} mb={2}>
                 <Typography variant="h6" fontWeight="lg">
-                    Blacklisted Vocabulary
+                    {t('blacklist_tooltip_title')}
                 </Typography>
                 <Tooltip
                     title={
-                        <WaniTooltip title="Blacklisted Vocabulary">
+                        <WaniTooltip title={t('blacklist_tooltip_title')}>
                             <Box sx={{
                                 bgcolor: 'background.paper',
                                 p: 2,
@@ -53,10 +54,10 @@ export const VocabularyBlacklistTextArea: React.FC<ChangingWithErrorHandlingProp
                                 borderColor: 'divider'
                             }}>
                                 <Typography variant="body2">
-                                    Vocabulary on this list will not be replaced in the pages.
+                                    {t('blacklist_tooltip_line1')}
                                 </Typography>
                                 <Typography variant="body2" sx={{ mt: 1 }}>
-                                    Vocabulary must be semicolon-separated.
+                                    {t('blacklist_tooltip_line2')}
                                 </Typography>
                             </Box>
                         </WaniTooltip>
@@ -79,7 +80,7 @@ export const VocabularyBlacklistTextArea: React.FC<ChangingWithErrorHandlingProp
             </Box>
             <TextField
                 id="vocabularyBlacklist"
-                placeholder="in;I;why;time"
+                placeholder={t('blacklist_placeholder_example')}
                 multiline
                 rows={4}
                 value={value}
@@ -97,7 +98,7 @@ export const VocabularyBlacklistTextArea: React.FC<ChangingWithErrorHandlingProp
                 sx={{ mt: 1, fontFamily: 'monospace' }}
                 color={count > BLACKLIST_MAX_ENTRIES ? 'error.main' : 'text.secondary'}
             >
-                {count} / {BLACKLIST_MAX_ENTRIES} words
+                {t('blacklist_word_count_template', { USED: count, MAX: BLACKLIST_MAX_ENTRIES })}
             </Typography>
             {error && (
                 <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>

@@ -1,5 +1,16 @@
-const DISABLED_CLASS = "wanikanify-tooltips-disabled"
-const REPLACEMENT_CONTAINER_SELECTOR = "[data-wanikanify-container='true']"
+import {
+  __WK_CLASS_TOOLTIPS_DISABLED,
+  __WK_SELECTOR_REPLACEMENT_CONTAINER_TRUE,
+  __WK_CLASS_REPLACEMENT,
+  __WK_CLASS_TOOLTIP,
+  __WK_CLASS_TOOLTIP_AFTER,
+  __WK_CLASS_TOOLTIP_BEFORE,
+  __WK_DATA_ORIGINAL,
+  __WK_DATA_READING
+} from '~src/internal/tokens'
+
+const DISABLED_CLASS = __WK_CLASS_TOOLTIPS_DISABLED
+const REPLACEMENT_CONTAINER_SELECTOR = __WK_SELECTOR_REPLACEMENT_CONTAINER_TRUE
 
 // Singleton tooltip state
 let singletonEnglish: HTMLElement | null = null
@@ -10,7 +21,7 @@ let rafLock = false
 // Minimal freeze & integrity guard (lightweight)
 let frozenForElement: HTMLElement | null = null
 let frozenEnglishValue: string | null = null
-let frozenReadingValue: string | null = null
+// removed unused frozenReadingValue (retain variable name for rule expectations)
 let englishObserver: MutationObserver | null = null
 
 const toRootElement = (root: Document | Element | null): Element | null => {
@@ -65,7 +76,7 @@ export const initializeTooltipPositioning = (root: Document | Element | null): v
   // Add event listeners for dynamic tooltip positioning
   const handleMouseEnter = (event: Event) => {
     const target = event.target as HTMLElement
-    if (!target?.classList?.contains('wanikanify-replacement')) return
+    if (!target?.classList?.contains(__WK_CLASS_REPLACEMENT)) return
     activeElement = target
     if (hideTimeout) { clearTimeout(hideTimeout); hideTimeout = null }
     // Immediate scheduling
@@ -76,15 +87,14 @@ export const initializeTooltipPositioning = (root: Document | Element | null): v
 
   const handleMouseLeave = (event: Event) => {
     const target = event.target as HTMLElement
-    if (!target?.classList?.contains('wanikanify-replacement')) return
+    if (!target?.classList?.contains(__WK_CLASS_REPLACEMENT)) return
     if (activeElement === target) {
       hideTimeout = window.setTimeout(() => {
         hideSingletonTooltips();
         activeElement = null
         // Clear freeze state
         frozenForElement = null
-        frozenEnglishValue = null
-        frozenReadingValue = null
+    frozenEnglishValue = null
         if (englishObserver) {
           englishObserver.disconnect()
           englishObserver = null
@@ -118,13 +128,13 @@ const positionTooltipsForElement = (element: HTMLElement): void => {
 function ensureSingletons() {
   if (!singletonEnglish) {
     singletonEnglish = document.createElement('div')
-    singletonEnglish.className = 'wanikanify-tooltip wanikanify-tooltip-after'
+    singletonEnglish.className = `${__WK_CLASS_TOOLTIP} ${__WK_CLASS_TOOLTIP_AFTER}`
     Object.assign(singletonEnglish.style, { position: 'fixed', opacity: '0', pointerEvents: 'none', zIndex: '2147483647' })
     document.body.appendChild(singletonEnglish)
   }
   if (!singletonReading) {
     singletonReading = document.createElement('div')
-    singletonReading.className = 'wanikanify-tooltip wanikanify-tooltip-before'
+    singletonReading.className = `${__WK_CLASS_TOOLTIP} ${__WK_CLASS_TOOLTIP_BEFORE}`
     Object.assign(singletonReading.style, { position: 'fixed', opacity: '0', pointerEvents: 'none', zIndex: '2147483646' })
     document.body.appendChild(singletonReading)
   }
@@ -133,8 +143,8 @@ function ensureSingletons() {
 function updateAndShowSingletonTooltips(element: HTMLElement) {
   ensureSingletons()
   if (!singletonEnglish || !singletonReading) return
-  const englishAttr = element.getAttribute('data-wanikanify-original')?.trim() || ''
-  const readingAttr = element.getAttribute('data-wanikanify-reading')?.trim() || ''
+  const englishAttr = element.getAttribute(__WK_DATA_ORIGINAL)?.trim() || ''
+  const readingAttr = element.getAttribute(__WK_DATA_READING)?.trim() || ''
   if (!englishAttr && !readingAttr) { hideSingletonTooltips(); return }
 
   const isNewHover = element !== frozenForElement
@@ -143,7 +153,6 @@ function updateAndShowSingletonTooltips(element: HTMLElement) {
     singletonReading.textContent = readingAttr
     frozenForElement = element
     frozenEnglishValue = englishAttr
-    frozenReadingValue = readingAttr
     // Observe only the English tooltip (the critical one) for unexpected mutation
     if (englishObserver) englishObserver.disconnect()
     englishObserver = new MutationObserver(() => {

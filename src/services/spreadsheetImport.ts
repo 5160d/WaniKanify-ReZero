@@ -2,6 +2,7 @@ import { Storage } from "@plasmohq/storage"
 
 import type { SpreadSheet } from "~src/components/settings/SpreadsheetImport/types"
 import type { VocabularyEntry } from "~src/services/vocabulary/types"
+import { t } from '~src/utils/i18n'
 
 const DATA_STORAGE_KEY = "wanikanify:spreadsheetData"
 const HISTORY_STORAGE_KEY = "wanikanify:spreadsheetHistory"
@@ -138,7 +139,7 @@ const toVocabularyEntries = (
     if (!englishCell || !japaneseCell) {
       errors.push({
         row: rowIndex + 2,
-        message: "Missing English or Japanese value"
+        message: t('spreadsheet_error_missing_pair')
       })
       return
     }
@@ -151,7 +152,7 @@ const toVocabularyEntries = (
     if (!englishWords.length) {
       errors.push({
         row: rowIndex + 2,
-        message: "No valid English words after applying delimiter"
+        message: t('spreadsheet_error_no_valid_english')
       })
       return
     }
@@ -194,7 +195,7 @@ export const importSpreadsheet = async (
   const rows = parseCsv(csv)
 
   if (!rows.length) {
-    throw new Error("Spreadsheet is empty")
+  throw new Error(t('spreadsheet_error_empty'))
   }
 
   const { entries, errors } = toVocabularyEntries(sheet, rows, sheet.delimiter)
