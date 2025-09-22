@@ -19,7 +19,7 @@ This document outlines the tasks required to migrate the WaniKanify ReZero exten
 5. Testing & QA (unit + manual)
 6. Optional: Future additional locale onboarding workflow
 
-## Phase 1: Audit & Inventory
+## Phase 1: Audit
 Tasks:
 - [x] Enumerate all UI surfaces:
   - `options.tsx` (settings form labels, section headers, buttons, tooltips) ✅
@@ -27,7 +27,7 @@ Tasks:
   - `content.ts` (no user-facing literal strings requiring localization discovered beyond injected vocab) ✅ (scanned)
   - Components under `src/components/**` (forms, preview, vocabulary lists, blacklist, custom vocabulary, import workflow, tools) ✅
   - Error or status strings in `background.ts` that may propagate to UI (`wanikanify:error` responses) ✅ (generic network error captured)
-- [x] Produce a JSON inventory (`i18n-inventory.json`) mapping fileRefs, default messages, domains, descriptions.
+- [x] Catalog initial UI strings (captured during migration; superseded by `locales/en/messages.json`).
 - [x] Classify messages by domain: `settings`, `popup`, `import`, `audio`, `preview`, `tools`, `blacklist`, `sitesFiltering`, `options`, `errors`.
 - [x] Identify dynamic strings needing interpolation (placeholders added):
   - Import success & warnings ($ENTRY_COUNT$, $WARNING_COUNT$)
@@ -35,8 +35,6 @@ Tasks:
   - Backup restore ($BACKUP_NAME$)
   - History restored/removed ($SHEET_NAME$)
 - [x] Identify concatenations → Represented via template + fragment pattern (import warnings fragment). No remaining unsafe runtime concatenations flagged for extraction phase.
-
-Deliverable: `i18n-inventory.json` (complete initial set; further additions occur opportunistically during extraction).
 
 Notes:
 - Some duplicate semantic concepts intentionally have separate keys (e.g. `settings_autorun_label` vs `toggle_autorun_label`) pending consolidation decision in Phase 2.
