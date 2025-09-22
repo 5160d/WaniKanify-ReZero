@@ -68,6 +68,29 @@ plasmo package
 
 ## Environment Variables
 
+## Pre-commit Quality Gate
+The repository includes a Husky `pre-commit` hook that enforces:
+1. ESLint (includes custom i18n rules: hardcoded-ui-string, duplicate-message-values, no-unregistered-internal-token, no-raw-console)
+2. Full Jest test suite
+
+If either step fails, the commit is aborted.
+
+Skip temporarily (discouraged) by passing `--no-verify` to `git commit`.
+
+To install hooks after a fresh clone (if not already run by package manager):
+```bash
+pnpm prepare
+```
+
+To adjust performance locally you can edit `.husky/pre-commit` to:
+- Use `pnpm test -- --changedSince=origin/main` (Jest feature) for partial runs.
+- Add the unused key audit (currently informational):
+	```bash
+	node scripts/find-unreferenced-locale-keys.cjs --allow-exit-zero
+	```
+
+Do not remove the ESLint invocation; it is the authoritative enforcement layer for localization & logging standards.
+
 These can be set ad-hoc in your shell before running commands. Do not commit secrets.
 
 | Name | Purpose | When to Use | Default |

@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Fail fast on errors
+set -e
+
+# 1. Lint (ESLint custom i18n rules + no raw console)
+echo "[pre-commit] Running ESLint..."
+pnpm lint
+
+# 2. Run tests (full regression) - can be optimized later with changed files selection
+echo "[pre-commit] Running Jest test suite..."
+pnpm test -- --runInBand
+
+# 3. Optional: unused localization key check (informational, non-blocking now)
+# node scripts/find-unreferenced-locale-keys.cjs --allow-exit-zero || true
+
+echo "[pre-commit] All checks passed."
