@@ -71,7 +71,7 @@ plasmo package
 ## Pre-commit Quality Gate
 The repository includes a Husky `pre-commit` hook that enforces (in order):
 1. ESLint (custom i18n + logging rules: `hardcoded-ui-string`, `duplicate-message-values`, `no-unregistered-internal-token`, `no-raw-console`)
-2. Unused localization key scan (`scripts/find-unreferenced-locale-keys.cjs`) – commit is blocked if any keys are unused
+2. Unused localization key scan (`pnpm i18n:unused` -> `scripts/find-unreferenced-locale-keys.cjs`) – commit is blocked if any keys are unused
 3. Full Jest test suite
 
 If any step fails, the commit is aborted.
@@ -79,7 +79,7 @@ If any step fails, the commit is aborted.
 Remediating unused localization keys:
 * Remove the stale entries from `locales/en/messages.json` OR
 * Add actual usages (e.g. wire UI component to new key) if the key is legitimately needed.
-* Re-run `pnpm i18n:unused` locally to verify it reports zero unused keys.
+* Re-run `pnpm i18n:unused` locally to verify it reports zero unused keys (includes tests). Use `pnpm i18n:unused -- --exclude-tests` to check production-only usage.
 
 Temporary bypass (discouraged) with `--no-verify` only for large refactors; follow-up cleanup is required before merging.
 

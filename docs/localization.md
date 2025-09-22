@@ -43,13 +43,57 @@ If in doubt, localize instead of ignoring.
 To intentionally allow duplicate values (e.g., common single-word button labels), add the value to the rule's configuration allowlist in the ESLint config.
 
 ## Adding New Localized Strings
-1. Add a new entry to `locales/en/messages.json`:
+1. Add (or modify) an entry in `locales/en/messages.json`:
    ```jsonc
    "my_feature_action_label": { "message": "Do the Thing" }
    ```
-2. (Optional) Run a key generation script if present (e.g., to refresh TypeScript definitions).
+2. Run `pnpm i18n:gen` to regenerate `src/locales/message-keys.d.ts` (enforced in pre-commit via `--check`).
 3. Replace the hardcoded literal with `t('my_feature_action_label')`.
-4. Run `pnpm lint` to confirm no rule violations.
+4. (Optional) If using the key only inside tests, still add it normally (the unused scan counts test references by default unless `--exclude-tests` is passed).
+5. Run `pnpm lint` then `pnpm i18n:unused` to ensure no unexpected unused keys.
+
+### Generated Key Union File
+`src/locales/message-keys.d.ts` is an auto-generated TypeScript union of all keys. Commit it. It provides immediate editor autocomplete and creates diff signal when keys are added/removed. The pre-commit hook runs the generator in `--check` mode to prevent drift.
+
+Regenerate manually:
+```
+pnpm i18n:gen
+```
+
+CI / local verification (no writes):
+```
+pnpm i18n:check
+```
+
+If `i18n:check` fails, run `i18n:gen` and commit the updated file.
+
+### Dynamic (Indirect) Keys
+Some keys are referenced only indirectly (e.g., looked up via a constant map or iterated lists) and therefore are not discoverable by the static regex scanner (`t('literal')`). These are declared in `scripts/i18n-dynamic-keys.txt`.
+
+File format:
+```
+# Comments allowed
+custom_vocab_description
+...
+```
+
+Guidelines:
+* Add a key here only if it is genuinely referenced at runtime through indirection (constants, arrays, computed property lookups) and converting to a direct literal would reduce clarity.
+* Prefer refactoring to direct `t('key')` form if the indirection adds little value (removes the need for a dynamic entry).
+* Keep related groups separated by a comment heading (`# Runtime indirection: Custom Vocabulary tooltip keys`).
+* Test-only demonstration keys should be grouped separately and reconsidered periodically.
+
+To audit dynamic keys still needed:
+1. Temporarily comment them out.
+2. Run `pnpm i18n:unused -- --include-tests`.
+3. If they appear unused and UI still behaves, refactor/remove.
+
+### Unused Key Scan Modes
+The scanner defaults to including test files. To simulate production-only usage classification:
+```
+pnpm i18n:unused -- --exclude-tests
+```
+Use this when deciding whether a test-only key should remain or be removed.
 
 ## Philosophy on Dev / Diagnostic Strings
 Developer-only log lines (network traces, cache diagnostics, internal state transitions) are ignored intentionally—they provide debugging clarity and are not translated. If a string transitions to user-visible (e.g., appears in a UI alert or tooltip), localize it.
@@ -70,9 +114,10 @@ If a string after `[WK]` becomes user-visible UI copy, remove the diagnostic for
 ## Maintenance Checklist
 - Before merging: run lint; ensure no `local-i18n/*` violations.
 - When adding styling/animation literals that get flagged: prefer adding a precise ignore regex rather than disabling the rule inline.
-- Periodically review `messages.json` for unused keys and dev-only entries—cleanup is safe if not referenced in code.
-   - Run `npm run i18n:unused` to list keys in `messages.json` that have no `t('key')` usage. Exit code is 1 if unused keys exist (use `--allow-exit-zero` to suppress failure for informational runs; supports `--json`).
-   - Dev-only keys should generally not exist now that prefixes are used; prune any that slip in.
+- Periodically review `messages.json` for unused keys and dev-only entries—cleanup is safe if not referenced.
+   - Run `pnpm i18n:unused` (includes tests) or add `-- --exclude-tests` for production-only.
+   - Dynamic indirection list lives at `scripts/i18n-dynamic-keys.txt`; prune stale lines.
+   - Use `--json` for tooling integration or `--allow-exit-zero` in exploratory runs.
 
 ## Pre-commit Hook Recommendation
 

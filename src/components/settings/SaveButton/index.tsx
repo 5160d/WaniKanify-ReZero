@@ -18,36 +18,36 @@ export const SaveButton: React.FC<SaveButtonProps> = ({ hasErrors, isDirty, stat
     severity: 'success'
   });
 
+  // Open and auto-dismiss alert for success or error states. Avoid triggering i18n lookup on empty key.
   useEffect(() => {
-    if (status.status === 'success') {
-      setAlert({
-        open: true,
-        message: status.message,
-        severity: 'success'
-      });
-      setTimeout(() => {
-        setAlert(prev => ({ ...prev, open: false }));
-      }, 2000);
+    if (status.status === 'success' && status.message) {
+      setAlert({ open: true, message: status.message, severity: 'success' });
+      setTimeout(() => setAlert(prev => ({ ...prev, open: false })), 2000);
+    } else if (status.status === 'error' && status.message) {
+      setAlert({ open: true, message: status.message, severity: 'error' });
+      setTimeout(() => setAlert(prev => ({ ...prev, open: false })), 4000);
     }
   }, [status]);
 
   return (
     <Box position="relative">
-      <Fade in={alert.open} timeout={ { enter: 1000, exit: 1200 }} >
-  <Alert 
-          severity={alert.severity}
-          sx={{
-            position: 'absolute',
-            bottom: '100%',
-            left: '50%',
-            transform: 'translateX(-50%) translateY(-8px)',
-            minWidth: '200px',
-            boxShadow: 2,
-          }}
-        >
-          {t(alert.message as MessageKey)}
-        </Alert>
-      </Fade>
+      {alert.open && alert.message && (
+        <Fade in timeout={{ enter: 1000, exit: 1200 }}>
+          <Alert
+            severity={alert.severity}
+            sx={{
+              position: 'absolute',
+              bottom: '100%',
+              left: '50%',
+              transform: 'translateX(-50%) translateY(-8px)',
+              minWidth: '200px',
+              boxShadow: 2
+            }}
+          >
+            {t(alert.message as MessageKey)}
+          </Alert>
+        </Fade>
+      )}
       <Button
         disabled={!isDirty || hasErrors}
         variant={hasErrors ? "outlined" : "contained"}
