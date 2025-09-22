@@ -1,0 +1,13 @@
+# Keys referenced indirectly at runtime (e.g., passed via variable)
+settings_save_success
+settings_save_error_generic
+settings_save_error_api_token
+# Runtime indirection: Custom Vocabulary tooltip keys (HELP_TEXT in constants.ts)
+custom_vocab_description
+custom_vocab_format_label
+custom_vocab_example_label
+custom_vocab_notes_separator
+custom_vocab_notes_reading_optional
+# Test-only / demonstration keys
+popup_save_button
+blacklist_error_too_many_entries

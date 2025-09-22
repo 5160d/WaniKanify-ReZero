@@ -1,7 +1,5 @@
-#!/usr/bin/env sh
-. "$(dirname "$0")/_/husky.sh"
-
-# Fail fast on errors
+#!/bin/sh
+# Husky v10 style hook (no legacy husky.sh shim). Fail fast on errors.
 set -e
 
 # 1. Lint (ESLint custom i18n rules + no raw console)
@@ -10,9 +8,10 @@ pnpm lint
 
 # 2. Unused localization key scan (must pass to commit)
 echo "[pre-commit] Checking for unused localization keys..."
-if ! pnpm i18n:unused > /tmp/unused-locale-keys.log 2>&1; then
+UNUSED_LOG="$(dirname "$0")/.cache_unused_keys.log"
+if ! pnpm i18n:unused > "$UNUSED_LOG" 2>&1; then
 	echo "[pre-commit] ❌ Unused localization keys detected:" >&2
-	cat /tmp/unused-locale-keys.log >&2
+	cat "$UNUSED_LOG" >&2
 	echo "[pre-commit] To proceed: remove unused keys from locales/en/messages.json or add references." >&2
 	echo "[pre-commit] (If performing a large refactor, temporarily bypass with --no-verify, but follow up with cleanup.)" >&2
 	exit 1
