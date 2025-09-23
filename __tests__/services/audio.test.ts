@@ -87,8 +87,10 @@ describe("AudioService DOM interactions", () => {
 
     service!.updateSettings({ enabled: true, mode: "click", volume: 1 })
 
-    const replacement = document.getElementById("replacement")!
-    replacement.dispatchEvent(new window.MouseEvent("click", { bubbles: true }))
+  const replacement = document.getElementById("replacement")!
+  const clickEvent = document.createEvent('MouseEvents')
+  clickEvent.initEvent('click', true, true)
+  replacement.dispatchEvent(clickEvent)
 
     await flushMicrotasks()
 
@@ -96,8 +98,10 @@ describe("AudioService DOM interactions", () => {
 
     playWordSpy.mockClear()
 
-    const normal = document.getElementById("normal")!
-    normal.dispatchEvent(new window.MouseEvent("click", { bubbles: true }))
+  const normal = document.getElementById("normal")!
+  const clickEvent2 = document.createEvent('MouseEvents')
+  clickEvent2.initEvent('click', true, true)
+  normal.dispatchEvent(clickEvent2)
 
     await flushMicrotasks()
 
@@ -113,8 +117,10 @@ describe("AudioService DOM interactions", () => {
 
     service!.updateSettings({ enabled: true, mode: "hover", volume: 1 })
 
-    const replacement = document.getElementById("replacement")!
-    replacement.dispatchEvent(new window.MouseEvent("mousemove", { bubbles: true }))
+  const replacement = document.getElementById("replacement")!
+  const moveEvent = document.createEvent('MouseEvents')
+  moveEvent.initEvent('mousemove', true, true)
+  replacement.dispatchEvent(moveEvent)
 
     jest.runAllTimers()
     await flushMicrotasks()
@@ -123,8 +129,10 @@ describe("AudioService DOM interactions", () => {
 
     playWordSpy.mockClear()
 
-    const normal = document.getElementById("normal")!
-    normal.dispatchEvent(new window.MouseEvent("mousemove", { bubbles: true }))
+  const normal = document.getElementById("normal")!
+  const moveEvent2 = document.createEvent('MouseEvents')
+  moveEvent2.initEvent('mousemove', true, true)
+  normal.dispatchEvent(moveEvent2)
 
     jest.runOnlyPendingTimers()
     await flushMicrotasks()

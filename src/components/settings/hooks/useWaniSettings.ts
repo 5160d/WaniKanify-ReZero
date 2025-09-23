@@ -126,7 +126,6 @@ export const useWaniSettings = () => {
 
         // After any storage change, the in-memory form now matches persisted state
         setIsDirty(false)
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [savedSettings, setSavedSettings])
 
     /**

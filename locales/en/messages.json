@@ -141,6 +141,7 @@
   "sites_filtering_button_add": { "message": "Add", "description": "Sites filtering add button" }
   ,"settings_clear_cache_progress_clearing": { "message": "Clearing…", "description": "Clear cache in-progress status" }
   ,"settings_clear_cache_progress_cleared": { "message": "Cleared!", "description": "Clear cache completed status" }
+  ,"settings_clear_cache_progress_rebuilding": { "message": "Rebuilding vocabulary…", "description": "Cache cleared and vocabulary is rebuilding" }
   ,"settings_clear_cache_title": { "message": "Vocabulary Cache", "description": "Clear cache section title" }
   ,"custom_vocab_invalid_entry_error": { "message": "Invalid entry format", "description": "Invalid custom vocab entry error" }
   ,"blacklist_invalid_list_error": { "message": "Invalid list", "description": "Invalid blacklist list error" }

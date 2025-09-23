@@ -90,6 +90,7 @@ export type MessageKey =
   | "settings_clear_cache_button"
   | "settings_clear_cache_progress_cleared"
   | "settings_clear_cache_progress_clearing"
+  | "settings_clear_cache_progress_rebuilding"
   | "settings_clear_cache_title"
   | "settings_custom_vocab_heading"
   | "settings_save_button"

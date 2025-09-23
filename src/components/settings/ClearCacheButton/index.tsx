@@ -1,14 +1,34 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Tooltip, Typography, Box } from '@mui/material';
 import { WaniTooltip } from '../../common/WaniTooltip';
 import { t } from '../../../utils/i18n';
 import { HelpOutline } from "@mui/icons-material";
 import { log } from '~src/utils/log'
-import { __WK_EVT_CLEAR_CACHE } from '~src/internal/tokens'
+import { __WK_EVT_CLEAR_CACHE, __WK_EVT_STATE } from '~src/internal/tokens'
+
+interface ExtensionStateEvent {
+    type: typeof __WK_EVT_STATE
+    payload: { isRefreshing: boolean }
+}
 
 export const ClearCacheButton: React.FC = () => {
     const [clearing, setClearing] = useState(false)
     const [done, setDone] = useState(false)
+    const [isRefreshing, setIsRefreshing] = useState(false)
+
+    useEffect(() => {
+        const handler = (message: unknown) => {
+            const evt = message as Partial<ExtensionStateEvent>
+            if (evt?.type === __WK_EVT_STATE && typeof evt.payload?.isRefreshing === 'boolean') {
+                setIsRefreshing(evt.payload.isRefreshing)
+            }
+        }
+        // Chrome typings may not perfectly match; cast to expected signature
+        chrome.runtime.onMessage.addListener(handler as (msg: unknown) => void)
+        return () => {
+            chrome.runtime.onMessage.removeListener(handler as (msg: unknown) => void)
+        }
+    }, [])
 
     const handleClick = async () => {
         setClearing(true)
@@ -31,7 +51,7 @@ export const ClearCacheButton: React.FC = () => {
             color="warning"
             type="button"
             name="clearButton"
-            disabled={clearing}
+            disabled={clearing || isRefreshing}
             onClick={handleClick}
             endIcon={
                 <Tooltip
@@ -75,11 +95,13 @@ export const ClearCacheButton: React.FC = () => {
                 </Tooltip>
             }
         >
-                            {clearing
-                              ? t('settings_clear_cache_progress_clearing')
-                              : done
-                                ? t('settings_clear_cache_progress_cleared')
-                                : t('settings_clear_cache_button')}
+                        {clearing
+                            ? t('settings_clear_cache_progress_clearing')
+                            : isRefreshing
+                                ? t('settings_clear_cache_progress_rebuilding')
+                                : done
+                                    ? t('settings_clear_cache_progress_cleared')
+                                    : t('settings_clear_cache_button')}
         </Button>
     );
 };
