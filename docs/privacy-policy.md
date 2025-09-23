@@ -12,6 +12,8 @@ No data is transmitted to third-party servers by the extension. All requests go 
 ## Permissions
 - `storage`: used to store extension settings, vocabulary cache, and import history.
 - `activeTab`: used to send toggle messages to the current tab when you click the toolbar icon so replacements can pause or resume without opening the options page.
+- `alarms`: used to schedule periodic background refreshes of the WaniKani vocabulary/cache so content stays up to date without manual action.
+- `Host permissions (https://*/*)`: required so the extension can read and modify page content to replace vocabulary on the websites you visit. Processing happens locally in the browser; page text is not sent to any server. You can control scope by disabling Auto Run, running on-demand, or adding sites to the Filtered Websites list in Options.
 
 ## User control
 - Settings can be exported or imported via the options page.

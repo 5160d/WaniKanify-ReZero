@@ -683,4 +683,99 @@ work,仕事,しごと`
     
     console.log(`✅ Microsoft Edge hero image saved`)
   })
+
+    test('generate Microsoft Edge promotional tile (440x280)', async ({ page }) => {
+      // Read the actual icon file and convert to base64
+      const iconPath = path.join(__dirname, '../../../assets/icon.png')
+      const iconBuffer = fs.readFileSync(iconPath)
+      const iconBase64 = iconBuffer.toString('base64')
+
+      await page.setViewportSize({ width: 440, height: 280 })
+
+      await page.setContent(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <style>
+              body {
+                margin: 0;
+                padding: 0;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                overflow: hidden;
+              }
+              .tile {
+                width: 400px;
+                height: 240px;
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                color: white;
+                padding: 16px 20px;
+                border-radius: 16px;
+                background: rgba(0,0,0,0.15);
+                box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+              }
+              .icon {
+                width: 64px;
+                height: 64px;
+                background: white;
+                border-radius: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+              }
+              .icon img {
+                width: 56px;
+                height: 56px;
+                object-fit: contain;
+              }
+              .text {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+              }
+              .title {
+                font-size: 20px;
+                font-weight: 700;
+                margin: 0;
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+              }
+              .subtitle {
+                font-size: 12px;
+                margin: 0;
+                opacity: 0.9;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="tile">
+              <div class="icon">
+                <img src="data:image/png;base64,${iconBase64}" alt="WaniKanify Icon" />
+              </div>
+              <div class="text">
+                <h1 class="title">WaniKanify ReZero</h1>
+                <p class="subtitle">Learn Japanese while you browse</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `)
+
+      await page.waitForTimeout(500)
+
+      const promoDir = path.join(__dirname, '../../../release-assets/assets/promo')
+      if (!fs.existsSync(promoDir)) {
+        fs.mkdirSync(promoDir, { recursive: true })
+      }
+      const tilePath = path.join(promoDir, 'edge-tile-440x280.png')
+      await page.screenshot({ path: tilePath, fullPage: true })
+      console.log('✅ Microsoft Edge 440x280 promotional tile saved')
+    })
 })

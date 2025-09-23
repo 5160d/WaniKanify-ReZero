@@ -22,6 +22,9 @@ The asset generator creates screenshots and promotional images by:
 - **hero-1400x560.png** - Chrome Web Store promotional image
 - **hero-3000x2000.png** - Microsoft Edge Add-ons store promotional image
 
+### Promotional Tiles (`release-assets/assets/promo/`)
+- **edge-tile-440x280.png** - Microsoft Edge Add-ons promotional tile (required)
+
 ## Prerequisites
 
 1. **Built Extension**: The extension must be built for development first:
@@ -60,6 +63,9 @@ npx playwright test tests/e2e/assets/generate-assets.spec.ts -g "live replacemen
 
 # Hero images only
 npx playwright test tests/e2e/assets/generate-assets.spec.ts -g "hero"
+ 
+# Edge promotional tile only
+npx playwright test tests/e2e/assets/generate-assets.spec.ts -g "promotional tile"
 ```
 
 ## Features
@@ -149,6 +155,7 @@ The generated assets are optimized for:
 ### Microsoft Edge Add-ons
 - Hero image: 3000x2000px (recommended)
 - Screenshots: 1366x768px (acceptable)
+- Promotional tile: 440x280px (required)
 
 ### Firefox Add-ons (AMO)
 - Screenshots: 1280x800px (recommended)
