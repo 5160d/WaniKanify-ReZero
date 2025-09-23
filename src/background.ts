@@ -155,6 +155,7 @@ class BackgroundController {
   }
 
   private lastVocabularyRefreshAt: number | null = null
+  private refreshWatchdogIds = new Set<ReturnType<typeof setTimeout>>()
 
   private async loadImportedVocabulary(): Promise<void> {
     const imported = await getAggregatedImportedVocabulary()
@@ -375,12 +376,15 @@ class BackgroundController {
         {
           // Clear existing cache then (throttled) kick off a forced refresh so the
           // UI repopulates instead of appearing empty until the next manual or alarm trigger.
-          await this.clearVocabularyCache()
+          await this.clearVocabularyCache(true)
           const now = Date.now()
           const MIN_INTERVAL_MS = 5_000 // throttle forced refresh to once every 5s
           if (!this.lastVocabularyRefreshAt || now - this.lastVocabularyRefreshAt > MIN_INTERVAL_MS) {
             this.lastVocabularyRefreshAt = now
-            void this.refreshVocabulary(true)
+            // Force a full baseline rebuild even if we have an in-memory cache (we retained it
+            // to keep replacements working during rebuild). Passing the baseline flag ensures we
+            // don't attempt an incremental merge against stale data that has been logically cleared.
+            void this.refreshVocabulary(true, { forceFullBaseline: true })
           }
           return { type: __WK_EVT_STATE, payload: this.buildState() }
         }
@@ -403,7 +407,7 @@ class BackgroundController {
     }
   }
 
-  private async refreshVocabulary(force = false): Promise<VocabularyCachePayload | null> {
+  private async refreshVocabulary(force = false, opts: { forceFullBaseline?: boolean } = {}): Promise<VocabularyCachePayload | null> {
     if (!this.settings.apiToken) {
       return null
     }
@@ -416,7 +420,7 @@ class BackgroundController {
       return this.refreshPromise
     }
 
-    this.refreshPromise = this.performVocabularyRefresh()
+    this.refreshPromise = this.performVocabularyRefresh(opts.forceFullBaseline === true)
       .catch((error) => {
   log.error('vocabulary refresh failed', error)
         throw error
@@ -425,17 +429,38 @@ class BackgroundController {
         this.refreshPromise = null
       })
 
+    // Watchdog: ensure we never stay stuck in isRefreshing state indefinitely (e.g. hung fetch)
+    const currentPromise = this.refreshPromise
+    const watchdogId = setTimeout(() => {
+      if (this.refreshPromise === currentPromise && this.isRefreshing) {
+        log.warn('vocabulary refresh watchdog triggered; resetting state')
+        this.isRefreshing = false
+        this.refreshPromise = null
+        this.broadcast({ type: __WK_EVT_STATE, payload: this.buildState() })
+      }
+      this.refreshWatchdogIds.delete(watchdogId)
+    }, 30_000)
+    this.refreshWatchdogIds.add(watchdogId)
+
+    // Ensure watchdog cleared on natural completion
+    this.refreshPromise.finally(() => {
+      clearTimeout(watchdogId)
+      this.refreshWatchdogIds.delete(watchdogId)
+    })
+
     return this.refreshPromise
   }
 
-  private async performVocabularyRefresh(): Promise<VocabularyCachePayload | null> {
+  private async performVocabularyRefresh(forceFullBaseline: boolean): Promise<VocabularyCachePayload | null> {
     this.isRefreshing = true
     this.broadcast({ type: __WK_EVT_STATE, payload: this.buildState() })
 
     try {
       this.client.setToken(this.settings.apiToken ?? "")
-      // Decide whether to perform full or incremental subject fetch
-      const canIncremental = Boolean(this.vocabularyCache?.wanikaniSubjects?.length) && !this.vocabularyCache?.error
+  // Decide whether to perform full or incremental subject fetch. When a cache clear occurs we
+  // retain the existing in-memory vocabulary so that page replacements still function, but we
+  // intentionally force a full baseline rebuild to avoid merging against possibly stale data.
+  const canIncremental = !forceFullBaseline && Boolean(this.vocabularyCache?.wanikaniSubjects?.length) && !this.vocabularyCache?.error
       let subjects: WaniKaniSubject[] = []
       let incremental = false
       let lastSubjectsUpdatedAt = this.vocabularyCache?.lastSubjectsUpdatedAt
@@ -612,11 +637,22 @@ class BackgroundController {
     this.broadcast({ type: __WK_EVT_STATE, payload: this.buildState() })
   }
 
-  private async clearVocabularyCache(): Promise<void> {
-    this.vocabularyCache = null
+  private async clearVocabularyCache(retainInMemoryUntilRebuild = false): Promise<void> {
+    // If retaining, do not null out in-memory cache so pages keep operating until rebuild completes.
+    if (!retainInMemoryUntilRebuild) {
+      this.vocabularyCache = null
+    } else if (this.vocabularyCache) {
+      // Mark existing cache as expired so any non-forced refresh logic still treats it as stale.
+      try {
+        this.vocabularyCache.expiresAt = new Date(Date.now() - 1000).toISOString()
+      } catch { /* ignore */ }
+    }
     await this.vocabularyStorage.remove(VOCABULARY_STORAGE_KEY)
     // Attempt to remove any lingering sync key
   try { chrome.storage.sync?.remove?.(VOCABULARY_STORAGE_KEY) } catch { /* ignore */ }
+    // Also clear WaniKani client conditional metadata so that a forced refresh
+    // after clearing does not rely on stale Last-Modified headers.
+    this.client.clearConditionalMetadata?.()
     this.broadcast({ type: __WK_EVT_STATE, payload: this.buildState() })
   }
 

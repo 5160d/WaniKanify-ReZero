@@ -154,6 +154,17 @@ export class WaniKaniClient {
     this.staleValues.clear()
   }
 
+  /**
+   * Clear only conditional request metadata (Last-Modified + stale 304 fallbacks)
+   * without touching the active TTL cache entries. Useful when we explicitly
+   * invalidate domain data (e.g. vocabulary clear) and want subsequent requests
+   * to force a fresh 200 rather than a conditional 304 against now-cleared state.
+   */
+  public clearConditionalMetadata(): void {
+    this.lastModified.clear()
+    this.staleValues.clear()
+  }
+
   hasToken(): boolean {
     return Boolean(this.token)
   }
