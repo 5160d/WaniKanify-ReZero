@@ -370,7 +370,11 @@ class BackgroundController {
 
         return { type: __WK_EVT_REFRESH_STARTED }
       case __WK_EVT_CLEAR_CACHE:
+        // Clear existing cache then immediately kick off a forced refresh so the
+        // UI repopulates instead of appearing empty until the next manual or alarm trigger.
         await this.clearVocabularyCache()
+        // Fire and forget refresh; state broadcast occurs when refresh completes.
+        void this.refreshVocabulary(true)
         return { type: __WK_EVT_STATE, payload: this.buildState() }
       case __WK_EVT_PERFORMANCE:
         if (!this.settings.performanceTelemetry || !message.payload) {
