@@ -119,7 +119,9 @@ npx playwright test tests/e2e/assets/generate-assets.spec.ts
 This creates:
 - **Screenshots**: Options page, popup, spreadsheet import, live replacement demo
 - **Hero Images**: Chrome Web Store (1400x560) and Microsoft Edge (3000x2000) promotional images
-- **Output**: All assets saved to `release-assets/assets/`
+- **Promotional tiles**: promotional tile for Edge.
+
+All files are written under `release-assets/assets/`. See the Asset Generation Guide at `tests/e2e/assets/README.md` for details and customization tips.
 
 See [Asset Generation Guide](tests/e2e/assets/README.md) for detailed documentation.
 
@@ -153,6 +155,8 @@ This is a [Plasmo](https://docs.plasmo.com/) extension project with the followin
 - `docs/user-manual.md` – end-user guide with feature walkthroughs.
 - `docs/store-listing.md` – draft Chrome Web Store listing copy.
 - `docs/privacy-policy.md` – privacy policy draft for store submission.
+- `docs/localization.md` – i18n workflow, adding locales, and message key hygiene.
+- `docs/cross-browser-report.md` – feature parity and validation notes across Chrome/Firefox/Edge.
 
 ### Testing (Unit vs Live API)
 
