@@ -19,6 +19,7 @@ import type { VocabularyCachePayload, VocabularyEntry } from "~src/services/voca
 import { toggleTooltipVisibility, initializeTooltipPositioning } from "~src/services/tooltips"
 import { ensureSafeRuntimeConnect } from "~src/utils/runtimeConnect"
 import { log } from '~src/utils/log'
+import { HotZoneTracker } from "~src/utils/hotZones"
 import {
   __WK_EVT_GET_STATE,
   __WK_EVT_STATE,
@@ -104,6 +105,23 @@ class ContentScriptController {
   private hasNavigationHooks = false
 
   private lastUrl = window.location.href
+  // Suppress replacements in rapidly mutating regions (hot zones)
+  private hotTracker = new HotZoneTracker({
+    zoneRootResolver: (el) => {
+      /* eslint-disable local-i18n/hardcoded-ui-string */
+      // Specific: DocSearch overlay containers first
+      const docsearch = el.closest(
+        '.DocSearch-Container, .DocSearch-Modal, [data-docsearch-root]'
+      ) as Element | null
+      if (docsearch) return docsearch
+      // Common portals/dialogs used by UI libraries
+      const portal = el.closest(
+        '[role="dialog"], [role="listbox"], [role="menu"], [role="tooltip"], [data-headlessui-portal], [data-radix-portal]'
+      ) as Element | null
+      /* eslint-enable local-i18n/hardcoded-ui-string */
+      return (portal || el) as Element
+    }
+  })
 
   private pendingMutations: MutationRecord[] = []
 
@@ -577,7 +595,9 @@ class ContentScriptController {
     }
 
     this.isRunning = true
-    this.ensureNavigationHooks()
+  // Reset hot region trackers on each start to avoid stale state
+  this.hotTracker.reset()
+  this.ensureNavigationHooks()
     this.observeMutations()
     this.enqueueFullDocument(force)
   }
@@ -589,6 +609,8 @@ class ContentScriptController {
     this.replacer.revertAll()
     this.processedNodes = new WeakMap()
     this.audioService.stop()
+  // Drop hot region trackers
+  this.hotTracker.reset()
   }
 
   private ensureNavigationHooks(): void {
@@ -681,14 +703,17 @@ class ContentScriptController {
   }
 
   private disconnectObserver(): void {
-    this.mutationObserver?.disconnect()
-    this.mutationObserver = undefined
+  this.mutationObserver?.disconnect()
+  this.mutationObserver = undefined
   }
 
   private handleMutations(records: MutationRecord[]): void {
     if (!this.isRunning) {
       return
     }
+
+    // Detect rapidly mutating regions and temporarily mark them as hot (skip replacements)
+    this.hotTracker.mark(records)
 
     this.pendingMutations.push(...records)
 
@@ -914,6 +939,10 @@ class ContentScriptController {
   }
 
   private shouldIgnoreElement(element: Element): boolean {
+    // Skip text inside recently hot (rapidly mutating) regions
+    if (this.hotTracker.isHot(element)) {
+      return true
+    }
     if (IGNORED_TAGS.has(element.tagName)) {
       return true
     }
@@ -946,16 +975,76 @@ class ContentScriptController {
       return true
     }
 
-    // Heuristic: avoid interfering with dynamic documentation search overlays (e.g. Algolia DocSearch)
-    // which perform their own virtual DOM diffing and can break if internal text nodes are mutated.
-    // We check common container classnames / attributes. This specifically addresses an observed
+    // Heuristic: avoid interfering with dynamic documentation search overlays (e.g. Algolia DocSearch,
+    // Nextra search, Headless UI/Radix portals) which perform their own virtual DOM diffing and can
+    // break if internal text nodes are mutated. This specifically addresses an observed
     // "Cancel rendering route" client-side exception on docs.plasmo.com when interacting with the
     // search dialog while Auto Run is enabled.
     try {
+      /* eslint-disable local-i18n/hardcoded-ui-string */
+      // Limit ancestor scanning to avoid blocking entire pages due to a far ancestor
+      const isWithin = (sel: string, maxDepth = 3) => {
+        let el: Element | null = element
+        let depth = 0
+        while (el && depth <= maxDepth) {
+          if (el.matches(sel)) return true
+          el = el.parentElement
+          depth += 1
+        }
+        return false
+      }
+
+      // If a search/modal overlay is open, avoid mutating nodes inside it only
+      const overlayRoot = document.querySelector(
+        '.DocSearch-Container, .DocSearch-Modal, [data-docsearch-root]'
+      )
       if (
-        element.closest('.DocSearch-Container, .DocSearch-Modal, [data-docsearch-root]') ||
-        // Generic safeguard: heavy dynamic search widgets often mark root with role="search"
-        element.closest('[role="search"]')
+        overlayRoot &&
+        element.closest('.DocSearch-Container, .DocSearch-Modal, [data-docsearch-root]')
+      ) {
+        return true
+      }
+
+      // If a search-like element is currently focused, avoid mutating the subtree around it
+      const isSearchLikeElement = (el: Element | null): boolean => {
+        if (!el) return false
+        const role = el.getAttribute('role')?.toLowerCase()
+        if (role === 'searchbox' || role === 'combobox') return true
+        const tag = el.tagName.toLowerCase()
+        const type = (el as HTMLInputElement).type?.toLowerCase?.()
+        if (tag === 'input' && (type === 'search' || type === 'text')) {
+          const placeholder = (el as HTMLInputElement).placeholder?.toLowerCase?.()
+          const ariaLabel = el.getAttribute('aria-label')?.toLowerCase()
+          if (placeholder?.includes('search') || ariaLabel?.includes('search')) return true
+        }
+        return false
+      }
+      const activeEl = document.activeElement as Element | null
+      if (isSearchLikeElement(activeEl)) {
+        const activeRoot =
+          activeEl.closest('.DocSearch-Container, .DocSearch-Modal, [data-docsearch-root]') ||
+          activeEl.closest('[role="search"], [role="searchbox"], [role="combobox"]')
+        if (
+          (activeRoot && (element === activeRoot || activeRoot.contains(element))) ||
+          element.contains(activeEl) ||
+          (activeEl && activeEl.contains(element))
+        ) {
+          return true
+        }
+      }
+      if (
+        // Algolia DocSearch containers
+  element.closest('.DocSearch-Container, .DocSearch-Modal, [data-docsearch-root]') ||
+        // Generic: any search region
+        isWithin('[role="search"], [role="searchbox"]', 2) ||
+        // ARIA interactive patterns involved in typeahead/search UIs
+        isWithin('[role="combobox"], [role="listbox"], [role="option"]', 2) ||
+        // Live regions / busy sections frequently re-render
+        isWithin('[aria-live], [aria-busy="true"]', 1) ||
+        // Common portal markers used by Headless UI / Radix / generic portals
+        isWithin('[data-headlessui-portal], [data-radix-portal], [data-portal], .react-portal', 3) ||
+        // Nextra/Docs search classes and generic docsearch id hooks
+        isWithin('[id*="docsearch" i], [class*="nextra-search" i], [class*="nextra" i]', 2)
       ) {
         return true
       }
@@ -963,16 +1052,32 @@ class ContentScriptController {
       const cls = element.className || ''
       if (typeof cls === 'string') {
         const lowered = cls.toLowerCase()
-        if (lowered.includes('docsearch') || lowered.includes('algolia') || lowered.includes('searchbox')) {
+        if (
+          lowered.includes('docsearch') ||
+          lowered.includes('algolia') ||
+          lowered.includes('searchbox') ||
+          lowered.includes('nextra')
+        ) {
           return true
         }
       }
+
+      // If a focused search-like input exists, avoid mutating nearby DOM
+      const active = document.activeElement as Element | null
+      if (active && (active.matches('input, textarea') || active.getAttribute('role') === 'searchbox')) {
+        if (element === active || element.contains(active) || active.contains(element)) {
+          return true
+        }
+      }
+      /* eslint-enable local-i18n/hardcoded-ui-string */
     } catch {
       // Defensive: DOM exceptions should not break processing
     }
 
     return false
   }
+
+  // (Typing guards removed in favor of contextual checks within shouldIgnoreElement)
 
   private requestIdleCallback(callback: IdleRequestCallback): number {
     if (typeof window.requestIdleCallback === "function") {
