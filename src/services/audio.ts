@@ -47,6 +47,8 @@ export class AudioService {
   private lastHoverWord: string | null = null
   private clickListener = this.handleClick.bind(this)
   private hoverListener = this.handleHover.bind(this)
+  private prefetchedUrls = new Set<string>()
+  private prefetchTimer: number | null = null
 
   updateSettings(settings: AudioSettings): void {
     const allowedModes: AudioMode[] = ["click", "hover"]
@@ -88,8 +90,21 @@ export class AudioService {
     })
   }
 
-  handleReplacements(): void { // replacements no longer used; method kept for interface compatibility
-    // Audio playback now only responds to direct user interaction (click/hover)
+  handleReplacements(): void {
+    // Lazy-load audio for vocabulary that just appeared on the page.
+    // Keep this lightweight and debounced to avoid scanning too often on busy pages.
+    if (!this.settings.enabled) {
+      return
+    }
+
+    if (this.prefetchTimer) {
+      window.clearTimeout(this.prefetchTimer)
+    }
+
+    this.prefetchTimer = window.setTimeout(() => {
+      this.prefetchTimer = null
+      void this.scanAndPrefetchAudio()
+    }, 250)
   }
 
   stop(): void {
@@ -121,6 +136,56 @@ export class AudioService {
 
     if (this.settings.mode === "hover") {
       document.addEventListener("mousemove", this.hoverListener, true)
+    }
+  }
+
+  private async scanAndPrefetchAudio(): Promise<void> {
+    try {
+      // Gather visible replacement elements and prefetch audio for the first few unique words
+      const nodes = Array.from(document.getElementsByClassName(__WK_CLASS_REPLACEMENT)) as HTMLElement[]
+      if (!nodes.length) {
+        return
+      }
+
+      const toPrefetch: string[] = []
+      const seen = new Set<string>()
+
+      for (const el of nodes) {
+        const text = el.textContent ?? ""
+        const word = sanitizeWord(text)
+        if (!word || seen.has(word)) continue
+        seen.add(word)
+
+        const entry = this.vocabularyAudio.get(word)
+        if (!entry?.audioUrls?.length) continue
+
+        // Take the first URL as primary; we can extend to multiple if needed
+        for (const url of entry.audioUrls) {
+          if (!this.prefetchedUrls.has(url) && !this.audioCache.has(url)) {
+            toPrefetch.push(url)
+          }
+          // Prefetch only the first viable url to limit bandwidth
+          break
+        }
+
+        if (toPrefetch.length >= 8) {
+          // Cap batch size per scan to avoid flooding network
+          break
+        }
+      }
+
+      // Sequentially prefetch to keep it simple and gentle on the network
+      for (const url of toPrefetch) {
+        try {
+          await this.loadAudio(url)
+          this.prefetchedUrls.add(url)
+        } catch (error) {
+          log.warn('audio prefetch failed', error)
+        }
+      }
+    } catch (error) {
+      // Non-fatal: prefetch is opportunistic
+      log.debug('audio prefetch scan error', error)
     }
   }
 
