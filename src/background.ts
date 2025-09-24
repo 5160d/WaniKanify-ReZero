@@ -294,6 +294,8 @@ class BackgroundController {
       if (areaName === "local" && changes?.[SPREADSHEET_DATA_STORAGE_KEY]) {
         await this.loadImportedVocabulary()
         await this.recalculateVocabularyEntriesFromCache()
+        // In case the presence of imported/custom vocabulary affects action behavior
+        this.updateActionBehavior(this.settings)
       }
     })
 
@@ -715,9 +717,26 @@ class BackgroundController {
 
   private updateActionBehavior(settings: WaniSettings): void {
     try {
-      chrome.action.setPopup({ popup: settings.apiToken ? "" : "popup.html" })
+      const hasAlt = this.hasAlternativeVocabulary()
+      // Show popup only when we have no token and no alternative vocabulary configured.
+      chrome.action.setPopup({ popup: settings.apiToken || hasAlt ? "" : "popup.html" })
     } catch (error) {
   log.debug('unable to update action popup', error)
+    }
+  }
+
+  private hasAlternativeVocabulary(): boolean {
+    try {
+      // Custom vocabulary defined directly in settings
+      const hasCustom = (this.settings.customVocabulary?.size ?? 0) > 0
+      if (hasCustom) {
+        return true
+      }
+      // Imported vocabulary loaded from storage (via vocabularyManager)
+      const entries = this.vocabularyManager.getEntries()
+      return entries.some((e) => e.source === "imported" || e.source === "custom")
+    } catch {
+      return false
     }
   }
 
@@ -744,7 +763,8 @@ controller
   .catch((error) => log.error('background init failed', error))
 
 chrome.action.onClicked.addListener(async (tab) => {
-  if (!controller.hasValidToken()) {
+  // Allow toggling if token exists OR alternative vocabulary is present.
+  if (!controller.hasValidToken() && !controller["hasAlternativeVocabulary"]?.()) {
     chrome.runtime.openOptionsPage()
     return
   }
