@@ -274,25 +274,29 @@ class ContentScriptController {
 
   private async reloadSettings(): Promise<void> {
     const newSettings = await this.loadSettings()
-    const shouldRestart = !this.isRunning && newSettings.autoRun
-    const shouldStop = this.isRunning && !newSettings.autoRun
-
     this.settings = newSettings
     this.updateSiteFilter()
+    // Determine whether we should be running on the current page after applying
+    // the latest settings and site filtering rules (including overrides).
+    const nowShouldRun = this.shouldRun()
+
     this.updateReplacerConfig()
     this.refreshReplacerVocabulary()
 
-    if (shouldStop) {
+    // If we're currently running but the page is now blocked, stop immediately
+    if (!nowShouldRun && this.isRunning) {
       this.stop()
       return
     }
 
-    if (shouldRestart) {
+    // If we're not running and the page is allowed with auto-run, start
+    if (nowShouldRun && !this.isRunning) {
       this.start(true)
       return
     }
 
-    if (this.isRunning) {
+    // If still running and allowed, re-process with latest rules
+    if (this.isRunning && nowShouldRun) {
       this.enqueueFullDocument(true)
     }
   }
