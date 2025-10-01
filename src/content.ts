@@ -963,10 +963,21 @@ class ContentScriptController {
       return true
     }
 
-    if (element.hasAttribute("contenteditable")) {
+    // Check for contenteditable elements - only ignore if contenteditable="true" or contenteditable=""
+    const contentEditable = element.getAttribute("contenteditable")
+    if (contentEditable === "true" || contentEditable === "") {
       return true
     }
 
+    // Also check if any ancestor has contenteditable="true" or contenteditable=""
+    const trueAttr = 'contenteditable="true"'
+    const emptyAttr = 'contenteditable=""'
+    if (element.closest(`[${trueAttr}], [${emptyAttr}]`)) {
+      return true
+    }
+
+    // Note: input/textarea check is redundant since IGNORED_TAGS already handles these tag types
+    // but we keep it for explicit ancestor checking (e.g., elements inside shadow DOM inputs)
     if (element.closest("input, textarea")) {
       return true
     }
