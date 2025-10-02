@@ -285,7 +285,7 @@ export default function Options(): ReactElement {
                       gap: 1
                     }}
                   >
-                    {`${index + 1}. ${section}`}
+                    {`${index + 1}. ${t('options_sections_' + section)}`}
                   </Typography>
                 )}
                 <Divider sx={{ mb: 3 }} />

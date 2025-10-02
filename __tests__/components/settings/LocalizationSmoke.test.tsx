@@ -47,7 +47,7 @@ describe('localization smoke', () => {
     const localizedExpectations = [
       'Live Preview',
       'Imported Vocabulary',
-      'Settings Tools',
+      'Settings Import / Export',
       'Filtered Websites',
       'Add', // sites filtering + import table
     ]

@@ -394,10 +394,10 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
 
             <Box mt={4}>
                 <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-                    <Typography variant="h6" fontWeight="lg">
+                    <Typography variant="subtitle1">
                         {t('import_history_heading')}
                     </Typography>
-                    <Chip label={history.length} />
+                    <Chip label={history.length} size="small" />
                     <Tooltip
                         title={historyOpen ? t('import_history_tooltip_hide') : t('import_history_tooltip_show')}
                         componentsProps={{

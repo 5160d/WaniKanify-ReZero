@@ -2,8 +2,6 @@ import React, { useEffect, useRef, useState } from "react"
 import {
   Box,
   Button,
-  Card,
-  CardContent,
   Chip,
   IconButton,
   List,
@@ -192,99 +190,99 @@ export const SettingsTools: React.FC<SettingsToolsProps> = ({
 
   const hasBackups = backups.length > 0
 
-  return (
-    <Card variant="outlined" sx={{ borderRadius: 3 }}>
-      <CardContent>
-        <Stack spacing={3}>
+  const toolsContent = (
+    <>
+      <Stack spacing={3}>
+        {
           <Typography variant="h6" color="text.primary">
             {t('settings_tools_heading')}
           </Typography>
+        }
 
-          <Stack direction="row" spacing={2}>
-            <Button
-              variant="contained"
-              startIcon={<Download />}
-              onClick={handleExport}
-            >
-              {t('settings_tools_button_export')}
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<Upload />}
-              onClick={handleImportClick}
-            >
-              {t('settings_tools_button_import')}
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<Restore />}
-              onClick={handleCreateBackup}
-            >
-              {t('settings_tools_button_create_backup')}
-            </Button>
-            <Button
-              variant="outlined"
-              color="warning"
-              onClick={handleResetDefaults}
-            >
-              {t('settings_tools_button_reset_defaults')}
-            </Button>
-            <Button
-              variant="text"
-              startIcon={<Sync />}
-              onClick={handleSync}
-            >
-              {t('settings_tools_button_pull_sync')}
-            </Button>
-            <input
-              type="file"
-              accept="application/json"
-              ref={fileInputRef}
-              onChange={handleImport}
-              style={{ display: "none" }}
-            />
-          </Stack>
-
-          <Box>
-            <Stack direction="row" spacing={1} alignItems="center" mb={1}>
-              <Typography variant="subtitle1">{t('settings_tools_backups_heading')}</Typography>
-              <Chip label={`${backups.length}`} size="small" />
-            </Stack>
-            {hasBackups ? (
-              <List disablePadding>
-                {backups.map((backup) => (
-                  <ListItem key={backup.id} divider>
-                    <ListItemText
-                      primary={backup.name}
-                      secondary={new Date(backup.createdAt).toLocaleString()}
-                    />
-                    <ListItemSecondaryAction>
-                      <Tooltip title={t('import_history_tooltip_restore')}>
-                        <IconButton
-                          edge="end"
-                          onClick={() => handleRestoreBackup(backup)}
-                          sx={{ mr: 1 }}
-                        >
-                          <Restore />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title={t('import_history_tooltip_delete')}>
-                        <IconButton edge="end" onClick={() => handleDeleteBackup(backup)}>
-                          <Delete />
-                        </IconButton>
-                      </Tooltip>
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                ))}
-              </List>
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                {t('settings_tools_no_backups')}
-              </Typography>
-            )}
-          </Box>
+        <Stack direction="row" spacing={2} flexWrap="wrap">
+          <Button
+            variant="contained"
+            startIcon={<Download />}
+            onClick={handleExport}
+          >
+            {t('settings_tools_button_export')}
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<Upload />}
+            onClick={handleImportClick}
+          >
+            {t('settings_tools_button_import')}
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<Restore />}
+            onClick={handleCreateBackup}
+          >
+            {t('settings_tools_button_create_backup')}
+          </Button>
+          <Button
+            variant="outlined"
+            color="warning"
+            onClick={handleResetDefaults}
+          >
+            {t('settings_tools_button_reset_defaults')}
+          </Button>
+          <Button
+            variant="text"
+            startIcon={<Sync />}
+            onClick={handleSync}
+          >
+            {t('settings_tools_button_pull_sync')}
+          </Button>
+          <input
+            type="file"
+            accept="application/json"
+            ref={fileInputRef}
+            onChange={handleImport}
+            style={{ display: "none" }}
+          />
         </Stack>
-      </CardContent>
+
+        <Box>
+          <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+            <Typography variant="subtitle1">{t('settings_tools_backups_heading')}</Typography>
+            <Chip label={`${backups.length}`} size="small" />
+          </Stack>
+          {hasBackups ? (
+            <List disablePadding>
+              {backups.map((backup) => (
+                <ListItem key={backup.id} divider>
+                  <ListItemText
+                    primary={backup.name}
+                    secondary={new Date(backup.createdAt).toLocaleString()}
+                  />
+                  <ListItemSecondaryAction>
+                    <Tooltip title={t('import_history_tooltip_restore')}>
+                      <IconButton
+                        edge="end"
+                        onClick={() => handleRestoreBackup(backup)}
+                        sx={{ mr: 1 }}
+                      >
+                        <Restore />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title={t('import_history_tooltip_delete')}>
+                      <IconButton edge="end" onClick={() => handleDeleteBackup(backup)}>
+                        <Delete />
+                      </IconButton>
+                    </Tooltip>
+                  </ListItemSecondaryAction>
+                </ListItem>
+              ))}
+            </List>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              {t('settings_tools_no_backups')}
+            </Typography>
+          )}
+        </Box>
+      </Stack>
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
@@ -292,8 +290,10 @@ export const SettingsTools: React.FC<SettingsToolsProps> = ({
         message={snackbar.message}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       />
-    </Card>
+    </>
   )
+
+  return toolsContent
 }
 
 export default SettingsTools
