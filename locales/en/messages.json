@@ -157,6 +157,9 @@
   ,"spreadsheet_error_missing_pair": { "message": "Missing English or Japanese value", "description": "Spreadsheet import missing value error" }
   ,"spreadsheet_error_no_valid_english": { "message": "No valid English words after applying delimiter", "description": "Spreadsheet no valid english error" }
   ,"spreadsheet_error_empty": { "message": "Spreadsheet is empty", "description": "Spreadsheet empty error" }
+  ,"spreadsheet_error_missing_english_column": { "message": "Missing required English column \"$COLUMN_NAME$\"", "description": "Spreadsheet import missing English column error", "placeholders": { "COLUMN_NAME": { "content": "$1", "example": "English" } } }
+  ,"spreadsheet_error_missing_japanese_column": { "message": "Missing required Japanese column \"$COLUMN_NAME$\"", "description": "Spreadsheet import missing Japanese column error", "placeholders": { "COLUMN_NAME": { "content": "$1", "example": "Japanese" } } }
+  ,"spreadsheet_warning_invalid_reading_column": { "message": "Reading column \"$COLUMN_NAME$\" not found, reading data will be ignored", "description": "Spreadsheet import invalid reading column warning", "placeholders": { "COLUMN_NAME": { "content": "$1", "example": "Reading" } } }
   ,"audio_error_invalid_url": { "message": "Invalid audio URL", "description": "Invalid audio URL error" }
   ,"wanikani_error_missing_token": { "message": "Missing WaniKani API token", "description": "Missing API token error" }
   ,"settings_srs_filtering_title": { "message": "SRS Filtering", "description": "Tooltip title for SRS filtering help" }

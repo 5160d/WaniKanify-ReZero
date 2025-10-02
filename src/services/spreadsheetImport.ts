@@ -118,14 +118,20 @@ const toVocabularyEntries = (
 
   const errors: SpreadsheetImportError[] = []
 
-  if (englishIndex === -1 || japaneseIndex === -1) {
-    if (englishIndex === -1) {
-      errors.push({ row: 0, message: `Missing English column "${sheet.englishColumn}"` })
-    }
-    if (japaneseIndex === -1) {
-      errors.push({ row: 0, message: `Missing Japanese column "${sheet.japaneseColumn}"` })
-    }
-    return { entries: [], errors }
+  // Missing English or Japanese columns are critical errors that should fail the import
+  if (englishIndex === -1) {
+    throw new Error(t('spreadsheet_error_missing_english_column', { COLUMN_NAME: sheet.englishColumn }))
+  }
+  if (japaneseIndex === -1) {
+    throw new Error(t('spreadsheet_error_missing_japanese_column', { COLUMN_NAME: sheet.japaneseColumn }))
+  }
+
+  // Invalid reading column is a warning (user specified a column that doesn't exist)
+  if (sheet.readingColumn && readingIndex === -1) {
+    errors.push({ 
+      row: 0, 
+      message: t('spreadsheet_warning_invalid_reading_column', { COLUMN_NAME: sheet.readingColumn })
+    })
   }
 
   const englishDelimiter = normalizeDelimiter(delimiter)
@@ -134,6 +140,7 @@ const toVocabularyEntries = (
   dataRows.forEach((row, rowIndex) => {
     const englishCell = normalizeValue(row[englishIndex])
     const japaneseCell = normalizeValue(row[japaneseIndex])
+    // Only use reading if the column exists and was found
     const readingCell = readingIndex >= 0 ? normalizeValue(row[readingIndex]) : ""
 
     if (!englishCell || !japaneseCell) {
