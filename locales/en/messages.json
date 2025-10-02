@@ -57,6 +57,8 @@
   "import_state_importing": { "message": "Importing...", "description": "Importing state" },
   "import_state_success_template": { "message": "Imported $ENTRY_COUNT$ entries$WARNINGS$", "description": "Import success template", "placeholders": { "ENTRY_COUNT": { "content": "$1", "example": "42" }, "WARNINGS": { "content": "$2", "example": " with 3 warnings" } } },
   "import_state_success_warnings_fragment": { "message": " with $WARNING_COUNT$ warnings", "description": "Import warnings fragment", "placeholders": { "WARNING_COUNT": { "content": "$1", "example": "3" } } },
+  "import_state_warnings_tooltip_title": { "message": "Import Warnings", "description": "Import warnings tooltip title" },
+  "import_state_warnings_tooltip_row_template": { "message": "Row $ROW$: $MESSAGE$", "description": "Import warnings tooltip row template", "placeholders": { "ROW": { "content": "$1", "example": "5" }, "MESSAGE": { "content": "$2", "example": "Empty English column" } } },
   "import_snackbar_success": { "message": "Spreadsheet imported successfully", "description": "Import snackbar success" },
   "import_snackbar_failed": { "message": "Failed to import spreadsheet", "description": "Import snackbar failed" },
   "import_state_error_fallback": { "message": "Import failed", "description": "Import failed fallback" },

@@ -58,6 +58,8 @@ export type MessageKey =
   | "import_state_not_imported"
   | "import_state_success_template"
   | "import_state_success_warnings_fragment"
+  | "import_state_warnings_tooltip_row_template"
+  | "import_state_warnings_tooltip_title"
   | "import_table_actions"
   | "import_tooltip_description"
   | "import_tooltip_field_collection_key_description"

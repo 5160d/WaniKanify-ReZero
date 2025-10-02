@@ -35,7 +35,8 @@ import {
     getImportHistory,
     importSpreadsheet,
     restoreHistoryEntry,
-    type SpreadsheetImportHistoryEntry
+    type SpreadsheetImportHistoryEntry,
+    type SpreadsheetImportError
 } from '~src/services/spreadsheetImport';
 import { __WK_EVT_REFRESH_IMPORTED_VOCAB } from '~src/internal/tokens'
 
@@ -62,6 +63,7 @@ interface ImportState {
     message?: string;
     entries?: number;
     errors?: number;
+    errorDetails?: SpreadsheetImportError[];
 }
 
 export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onChange, value }) => {
@@ -149,7 +151,8 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
                 status: 'success',
                 message: t('import_state_success_template', { ENTRY_COUNT: historyEntry.entryCount, WARNINGS: warningsFragment }),
                 entries: historyEntry.entryCount,
-                errors: historyEntry.errors.length
+                errors: historyEntry.errors.length,
+                errorDetails: historyEntry.errors
             });
             setSnackbar({ open: true, message: t('import_snackbar_success'), severity: 'success' });
             await loadHistory();
@@ -225,6 +228,61 @@ export const SpreadsheetImportTable: React.FC<SpreadsheetImportProps> = ({ onCha
             : state.status === 'error'
             ? 'error.main'
             : 'text.secondary';
+
+        // If there are warnings, wrap in a tooltip
+        if (state.status === 'success' && state.errorDetails && state.errorDetails.length > 0) {
+            const tooltipContent = (
+                <Box>
+                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                        {t('import_state_warnings_tooltip_title')}
+                    </Typography>
+                    {state.errorDetails.map((error, index) => (
+                        <Typography key={index} variant="body2" sx={{ fontSize: '0.75rem' }}>
+                            {t('import_state_warnings_tooltip_row_template', { 
+                                ROW: error.row.toString(), 
+                                MESSAGE: error.message 
+                            })}
+                        </Typography>
+                    ))}
+                </Box>
+            );
+
+            return (
+                <Tooltip
+                    title={tooltipContent}
+                    placement="top"
+                    arrow
+                    componentsProps={{
+                        tooltip: {
+                            sx: (theme) => ({
+                                maxWidth: 400,
+                                bgcolor: 'background.tooltip',
+                                border: `1px solid ${theme.palette.divider}`,
+                                '& .MuiTooltip-arrow': {
+                                    color: 'background.tooltip',
+                                }
+                            })
+                        }
+                    }}
+                >
+                    <Typography
+                        variant="caption"
+                        color={color}
+                        sx={{ 
+                            display: 'block', 
+                            mt: 1,
+                            cursor: 'help',
+                            textDecoration: 'underline',
+                            textDecorationStyle: 'dotted',
+                            textDecorationColor: 'warning.main'
+                        }}
+                    >
+                        {state.message}
+                    </Typography>
+                </Tooltip>
+            );
+        }
+
         return (
             <Typography
                 variant="caption"
