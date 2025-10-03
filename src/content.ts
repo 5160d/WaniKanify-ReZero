@@ -13,6 +13,7 @@ import {
   type ReplacementSource,
   type ReplacementVocabulary,
 } from "~src/services/textReplacer"
+import { FastAhoCorasickReplacer } from "~src/services/fastAhoCorasickReplacer"
 import { SiteFilter } from "~src/services/siteFilter"
 import { AudioService, type AudioVocabularyItem } from "~src/services/audio"
 import type { VocabularyCachePayload, VocabularyEntry } from "~src/services/vocabulary/types"
@@ -52,10 +53,27 @@ const IGNORED_TAGS = new Set([
   "SAMP"
 ])
 
-const MAX_PROCESS_TIME_MS = 6
-const MAX_CHARS_PER_BATCH = 6000
-const MUTATION_DEBOUNCE_MS = 50
-const MAX_NODE_QUEUE_LENGTH = 2000
+// Processing strategy threshold
+const HEAVY_PAGE_NODE_THRESHOLD = 6000 // Pages with >= this many text nodes use time-sliced processing
+
+// Processing constants for time-sliced mode (optimized settings)
+const PROCESS_TIME_MS = 20 // Time in milliseconds to spend processing text nodes per batch
+const CHARS_PER_BATCH = 10000 // Number of characters to process in a single batch
+const MUTATION_DEBOUNCE_MS = 100 // Debounce delay in milliseconds for mutation observer events
+const NODE_QUEUE_LENGTH = 6000 // Number of text nodes to queue before processing
+
+// Tree walking and scheduling constants
+const TREE_WALKING_CHUNK_TIME = 6 // ms chunks for tree walking
+const TREE_WALKING_MAX_NODES_PER_CHUNK = 200 // Process at most 200 nodes per chunk
+const TREE_WALKING_DELAY = 1 // ms delay between tree walking chunks
+const SCHEDULING_DELAY = 5 // Delay to allow UI responsiveness
+const CONTINUATION_DELAY = 5 // Continuation delay to allow UI responsiveness
+
+// Performance and queue management constants
+const PERFORMANCE_REPORT_BATCH_SIZE = 400 // Report performance every N processed nodes
+const PERFORMANCE_REPORT_MIN_INTERVAL = 5000 // Minimum ms between performance reports
+
+
 
 const structuredCloneFallback = <T>(value: T): T => {
   if (typeof structuredClone === "function") {
@@ -79,6 +97,8 @@ class ContentScriptController {
   private settings: WaniSettings = this.cloneDefaultSettings()
 
   private replacer = new TextReplacementEngine()
+
+  private fastReplacer = new FastAhoCorasickReplacer()
 
   private siteFilter = new SiteFilter()
 
@@ -135,6 +155,7 @@ class ContentScriptController {
 
   private lastPerformanceReport = 0
   private lastLoggedLongestNode = 0
+  private totalTextNodesDetected = 0
 
   async init(): Promise<void> {
     this.settings = await this.loadSettings()
@@ -460,13 +481,13 @@ class ContentScriptController {
 
     this.replacer.setVocabulary(vocabulary, blacklist)
     this.audioService.setVocabulary(Array.from(audioEntries.values()))
+    this.fastReplacer.setVocabulary(vocabulary, blacklist, false)
   }
 
   private applyVocabularyState(vocabulary: VocabularyCachePayload | null | undefined): void {
     this.vocabularyEntries = vocabulary?.vocabularyEntries ?? []
     this.refreshReplacerVocabulary()
-    // Ensure that after vocabulary loads from background we process already-present nodes
-    // with the freshly compiled automaton to avoid missing early static content.
+    // Process already-present nodes with updated vocabulary
     if (this.isRunning) {
       this.enqueueFullDocument(true)
     }
@@ -495,7 +516,7 @@ class ContentScriptController {
       return
     }
 
-    const hitsBatchThreshold = this.performanceStats.processedNodes % 200 === 0
+    const hitsBatchThreshold = this.performanceStats.processedNodes % PERFORMANCE_REPORT_BATCH_SIZE === 0
     const hasNewLongest = this.performanceStats.longestNodeMs > 0
 
     if (!hitsBatchThreshold && !hasNewLongest) {
@@ -504,7 +525,7 @@ class ContentScriptController {
 
     const now = performance.now()
 
-    if (!hasNewLongest && now - this.lastPerformanceReport < 5000) {
+    if (!hasNewLongest && now - this.lastPerformanceReport < PERFORMANCE_REPORT_MIN_INTERVAL) {
       return
     }
 
@@ -595,9 +616,8 @@ class ContentScriptController {
     }
 
     this.isRunning = true
-  // Reset hot region trackers on each start to avoid stale state
-  this.hotTracker.reset()
-  this.ensureNavigationHooks()
+    this.hotTracker.reset()
+    this.ensureNavigationHooks()
     this.observeMutations()
     this.enqueueFullDocument(force)
   }
@@ -609,8 +629,7 @@ class ContentScriptController {
     this.replacer.revertAll()
     this.processedNodes = new WeakMap()
     this.audioService.stop()
-  // Drop hot region trackers
-  this.hotTracker.reset()
+    this.hotTracker.reset()
   }
 
   private ensureNavigationHooks(): void {
@@ -754,9 +773,19 @@ class ContentScriptController {
         this.processedNodes = new WeakMap()
         this.performanceStats = { processedNodes: 0, totalProcessingTime: 0, longestNodeMs: 0 }
         this.lastPerformanceReport = performance.now()
+        this.totalTextNodesDetected = 0
       }
 
-      this.enqueueNode(document.body)
+      // Analyze page complexity to determine processing approach
+      const pageAnalysis = this.analyzePage()
+      
+      if (pageAnalysis.shouldUseFastRegex) {
+        log.debug('Using fast regex processing for light page', pageAnalysis)
+        this.processWithFastRegex()
+      } else {
+        log.debug('Using time-sliced processing for heavy page', pageAnalysis)
+        this.enqueueNode(document.body)
+      }
     }
 
     if (document.readyState === "loading") {
@@ -787,6 +816,11 @@ class ContentScriptController {
       return
     }
 
+    // Use chunked tree walking to avoid blocking the UI
+    this.scheduleTreeWalking(element)
+  }
+
+  private scheduleTreeWalking(element: Element): void {
     const walker = document.createTreeWalker(
       element,
       NodeFilter.SHOW_TEXT,
@@ -798,12 +832,25 @@ class ContentScriptController {
       }
     )
 
-    let current = walker.nextNode()
+    const walkInChunks = () => {
+      const start = performance.now()
+      let nodesProcessed = 0
+      const maxChunkTime = TREE_WALKING_CHUNK_TIME
+      const maxNodesPerChunk = TREE_WALKING_MAX_NODES_PER_CHUNK
 
-    while (current) {
-      this.enqueueTextNode(current as Text)
-      current = walker.nextNode()
+      let current = walker.nextNode()
+      while (current && performance.now() - start < maxChunkTime && nodesProcessed < maxNodesPerChunk) {
+        this.enqueueTextNode(current as Text)
+        current = walker.nextNode()
+        nodesProcessed++
+      }
+
+      if (current) {
+        setTimeout(walkInChunks, TREE_WALKING_DELAY)
+      }
     }
+
+    walkInChunks()
   }
 
   private enqueueTextNode(node: Text): void {
@@ -816,15 +863,19 @@ class ContentScriptController {
     }
 
     this.queuedNodes.add(node)
-    if (this.nodeQueue.length >= MAX_NODE_QUEUE_LENGTH) {
+    this.totalTextNodesDetected++
+
+    const maxQueueLength = NODE_QUEUE_LENGTH
+
+    if (this.nodeQueue.length >= maxQueueLength) {
       const removed = this.nodeQueue.shift()
       if (removed) {
         // Instead of silently discarding the oldest node (which can cause missed
-        // replacements on very content‑dense pages like Wiktionary), attempt a
+        // replacements on very content‑dense pages), attempt a
         // fast inline processing pass. We guard with basic safety checks to
         // avoid heavy synchronous work in pathological cases.
         this.queuedNodes.delete(removed)
-        if (removed.isConnected && removed.length < 2000) {
+        if (removed.isConnected && removed.length < 3000) {
           // Process immediately without scheduling so we don't lose the node.
             try {
               this.processTextNode(removed)
@@ -843,26 +894,28 @@ class ContentScriptController {
       return
     }
 
-    this.pendingIdleCallback = this.requestIdleCallback((deadline) => {
+    this.pendingIdleCallback = window.setTimeout(() => {
       this.pendingIdleCallback = null
-      this.flushQueue(deadline)
-    })
+      this.flushQueue()
+    }, SCHEDULING_DELAY)
   }
 
   private flushQueue(deadline?: IdleDeadline): void {
     const start = performance.now()
     let processedChars = 0
+    const maxProcessTime = PROCESS_TIME_MS
+    const maxCharsPerBatch = CHARS_PER_BATCH
 
     while (this.nodeQueue.length > 0) {
       if (deadline) {
         if (!deadline.didTimeout && deadline.timeRemaining() <= 0) {
           break
         }
-      } else if (performance.now() - start > MAX_PROCESS_TIME_MS) {
+      } else if (performance.now() - start > maxProcessTime) {
         break
       }
 
-      if (processedChars >= MAX_CHARS_PER_BATCH) {
+      if (processedChars >= maxCharsPerBatch) {
         break
       }
 
@@ -874,7 +927,9 @@ class ContentScriptController {
     }
 
     if (this.nodeQueue.length > 0) {
-      this.scheduleProcessing()
+      setTimeout(() => {
+        this.scheduleProcessing()
+      }, CONTINUATION_DELAY)
     }
   }
 
@@ -1088,20 +1143,88 @@ class ContentScriptController {
     return false
   }
 
-  // (Typing guards removed in favor of contextual checks within shouldIgnoreElement)
+  /**
+   * Analyze page structure to determine optimal processing approach.
+   */
+  private analyzePage(): { shouldUseFastRegex: boolean; textNodeCount: number; estimatedPageSize: string } {
+    const startTime = performance.now()
+    
+    // Quick scan to estimate page complexity
+    const walker = document.createTreeWalker(
+      document.body,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode: (node) => {
+          const parent = (node as Text).parentElement
+          if (!parent) return NodeFilter.FILTER_REJECT
+          
+          // Skip if in ignored tags
+          if (IGNORED_TAGS.has(parent.tagName.toUpperCase())) {
+            return NodeFilter.FILTER_REJECT
+          }
+          
+          // Skip empty or whitespace-only nodes
+          const text = (node as Text).textContent || ''
+          if (!text.trim()) {
+            return NodeFilter.FILTER_REJECT
+          }
+          
+          return NodeFilter.FILTER_ACCEPT
+        }
+      }
+    )
 
-  private requestIdleCallback(callback: IdleRequestCallback): number {
-    if (typeof window.requestIdleCallback === "function") {
-      return window.requestIdleCallback(callback, { timeout: 250 })
+    let textNodeCount = 0
+    let totalTextLength = 0
+    let current = walker.nextNode()
+    
+    // Limit scanning time to avoid blocking
+    while (current && (performance.now() - startTime) < 50) {
+      textNodeCount++
+      totalTextLength += (current.textContent || '').length
+      current = walker.nextNode()
     }
 
-    return window.setTimeout(() => {
-      const start = performance.now()
-      callback({
-        didTimeout: true,
-        timeRemaining: () => Math.max(0, MAX_PROCESS_TIME_MS - (performance.now() - start))
-      } as IdleDeadline)
-    }, 0)
+    const shouldUseFastRegex = textNodeCount < HEAVY_PAGE_NODE_THRESHOLD
+    const estimatedPageSize = totalTextLength > 100000 ? 'large' : 
+                              totalTextLength > 10000 ? 'medium' : 'small'
+
+    log.debug('Page analysis completed', {
+      textNodeCount,
+      totalTextLength,
+      shouldUseFastRegex,
+      estimatedPageSize,
+      analysisTime: performance.now() - startTime
+    })
+
+    return { shouldUseFastRegex, textNodeCount, estimatedPageSize }
+  }
+
+  /**
+   * Fast regex-based processing for light pages
+   */
+  private processWithFastRegex(): void {
+    const startTime = performance.now()
+    
+    this.fastReplacer.replaceTextNodesInElement(document.body)
+    
+    const processingTime = performance.now() - startTime
+    log.debug('Fast regex processing completed', {
+      processingTime: `${processingTime.toFixed(2)}ms`
+    })
+
+    this.initializeFeaturesForProcessedContent()
+  }
+
+  /**
+   * Initialize audio and tooltip features for processed content
+   */
+  private initializeFeaturesForProcessedContent(): void {
+    if (this.settings.audio.enabled) {
+      this.audioService.handleReplacements()
+    }
+
+    // Tooltips are handled automatically by the global system
   }
 
   private clearPendingWork(): void {

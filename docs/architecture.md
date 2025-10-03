@@ -14,7 +14,7 @@ WaniKanify ReZero follows a standard Chrome MV3 architecture built on top of the
   - Loads user settings, site overrides, and vocabulary from the background worker.
   - Utilises `TextReplacementEngine` to walk DOM text nodes, replace content, track statistics, and (when enabled) trigger audio playback.
   - Observes DOM mutations, debounces large updates, and coordinates site exclusion logic.
-  - Performs an immediate first compile of the vocabulary automaton so early DOM (e.g. page titles) receives replacements without waiting for idle callbacks; a full reprocess is scheduled after background vocabulary state loads.
+  - Performs an immediate first compile of the vocabulary automaton so early DOM (e.g. page titles) receives replacements; a full reprocess is scheduled after background vocabulary state loads.
 
 - **UI surfaces (`src/options.tsx`, `src/popup.tsx`)**
   - Options page provides full settings management, import/export utilities, live preview, and spreadsheet import tooling.
@@ -67,7 +67,10 @@ Worst‑case latency for newly released WaniKani vocabulary to appear (without m
 
 ## Performance considerations
 
-- Mutations are batched and processed using idle callbacks to avoid overwhelming the main thread.
+- Pages are analyzed by text node count to determine the optimal processing strategy.
+- Light pages (< 6000 text nodes) use `FastAhoCorasickReplacer` for efficient regex-like processing.
+- Heavy pages (≥ 6000 text nodes) use time-sliced processing to prevent main thread blocking.
+- Mutations are batched and processed to avoid overwhelming the browser.
 - Replacement rules are lazily compiled and truncated when vocabulary changes rapidly.
 - Spreadsheet imports run off the main UI thread and store aggregated results for reuse.
 
