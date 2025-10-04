@@ -9,7 +9,6 @@ import {
   waniSettingsSerializer
 } from "~src/components/settings/types"
 import {
-  TextReplacementEngine,
   type ReplacementSource,
   type ReplacementVocabulary,
 } from "~src/services/textReplacer"
@@ -96,9 +95,7 @@ class ContentScriptController {
 
   private settings: WaniSettings = this.cloneDefaultSettings()
 
-  private replacer = new TextReplacementEngine()
-
-  private fastReplacer = new FastAhoCorasickReplacer()
+  private replacer = new FastAhoCorasickReplacer()
 
   private siteFilter = new SiteFilter()
 
@@ -479,9 +476,8 @@ class ContentScriptController {
       this.replacementIndex.set(key, entry)
     }
 
-    this.replacer.setVocabulary(vocabulary, blacklist)
+    this.replacer.setVocabulary(vocabulary, blacklist, false)
     this.audioService.setVocabulary(Array.from(audioEntries.values()))
-    this.fastReplacer.setVocabulary(vocabulary, blacklist, false)
   }
 
   private applyVocabularyState(vocabulary: VocabularyCachePayload | null | undefined): void {
@@ -779,9 +775,9 @@ class ContentScriptController {
       // Analyze page complexity to determine processing approach
       const pageAnalysis = this.analyzePage()
       
-      if (pageAnalysis.shouldUseFastRegex) {
-        log.debug('Using fast regex processing for light page', pageAnalysis)
-        this.processWithFastRegex()
+      if (pageAnalysis.shouldUseBatchProcessing) {
+        log.debug('Using batch processing for light page', pageAnalysis)
+        this.processWithBatchReplacement()
       } else {
         log.debug('Using time-sliced processing for heavy page', pageAnalysis)
         this.enqueueNode(document.body)
@@ -1146,7 +1142,7 @@ class ContentScriptController {
   /**
    * Analyze page structure to determine optimal processing approach.
    */
-  private analyzePage(): { shouldUseFastRegex: boolean; textNodeCount: number; estimatedPageSize: string } {
+  private analyzePage(): { shouldUseBatchProcessing: boolean; textNodeCount: number; estimatedPageSize: string } {
     const startTime = performance.now()
     
     // Quick scan to estimate page complexity
@@ -1185,31 +1181,31 @@ class ContentScriptController {
       current = walker.nextNode()
     }
 
-    const shouldUseFastRegex = textNodeCount < HEAVY_PAGE_NODE_THRESHOLD
+    const shouldUseBatchProcessing = textNodeCount < HEAVY_PAGE_NODE_THRESHOLD
     const estimatedPageSize = totalTextLength > 100000 ? 'large' : 
                               totalTextLength > 10000 ? 'medium' : 'small'
 
     log.debug('Page analysis completed', {
       textNodeCount,
       totalTextLength,
-      shouldUseFastRegex,
+      shouldUseBatchProcessing,
       estimatedPageSize,
       analysisTime: performance.now() - startTime
     })
 
-    return { shouldUseFastRegex, textNodeCount, estimatedPageSize }
+    return { shouldUseBatchProcessing, textNodeCount, estimatedPageSize }
   }
 
   /**
-   * Fast regex-based processing for light pages
+   * Batch processing for light pages using FastAhoCorasick on entire document
    */
-  private processWithFastRegex(): void {
+  private processWithBatchReplacement(): void {
     const startTime = performance.now()
     
-    this.fastReplacer.replaceTextNodesInElement(document.body)
+    this.replacer.replaceTextNodesInElement(document.body)
     
     const processingTime = performance.now() - startTime
-    log.debug('Fast regex processing completed', {
+    log.debug('Batch processing completed', {
       processingTime: `${processingTime.toFixed(2)}ms`
     })
 
