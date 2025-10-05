@@ -664,9 +664,17 @@ class BackgroundController {
       return
     }
 
+    // Clear any existing alarm before creating a new one to prevent duplicates
+    chrome.alarms.clear(VOCABULARY_REFRESH_ALARM)
+
     chrome.alarms.create(VOCABULARY_REFRESH_ALARM, {
       periodInMinutes: DEFAULT_REFRESH_INTERVAL_MINUTES,
       delayInMinutes: 1
+    })
+
+    log.debug('vocabulary refresh alarm scheduled', {
+      intervalMinutes: DEFAULT_REFRESH_INTERVAL_MINUTES,
+      nextRefreshDelayMinutes: 1
     })
   }
 

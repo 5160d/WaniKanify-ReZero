@@ -49,6 +49,12 @@ export class AudioService {
   private hoverListener = this.handleHover.bind(this)
   private prefetchedUrls = new Set<string>()
   private prefetchTimer: number | null = null
+  private lastFeatureInitTime: number = 0
+  private featureInitCooldown: number = 500
+  private prefetchQueue: string[] = []
+  private isProcessingQueue: boolean = false
+  private maxConcurrentRequests: number = 2
+  private requestDelayMs: number = 100
 
   updateSettings(settings: AudioSettings): void {
     const allowedModes: AudioMode[] = ["click", "hover"]
@@ -91,7 +97,6 @@ export class AudioService {
   }
 
   handleReplacements(): void {
-    // Lazy-load audio for vocabulary that just appeared on the page.
     // Keep this lightweight and debounced to avoid scanning too often on busy pages.
     if (!this.settings.enabled) {
       return
@@ -107,6 +112,32 @@ export class AudioService {
     }, 250)
   }
 
+  /**
+   * Immediately initialize audio features without debouncing.
+   * Use this when you know processing is complete and want immediate feature setup.
+   */
+  initializeFeatures(): void {
+    if (!this.settings.enabled) {
+      return
+    }
+
+    // Prevent excessive calls with a cooldown period
+    const now = performance.now()
+    if (now - this.lastFeatureInitTime < this.featureInitCooldown) {
+      return
+    }
+    this.lastFeatureInitTime = now
+
+    // Cancel any pending debounced scan
+    if (this.prefetchTimer) {
+      window.clearTimeout(this.prefetchTimer)
+      this.prefetchTimer = null
+    }
+
+    // Immediately scan and prefetch audio
+    void this.scanAndPrefetchAudio()
+  }
+
   stop(): void {
     if (this.currentAudio) {
       this.currentAudio.pause()
@@ -115,8 +146,7 @@ export class AudioService {
   }
 
   /**
-   * Explicit cleanup to remove global event listeners. Useful for React unmount scenarios
-   * (e.g. options Live Preview component) and for deterministic test teardown.
+   * Explicit cleanup to remove global event listeners.
    */
   dispose(): void {
     document.removeEventListener("click", this.clickListener, true)
@@ -141,13 +171,12 @@ export class AudioService {
 
   private async scanAndPrefetchAudio(): Promise<void> {
     try {
-      // Gather visible replacement elements and prefetch audio for the first few unique words
       const nodes = Array.from(document.getElementsByClassName(__WK_CLASS_REPLACEMENT)) as HTMLElement[]
       if (!nodes.length) {
         return
       }
 
-      const toPrefetch: string[] = []
+      const toQueue: string[] = []
       const seen = new Set<string>()
 
       for (const el of nodes) {
@@ -159,33 +188,64 @@ export class AudioService {
         const entry = this.vocabularyAudio.get(word)
         if (!entry?.audioUrls?.length) continue
 
-        // Take the first URL as primary; we can extend to multiple if needed
         for (const url of entry.audioUrls) {
           if (!this.prefetchedUrls.has(url) && !this.audioCache.has(url)) {
-            toPrefetch.push(url)
+            toQueue.push(url)
           }
-          // Prefetch only the first viable url to limit bandwidth
-          break
-        }
-
-        if (toPrefetch.length >= 8) {
-          // Cap batch size per scan to avoid flooding network
           break
         }
       }
 
-      // Sequentially prefetch to keep it simple and gentle on the network
-      for (const url of toPrefetch) {
-        try {
-          await this.loadAudio(url)
-          this.prefetchedUrls.add(url)
-        } catch (error) {
-          log.warn('audio prefetch failed', error)
-        }
-      }
+      this.addToQueue(toQueue)
     } catch (error) {
-      // Non-fatal: prefetch is opportunistic
       log.debug('audio prefetch scan error', error)
+    }
+  }
+
+  private addToQueue(urls: string[]): void {
+    for (const url of urls) {
+      if (!this.prefetchQueue.includes(url)) {
+        this.prefetchQueue.push(url)
+      }
+    }
+
+    if (!this.isProcessingQueue && this.prefetchQueue.length > 0) {
+      void this.processQueue()
+    }
+  }
+
+  private async processQueue(): Promise<void> {
+    if (this.isProcessingQueue) {
+      return
+    }
+
+    this.isProcessingQueue = true
+
+    try {
+      while (this.prefetchQueue.length > 0) {
+        const batch = this.prefetchQueue.splice(0, this.maxConcurrentRequests)
+        
+        const promises = batch.map(async (url, index) => {
+          if (index > 0) {
+            await new Promise(resolve => setTimeout(resolve, this.requestDelayMs * index))
+          }
+          
+          try {
+            await this.loadAudio(url)
+            this.prefetchedUrls.add(url)
+          } catch (error) {
+            log.warn('audio prefetch failed for url:', url, error)
+          }
+        })
+
+        await Promise.all(promises)
+
+        if (this.prefetchQueue.length > 0) {
+          await new Promise(resolve => setTimeout(resolve, this.requestDelayMs * 2))
+        }
+      }
+    } finally {
+      this.isProcessingQueue = false
     }
   }
 

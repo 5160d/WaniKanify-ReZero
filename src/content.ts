@@ -52,25 +52,24 @@ const IGNORED_TAGS = new Set([
   "SAMP"
 ])
 
-// Processing strategy threshold
-const HEAVY_PAGE_NODE_THRESHOLD = 6000 // Pages with >= this many text nodes use time-sliced processing
+const HEAVY_PAGE_NODE_THRESHOLD = 4000
 
-// Processing constants for time-sliced mode (optimized settings)
-const PROCESS_TIME_MS = 20 // Time in milliseconds to spend processing text nodes per batch
-const CHARS_PER_BATCH = 10000 // Number of characters to process in a single batch
-const MUTATION_DEBOUNCE_MS = 100 // Debounce delay in milliseconds for mutation observer events
-const NODE_QUEUE_LENGTH = 6000 // Number of text nodes to queue before processing
+const PROCESS_TIME_MS = 50
+const CHARS_PER_BATCH = 200000
+const MUTATION_DEBOUNCE_MS = 100
+const NODE_QUEUE_LENGTH = 500
 
-// Tree walking and scheduling constants
-const TREE_WALKING_CHUNK_TIME = 6 // ms chunks for tree walking
-const TREE_WALKING_MAX_NODES_PER_CHUNK = 200 // Process at most 200 nodes per chunk
-const TREE_WALKING_DELAY = 1 // ms delay between tree walking chunks
-const SCHEDULING_DELAY = 5 // Delay to allow UI responsiveness
-const CONTINUATION_DELAY = 5 // Continuation delay to allow UI responsiveness
+const TREE_WALKING_CHUNK_TIME = 50
+const TREE_WALKING_MAX_NODES_PER_CHUNK = 500
+const TREE_WALKING_DELAY = 1
+const SCHEDULING_DELAY = 1
+const CONTINUATION_DELAY = 1
 
-// Performance and queue management constants
-const PERFORMANCE_REPORT_BATCH_SIZE = 400 // Report performance every N processed nodes
-const PERFORMANCE_REPORT_MIN_INTERVAL = 5000 // Minimum ms between performance reports
+const FEATURE_INIT_NODE_THRESHOLD = 500
+const FEATURE_INIT_TIME_THRESHOLD = 1000
+
+const PERFORMANCE_REPORT_BATCH_SIZE = 1000
+const PERFORMANCE_REPORT_MIN_INTERVAL = 10000
 
 
 
@@ -122,7 +121,6 @@ class ContentScriptController {
   private hasNavigationHooks = false
 
   private lastUrl = window.location.href
-  // Suppress replacements in rapidly mutating regions (hot zones)
   private hotTracker = new HotZoneTracker({
     zoneRootResolver: (el) => {
       /* eslint-disable local-i18n/hardcoded-ui-string */
@@ -153,6 +151,8 @@ class ContentScriptController {
   private lastPerformanceReport = 0
   private lastLoggedLongestNode = 0
   private totalTextNodesDetected = 0
+  private nodesProcessedSinceLastFeatureInit = 0
+  private lastFeatureInitTime = 0
 
   async init(): Promise<void> {
     this.settings = await this.loadSettings()
@@ -162,7 +162,6 @@ class ContentScriptController {
     this.refreshReplacerVocabulary()
     this.registerStorageListener()
 
-    // Initialize tooltip positioning for better visibility
     initializeTooltipPositioning(document)
 
     if (this.shouldRun()) {
@@ -312,26 +311,21 @@ class ContentScriptController {
     const newSettings = await this.loadSettings()
     this.settings = newSettings
     this.updateSiteFilter()
-    // Determine whether we should be running on the current page after applying
-    // the latest settings and site filtering rules (including overrides).
     const nowShouldRun = this.shouldRun()
 
     this.updateReplacerConfig()
     this.refreshReplacerVocabulary()
 
-    // If we're currently running but the page is now blocked, stop immediately
     if (!nowShouldRun && this.isRunning) {
       this.stop()
       return
     }
 
-    // If we're not running and the page is allowed with auto-run, start
     if (nowShouldRun && !this.isRunning) {
       this.start(true)
       return
     }
 
-    // If still running and allowed, re-process with latest rules
     if (this.isRunning && nowShouldRun) {
       this.enqueueFullDocument(true)
     }
@@ -483,7 +477,6 @@ class ContentScriptController {
   private applyVocabularyState(vocabulary: VocabularyCachePayload | null | undefined): void {
     this.vocabularyEntries = vocabulary?.vocabularyEntries ?? []
     this.refreshReplacerVocabulary()
-    // Process already-present nodes with updated vocabulary
     if (this.isRunning) {
       this.enqueueFullDocument(true)
     }
@@ -727,7 +720,6 @@ class ContentScriptController {
       return
     }
 
-    // Detect rapidly mutating regions and temporarily mark them as hot (skip replacements)
     this.hotTracker.mark(records)
 
     this.pendingMutations.push(...records)
@@ -770,9 +762,10 @@ class ContentScriptController {
         this.performanceStats = { processedNodes: 0, totalProcessingTime: 0, longestNodeMs: 0 }
         this.lastPerformanceReport = performance.now()
         this.totalTextNodesDetected = 0
+        this.nodesProcessedSinceLastFeatureInit = 0
+        this.lastFeatureInitTime = performance.now()
       }
 
-      // Analyze page complexity to determine processing approach
       const pageAnalysis = this.analyzePage()
       
       if (pageAnalysis.shouldUseBatchProcessing) {
@@ -812,7 +805,6 @@ class ContentScriptController {
       return
     }
 
-    // Use chunked tree walking to avoid blocking the UI
     this.scheduleTreeWalking(element)
   }
 
@@ -866,17 +858,12 @@ class ContentScriptController {
     if (this.nodeQueue.length >= maxQueueLength) {
       const removed = this.nodeQueue.shift()
       if (removed) {
-        // Instead of silently discarding the oldest node (which can cause missed
-        // replacements on very content‑dense pages), attempt a
-        // fast inline processing pass. We guard with basic safety checks to
-        // avoid heavy synchronous work in pathological cases.
         this.queuedNodes.delete(removed)
         if (removed.isConnected && removed.length < 3000) {
-          // Process immediately without scheduling so we don't lose the node.
             try {
               this.processTextNode(removed)
-            } catch {
-              // Swallow any unexpected errors; worst case the node is skipped.
+            } catch (error) {
+              log.debug('Error processing overflow node:', error)
             }
         }
       }
@@ -926,6 +913,8 @@ class ContentScriptController {
       setTimeout(() => {
         this.scheduleProcessing()
       }, CONTINUATION_DELAY)
+    } else {
+      this.initializeFeaturesForProcessedContent()
     }
   }
 
@@ -950,10 +939,12 @@ class ContentScriptController {
     }
 
     const start = performance.now()
-    const result = this.replacer.replaceNode(node)
+    this.replacer.replaceNode(node)
     const duration = performance.now() - start
     this.performanceStats.totalProcessingTime += duration
     this.performanceStats.processedNodes += 1
+    this.nodesProcessedSinceLastFeatureInit += 1
+    
     if (duration > this.performanceStats.longestNodeMs) {
       this.performanceStats.longestNodeMs = duration
     }
@@ -963,12 +954,9 @@ class ContentScriptController {
   log.debug('longest replaceNode duration', duration.toFixed(2), 'ms', '(node length:', node.length, ')')
     }
 
-    if (result.matches.length) {
-      this.audioService.handleReplacements()
-    }
-
     this.processedNodes.set(node, node.data)
     this.maybeReportPerformance()
+    this.maybeInitializeFeatures()
   }
 
   private shouldIgnoreTextNode(node: Text): boolean {
@@ -990,7 +978,6 @@ class ContentScriptController {
   }
 
   private shouldIgnoreElement(element: Element): boolean {
-    // Skip text inside recently hot (rapidly mutating) regions
     if (this.hotTracker.isHot(element)) {
       return true
     }
@@ -1217,10 +1204,28 @@ class ContentScriptController {
    */
   private initializeFeaturesForProcessedContent(): void {
     if (this.settings.audio.enabled) {
-      this.audioService.handleReplacements()
+      this.audioService.initializeFeatures()
     }
 
+    // Reset tracking
+    this.nodesProcessedSinceLastFeatureInit = 0
+    this.lastFeatureInitTime = performance.now()
+
     // Tooltips are handled automatically by the global system
+  }
+
+  /**
+   * Periodically initialize features during heavy page processing
+   */
+  private maybeInitializeFeatures(): void {
+    const now = performance.now()
+    const timeSinceLastInit = now - this.lastFeatureInitTime
+    
+    // Initialize features if we've processed enough nodes or enough time has passed
+    if (this.nodesProcessedSinceLastFeatureInit >= FEATURE_INIT_NODE_THRESHOLD ||
+        timeSinceLastInit >= FEATURE_INIT_TIME_THRESHOLD) {
+      this.initializeFeaturesForProcessedContent()
+    }
   }
 
   private clearPendingWork(): void {

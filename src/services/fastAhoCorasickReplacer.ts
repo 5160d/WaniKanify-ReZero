@@ -13,7 +13,6 @@ const isWordLikeCodeUnit = (char: string | null): boolean => {
   return /[\p{L}\p{N}_'-]/u.test(char)
 }
 
-// Number to Kanji mapping for consistency with TextReplacementEngine
 const DIGIT_TO_KANJI: Record<string, string> = {
   "0": "〇",
   "1": "一",
@@ -29,8 +28,7 @@ const DIGIT_TO_KANJI: Record<string, string> = {
 
 /**
  * Fast Aho-Corasick-based text replacer optimized for both light and heavy pages.
- * Provides unified replacement logic with superior Aho-Corasick algorithm
- * for consistent performance regardless of processing strategy.
+ * Provides unified replacement logic with superior performance regardless of processing strategy.
  */
 export class FastAhoCorasickReplacer {
   private vocabulary: ReplacementVocabulary = new Map()
@@ -44,7 +42,6 @@ export class FastAhoCorasickReplacer {
   updateConfig(config: Partial<TextReplacementConfig>): void {
     this.numbersReplacement = config.numbersReplacement ?? this.numbersReplacement
     this.caseSensitive = config.caseSensitive ?? this.caseSensitive
-    // Rebuild automaton if case sensitivity changed
     if (config.caseSensitive !== undefined && config.caseSensitive !== this.caseSensitive) {
       this.buildAutomaton()
     }
@@ -66,7 +63,7 @@ export class FastAhoCorasickReplacer {
 
     if (result.changed && original !== result.value) {
       if (result.matches.length > 0) {
-        const container = this.createReplacementContainer(result.value, result.matches)
+        const container = this.createReplacementContainer(original, result.matches)
 
         this.nodeOriginalContent.set(node, {
           originalText: original,
@@ -74,10 +71,9 @@ export class FastAhoCorasickReplacer {
         })
         this.trackedNodes.add(node)
 
-        node.data = result.value
+        // Replace the node with the container (don't modify node.data first)
         node.replaceWith(container)
       } else {
-        // Numbers-only replacement
         this.nodeOriginalContent.set(node, {
           originalText: original
         })
@@ -90,7 +86,7 @@ export class FastAhoCorasickReplacer {
   }
 
   /**
-   * Replace text using Aho-Corasick algorithm - compatible with TextReplacementEngine.replace()
+   * Replace text using Aho-Corasick algorithm
    */
   replace(text: string): ReplacementResult {
     const input = text ?? ""
@@ -113,7 +109,6 @@ export class FastAhoCorasickReplacer {
 
     const automatonMatches = this.automaton.search(normalizedCharacters)
     
-    // Filter matches with word boundary checking
     const matches: ReplacementDetail[] = []
     
     automatonMatches.forEach(match => {
@@ -125,7 +120,7 @@ export class FastAhoCorasickReplacer {
         const afterChar = end < input.length ? input.slice(end, end + 1) : null
 
         if (isWordLikeCodeUnit(beforeChar) || isWordLikeCodeUnit(afterChar)) {
-          return // Skip this match
+          return
         }
       }
 
@@ -142,7 +137,6 @@ export class FastAhoCorasickReplacer {
       return { value: numbersResult.value, changed: numbersResult.changed, matches: [] }
     }
 
-    // Sort matches by start position, with preference for longer matches
     matches.sort((a, b) => {
       const aStart = input.indexOf(a.original)
       const bStart = input.indexOf(b.original)
@@ -202,7 +196,7 @@ export class FastAhoCorasickReplacer {
   }
 
   /**
-   * Revert all tracked nodes - compatible with TextReplacementEngine.revertAll()
+   * Revert all tracked nodes
    */
   revertAll(): void {
     this.nodeOriginalContent.forEach((record, node) => {
@@ -298,7 +292,6 @@ export class FastAhoCorasickReplacer {
             return NodeFilter.FILTER_REJECT
           }
 
-          // Skip if already processed
           if (parent.classList.contains(__WK_CLASS_REPLACEMENT) || 
               parent.classList.contains(__WK_CLASS_REPLACEMENT_CONTAINER)) {
             return NodeFilter.FILTER_REJECT
@@ -316,7 +309,6 @@ export class FastAhoCorasickReplacer {
       current = walker.nextNode()
     }
 
-    // Process each text node
     textNodes.forEach(node => this.replaceTextNode(node))
   }
 
@@ -326,7 +318,6 @@ export class FastAhoCorasickReplacer {
     const text = node.textContent || ''
     if (!text.trim()) return
 
-    // Use Aho-Corasick to find matches
     const { characters, indexMap } = computeIndexMap(text)
     const normalizedCharacters = this.caseSensitive
       ? characters
@@ -335,7 +326,6 @@ export class FastAhoCorasickReplacer {
     const matches = this.automaton.search(normalizedCharacters)
     if (matches.length === 0) return
 
-    // Filter matches with word boundary checking
     const validMatches = matches.filter(match => {
       const start = indexMap[match.start]
       const end = indexMap[match.end] + characters[match.end].length
