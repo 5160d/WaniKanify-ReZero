@@ -1,7 +1,7 @@
 {
 	"name": "wanikanify-rezero",
 	"displayName": "WaniKanify ReZero",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "A tool to reinforce your WaniKani vocabulary.",
 	"author": "5160d <5160d-dev@pm.me>",
 	"scripts": {
