@@ -11,8 +11,8 @@ import {
 import {
   type ReplacementSource,
   type ReplacementVocabulary,
-} from "~src/services/textReplacer"
-import { FastAhoCorasickReplacer } from "~src/services/fastAhoCorasickReplacer"
+  FastAhoCorasickReplacer
+} from "~src/services/fastAhoCorasickReplacer"
 import { SiteFilter } from "~src/services/siteFilter"
 import { AudioService, type AudioVocabularyItem } from "~src/services/audio"
 import type { VocabularyCachePayload, VocabularyEntry } from "~src/services/vocabulary/types"

@@ -1,4 +1,3 @@
-import type { ReplacementVocabulary, ReplacementDetail, ReplacementResult, TextReplacementConfig } from "~src/services/textReplacer"
 import { AhoCorasick, computeIndexMap } from "~src/services/textMatcher/ahoCorasick"
 import {
   __WK_CLASS_REPLACEMENT_CONTAINER,
@@ -7,6 +6,33 @@ import {
   __WK_DATA_ORIGINAL,
   __WK_DATA_READING
 } from '~src/internal/tokens'
+
+export type ReplacementSource = {
+  japanese: string
+  reading?: string
+}
+
+export type ReplacementVocabulary = Map<string, ReplacementSource>
+
+export type TextReplacementConfig = {
+  caseSensitive: boolean
+  matchWholeWord: boolean
+  numbersReplacement: boolean
+  patternOverrides?: Map<string, RegExp>
+}
+
+export type ReplacementDetail = {
+  original: string
+  replacement: string
+  source: string
+  reading?: string
+}
+
+export type ReplacementResult = {
+  value: string
+  changed: boolean
+  matches: ReplacementDetail[]
+}
 
 const isWordLikeCodeUnit = (char: string | null): boolean => {
   if (!char) return false
@@ -309,127 +335,7 @@ export class FastAhoCorasickReplacer {
       current = walker.nextNode()
     }
 
-    textNodes.forEach(node => this.replaceTextNode(node))
-  }
-
-  private replaceTextNode(node: Text): void {
-    if (!this.automaton || !node.parentNode) return
-
-    const text = node.textContent || ''
-    if (!text.trim()) return
-
-    const { characters, indexMap } = computeIndexMap(text)
-    const normalizedCharacters = this.caseSensitive
-      ? characters
-      : characters.map((char) => char.toLowerCase())
-
-    const matches = this.automaton.search(normalizedCharacters)
-    if (matches.length === 0) return
-
-    const validMatches = matches.filter(match => {
-      const start = indexMap[match.start]
-      const end = indexMap[match.end] + characters[match.end].length
-
-      if (match.payload.requiresBoundary) {
-        const beforeChar = start > 0 ? text.slice(start - 1, start) : null
-        const afterChar = end < text.length ? text.slice(end, end + 1) : null
-
-        return !isWordLikeCodeUnit(beforeChar) && !isWordLikeCodeUnit(afterChar)
-      }
-
-      return true
-    })
-
-    if (validMatches.length === 0) return
-
-    // Create replacement fragment
-    const fragment = document.createDocumentFragment()
-    let cursor = 0
-
-    validMatches.forEach(match => {
-      const start = indexMap[match.start]
-      const end = indexMap[match.end] + characters[match.end].length
-
-      // Add text before the match
-      if (start > cursor) {
-        const segment = text.slice(cursor, start)
-        if (segment) {
-          fragment.appendChild(document.createTextNode(segment))
-        }
-      }
-
-      // Add the replacement span
-      const span = document.createElement('span')
-      span.className = __WK_CLASS_REPLACEMENT
-      span.textContent = match.payload.replacement
-      span.setAttribute(__WK_DATA_ORIGINAL, match.payload.source)
-      
-      if (match.payload.reading) {
-        span.setAttribute(__WK_DATA_READING, match.payload.reading)
-      }
-
-      fragment.appendChild(span)
-      cursor = end
-    })
-
-    // Add remaining text after last match
-    if (cursor < text.length) {
-      fragment.appendChild(document.createTextNode(text.slice(cursor)))
-    }
-
-    // Replace the original text node with the fragment
-    node.parentNode.replaceChild(fragment, node)
-  }
-
-  /**
-   * Alternative implementation that creates container spans like the main TextReplacer
-   * for maximum compatibility with existing tooltip and audio systems
-   */
-  replaceTextNodeWithContainer(node: Text): boolean {
-    if (!this.automaton || !node.parentNode) return false
-
-    const text = node.textContent || ''
-    if (!text.trim()) return false
-
-    // Use Aho-Corasick to find matches
-    const { characters, indexMap } = computeIndexMap(text)
-    const normalizedCharacters = this.caseSensitive
-      ? characters
-      : characters.map((char) => char.toLowerCase())
-
-    const automatonMatches = this.automaton.search(normalizedCharacters)
-    
-    // Filter matches with word boundary checking and convert to ReplacementDetail
-    const matches: ReplacementDetail[] = []
-    
-    automatonMatches.forEach(match => {
-      const start = indexMap[match.start]
-      const end = indexMap[match.end] + characters[match.end].length
-
-      if (match.payload.requiresBoundary) {
-        const beforeChar = start > 0 ? text.slice(start - 1, start) : null
-        const afterChar = end < text.length ? text.slice(end, end + 1) : null
-
-        if (isWordLikeCodeUnit(beforeChar) || isWordLikeCodeUnit(afterChar)) {
-          return // Skip this match
-        }
-      }
-
-      matches.push({
-        original: match.payload.source,
-        replacement: match.payload.replacement,
-        source: match.payload.source,
-        reading: match.payload.reading
-      })
-    })
-
-    if (matches.length === 0) return false
-
-    // Create container span with replacement spans inside (same as TextReplacer)
-    const container = this.createReplacementContainer(text, matches)
-    node.replaceWith(container)
-
-    return true
+    textNodes.forEach(node => this.replaceNode(node))
   }
 
   private createReplacementContainer(text: string, matches: ReplacementDetail[]): HTMLElement {
@@ -476,4 +382,26 @@ export class FastAhoCorasickReplacer {
     container.append(fragment)
     return container
   }
+}
+
+export const createReplacementVocabularyFromEntries = (
+  entries: import('~src/services/vocabulary/types').VocabularyEntry[]
+): ReplacementVocabulary => {
+  const vocabulary: ReplacementVocabulary = new Map()
+
+  entries?.forEach((entry) => {
+    entry.english.forEach((englishWord) => {
+      const normalized = englishWord.trim()
+      if (!normalized) {
+        return
+      }
+
+      vocabulary.set(normalized, {
+        japanese: entry.japanese,
+        reading: entry.reading
+      })
+    })
+  })
+
+  return vocabulary
 }

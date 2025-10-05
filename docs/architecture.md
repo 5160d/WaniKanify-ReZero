@@ -12,8 +12,8 @@ WaniKanify ReZero follows a standard Chrome MV3 architecture built on top of the
 
 - **Content script (`src/content.ts`)**
   - Loads user settings, site overrides, and vocabulary from the background worker.
-  - Utilises `TextReplacementEngine` to walk DOM text nodes, replace content, track statistics, and (when enabled) trigger audio playback.
-  - Observes DOM mutations, debounces large updates, and coordinates site exclusion logic.
+  - Analyzes page complexity and uses dual processing strategy: light pages (< 4000 text nodes) use `FastAhoCorasickReplacer` for efficient batch processing, while heavy pages (≥ 4000 text nodes) use time-sliced processing with the same `FastAhoCorasickReplacer` to prevent main thread blocking.
+  - Observes DOM mutations, debounces large updates, and coordinates site exclusion logic with hot zone tracking to avoid interference with dynamic UI overlays.
   - Performs an immediate first compile of the vocabulary automaton so early DOM (e.g. page titles) receives replacements; a full reprocess is scheduled after background vocabulary state loads.
 
 - **UI surfaces (`src/options.tsx`, `src/popup.tsx`)**
@@ -24,7 +24,7 @@ WaniKanify ReZero follows a standard Chrome MV3 architecture built on top of the
 - **Services layer (under `src/services/`)**
   - `wanikani.ts`: REST client with caching/rate limiting.
   - `vocabulary.ts`: merges custom/imported/WaniKani data and produces lookup structures and tries.
-  - `textReplacer.ts`: performs DOM-safe replacements with undo tracking and number conversion.
+  - `fastAhoCorasickReplacer.ts`: high-performance replacement engine using Aho-Corasick algorithm for both light and heavy page processing, supporting both batch and time-sliced processing modes.
   - `siteFilter.ts`: handles blacklist pattern matching and overrides.
   - `spreadsheetImport.ts`: fetches published Google Sheets CSV data, validates columns, and records import history.
   - `storage.ts`: wraps Plasmo storage with compression, migrations, and quota utilities.
@@ -34,7 +34,7 @@ WaniKanify ReZero follows a standard Chrome MV3 architecture built on top of the
 ## Data flow summary
 
 1. **Background** fetches WaniKani data and imported spreadsheets, builds a cache via `VocabularyManager`, and persists it using the storage service.
-2. **Content script** loads settings + vocabulary, applies filters via `SiteFilter`, and uses `TextReplacementEngine` to modify the DOM.
+2. **Content script** loads settings + vocabulary, applies filters via `SiteFilter`, and uses `FastAhoCorasickReplacer` to modify the DOM.
 3. When settings change, both background and content scripts respond via storage listeners to update their local state.
 4. The popup and options UI interact with the background worker through `chrome.runtime.sendMessage` (e.g., fetching state, requesting refreshes).
 5. A Chrome alarms entry (`wanikanify:vocabulary-refresh`) fires every 6 hours; on trigger the background checks the current cache TTL and only performs a network fetch if the stored `expiresAt` has passed.
@@ -68,11 +68,13 @@ Worst‑case latency for newly released WaniKani vocabulary to appear (without m
 ## Performance considerations
 
 - Pages are analyzed by text node count to determine the optimal processing strategy.
-- Light pages (< 6000 text nodes) use `FastAhoCorasickReplacer` for efficient regex-like processing.
-- Heavy pages (≥ 6000 text nodes) use time-sliced processing to prevent main thread blocking.
-- Mutations are batched and processed to avoid overwhelming the browser.
+- Light pages (< 4000 text nodes) use `FastAhoCorasickReplacer` for efficient batch processing on the entire document.
+- Heavy pages (≥ 4000 text nodes) use time-sliced processing with the same `FastAhoCorasickReplacer` to prevent main thread blocking by processing text nodes individually in chunks.
+- The processing strategy ensures consistent toggle functionality by tracking all replacements for proper reversion regardless of which mode is used.
+- Mutations are batched and processed with hot zone detection to avoid overwhelming the browser and interference with dynamic UI overlays.
 - Replacement rules are lazily compiled and truncated when vocabulary changes rapidly.
 - Spreadsheet imports run off the main UI thread and store aggregated results for reuse.
+- Automatic vocabulary refresh is scheduled every 6 hours with duplicate alarm prevention.
 
 Refer to the individual service files for deeper details.
 

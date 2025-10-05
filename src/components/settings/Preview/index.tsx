@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef } from "react"
 import { Card, CardContent, Stack, Typography } from "@mui/material"
 import { t } from '~src/utils/i18n'
 
-import { TextReplacementEngine, type ReplacementResult } from "~src/services/textReplacer"
+import { FastAhoCorasickReplacer, type ReplacementResult } from "~src/services/fastAhoCorasickReplacer"
 import { initializeTooltipPositioning, toggleTooltipVisibility } from "~src/services/tooltips"
 import { AudioService } from "~src/services/audio"
 import type { WaniSettingsFormImpl } from "~src/components/settings/types"
@@ -20,7 +20,7 @@ const SAMPLE_TEXTS = [
 ]
 
 const buildVocabularyFromForm = (settingsForm: WaniSettingsFormImpl) => {
-  const engine = new TextReplacementEngine()
+  const engine = new FastAhoCorasickReplacer()
 
   const parsedVocabulary = parseCustomVocabulary(settingsForm.customVocabulary)
   const vocabulary = new Map<string, { japanese: string; reading?: string }>()
@@ -52,7 +52,7 @@ const buildVocabularyFromForm = (settingsForm: WaniSettingsFormImpl) => {
     numbersReplacement: settingsForm.numbersReplacement
   })
 
-  engine.setVocabulary(vocabulary, blacklist)
+  engine.setVocabulary(vocabulary, blacklist, false)
 
   return engine
 }
