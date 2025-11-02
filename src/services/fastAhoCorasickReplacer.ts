@@ -26,6 +26,8 @@ export type ReplacementDetail = {
   replacement: string
   source: string
   reading?: string
+  start: number
+  end: number
 }
 
 export type ReplacementResult = {
@@ -154,7 +156,9 @@ export class FastAhoCorasickReplacer {
         original: input.slice(start, end),
         replacement: match.payload.replacement,
         source: match.payload.source,
-        reading: match.payload.reading
+        reading: match.payload.reading,
+        start,
+        end
       })
     })
 
@@ -164,25 +168,30 @@ export class FastAhoCorasickReplacer {
     }
 
     matches.sort((a, b) => {
-      const aStart = input.indexOf(a.original)
-      const bStart = input.indexOf(b.original)
-      
-      if (aStart !== bStart) {
-        return aStart - bStart
+      if (a.start !== b.start) {
+        return a.start - b.start
       }
-      
-      // Prefer longer matches
-      return b.original.length - a.original.length
+
+      const aLength = a.end - a.start
+      const bLength = b.end - b.start
+
+      if (aLength !== bLength) {
+        return bLength - aLength
+      }
+
+      return 0
     })
 
     // Apply replacements
     const segments: string[] = []
     let cursor = 0
+    const appliedMatches: ReplacementDetail[] = []
 
     for (const match of matches) {
-      const matchStart = input.indexOf(match.original, cursor)
-      
-      if (matchStart === -1 || matchStart < cursor) {
+      const matchStart = match.start
+      const matchEnd = match.end
+
+      if (matchStart < cursor) {
         continue
       }
 
@@ -192,7 +201,8 @@ export class FastAhoCorasickReplacer {
       }
 
       segments.push(match.replacement)
-      cursor = matchStart + match.original.length
+      cursor = matchEnd
+      appliedMatches.push(match)
     }
 
     // Add remaining text
@@ -201,7 +211,7 @@ export class FastAhoCorasickReplacer {
     }
 
     let output = segments.join("")
-    let changed = matches.length > 0
+    let changed = appliedMatches.length > 0
 
     // Apply number replacement
     const numbersResult = this.replaceNumbersIfNeeded(output)
@@ -217,7 +227,7 @@ export class FastAhoCorasickReplacer {
     return {
       value: output,
       changed,
-      matches
+      matches: appliedMatches
     }
   }
 
@@ -347,7 +357,7 @@ export class FastAhoCorasickReplacer {
     let cursor = 0
 
     matches.forEach((match) => {
-      const index = text.indexOf(match.original, cursor)
+      const index = match.start
 
       if (index === -1) {
         return
@@ -371,7 +381,7 @@ export class FastAhoCorasickReplacer {
       }
 
       fragment.append(span)
-      cursor = index + match.original.length
+      cursor = match.end
     })
 
     // Add remaining text after last match
