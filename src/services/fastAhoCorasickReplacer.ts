@@ -90,7 +90,10 @@ export class FastAhoCorasickReplacer {
     const result = this.replace(original)
 
     if (result.changed && original !== result.value) {
-      if (result.matches.length > 0) {
+      const parentElement = node.parentElement
+      const canUseContainer = Boolean(parentElement && this.canUseReplacementContainer(parentElement))
+
+      if (result.matches.length > 0 && canUseContainer) {
         const container = this.createReplacementContainer(original, result.matches)
 
         this.nodeOriginalContent.set(node, {
@@ -277,6 +280,16 @@ export class FastAhoCorasickReplacer {
       .split("")
       .map((digit) => DIGIT_TO_KANJI[digit] ?? digit)
       .join("")
+  }
+
+  private canUseReplacementContainer(element: Element): boolean {
+    const namespace = element.namespaceURI
+
+    if (!namespace) {
+      return true
+    }
+
+    return namespace === "http://www.w3.org/1999/xhtml"
   }
 
   private buildAutomaton(): void {

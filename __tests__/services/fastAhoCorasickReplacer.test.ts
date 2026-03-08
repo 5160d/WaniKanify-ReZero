@@ -1,3 +1,5 @@
+import { beforeEach, describe, expect, test } from "@jest/globals"
+
 import { FastAhoCorasickReplacer } from "~src/services/fastAhoCorasickReplacer"
 
 describe('FastAhoCorasickReplacer Unified Architecture', () => {
@@ -46,6 +48,24 @@ describe('FastAhoCorasickReplacer Unified Architecture', () => {
     
     // Verify tracking
     expect(replacer.getTrackedNodesCount()).toBe(1)
+  })
+
+  test('avoids injecting HTML containers inside SVG namespaces', () => {
+    const vocabulary = new Map([
+      ['play', { japanese: '再生', reading: 'さいせい' }]
+    ])
+    replacer.setVocabulary(vocabulary, new Set(), false)
+
+    const svgNS = 'http://www.w3.org/2000/svg'
+    const title = document.createElementNS(svgNS, 'title')
+    title.textContent = 'Play'
+
+    const textNode = title.firstChild as Text
+    const result = replacer.replaceNode(textNode)
+
+    expect(result.changed).toBe(true)
+    expect(title.textContent).toBe('再生')
+    expect(title.querySelector('.wanikanify-replacement')).toBeNull()
   })
 
   test('handles numbers replacement', () => {
