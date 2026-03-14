@@ -45,6 +45,7 @@ import { waniStyle } from "src/styles/wanikanifyStyles";
 import "src/styles/style.css";
 import { githubUrl } from "./components/common/constants";
 import { WaniTooltip } from "./components/common/WaniTooltip";
+import type { SrsGroupsObject } from "~src/components/settings/types";
 
 
 interface HeaderProps {
@@ -122,7 +123,7 @@ const Footer: React.FC<FooterProps> = ({ githubUrl }) => (
     >
       <IconButton
         onClick={() => window.open(githubUrl, '_blank', 'noopener')}
-  aria-label={t('options_footer_github_aria')}
+        aria-label={t('options_footer_github_aria')}
         sx={{
           position: 'relative',
           transition: 'all 0.3s ease',
@@ -156,6 +157,7 @@ const Footer: React.FC<FooterProps> = ({ githubUrl }) => (
 
 export default function Options(): ReactElement {
   const mode = useSystemTheme();
+  const theme = useMemo(() => waniStyle(mode), [mode]);
   const {
     settingsForm,
     updateSettingsForm,
@@ -179,13 +181,12 @@ export default function Options(): ReactElement {
   // Reset errors when form is clean
   useEffect(() => {
     if (!isDirty) {
-      setErrors({ ...DEFAULT_SETTINGS_FORM_ERRORS });
+      setErrors((prev) => {
+        if (!Object.values(prev).some(Boolean)) return prev;
+        return { ...DEFAULT_SETTINGS_FORM_ERRORS };
+      });
     }
-    return () => {
-      // Cleanup errors when component unmounts
-      setErrors({ ...DEFAULT_SETTINGS_FORM_ERRORS });
-    };
-  }, [isDirty, setErrors]);
+  }, [isDirty]);
 
   useEffect(() => {
     const rawToken = settingsForm.apiToken?.trim() ?? "";
@@ -196,13 +197,93 @@ export default function Options(): ReactElement {
     setErrors((prev) => (prev.apiToken === hasTokenError ? prev : { ...prev, apiToken: hasTokenError }));
   }, [settingsForm.apiToken]);
 
+  const handleCustomVocabularyError = useCallback((error: boolean) => {
+    setErrors((prev) => (prev.customVocabulary === error ? prev : { ...prev, customVocabulary: error }));
+  }, []);
+
+  const handleBlacklistError = useCallback((error: boolean) => {
+    setErrors((prev) => (prev.vocabularyBlacklist === error ? prev : { ...prev, vocabularyBlacklist: error }));
+  }, []);
+
+  const handleApiTokenChange = useCallback((newValue: string) => {
+    updateSettingsForm({ apiToken: newValue });
+  }, [updateSettingsForm]);
+
+  const handleAutoRunChange = useCallback((newValue: boolean) => {
+    updateSettingsForm({ autoRun: newValue });
+  }, [updateSettingsForm]);
+
+  const handleAudioEnabledChange = useCallback((enabled: boolean) => {
+    updateSettingsForm({ audio: { ...settingsForm.audio, enabled } });
+  }, [updateSettingsForm, settingsForm.audio]);
+
+  const handleAudioModeChange = useCallback((mode: string) => {
+    updateSettingsForm({ audio: { ...settingsForm.audio, mode: mode as 'click' | 'hover' } });
+  }, [updateSettingsForm, settingsForm.audio]);
+
+  const handleAudioVolumeChange = useCallback((volume: number) => {
+    updateSettingsForm({ audio: { ...settingsForm.audio, volume } });
+  }, [updateSettingsForm, settingsForm.audio]);
+
+  const handleTooltipsChange = useCallback((newValue: boolean) => {
+    updateSettingsForm({ showReplacementTooltips: newValue });
+  }, [updateSettingsForm]);
+
+  const handleSitesFilteringChange = useCallback((newValue: string[]) => {
+    updateSettingsForm({ sitesFiltering: newValue });
+  }, [updateSettingsForm]);
+
+  const handleNumbersReplacementChange = useCallback((newValue: boolean) => {
+    updateSettingsForm({ numbersReplacement: newValue });
+  }, [updateSettingsForm]);
+
+  const handleSrsGroupsChange = useCallback((newValue: SrsGroupsObject) => {
+    updateSettingsForm({ srsGroups: newValue });
+  }, [updateSettingsForm]);
+
+  const handleCustomVocabularyChange = useCallback((newValue: string) => {
+    updateSettingsForm({ customVocabulary: newValue });
+  }, [updateSettingsForm]);
+
+  const handleBlacklistChange = useCallback((newValue: string) => {
+    updateSettingsForm({ vocabularyBlacklist: newValue });
+  }, [updateSettingsForm]);
+
+  const handleSpreadsheetImportChange = useCallback((newValue: Parameters<typeof updateSettingsForm>[0]['spreadsheetImport']) => {
+    updateSettingsForm({ spreadsheetImport: newValue });
+  }, [updateSettingsForm]);
+
+  const handlePerformanceTelemetryChange = useCallback((newValue: boolean) => {
+    updateSettingsForm({ performanceTelemetry: newValue });
+  }, [updateSettingsForm]);
+
+  const handleImportSettings = useCallback((settings: Parameters<typeof applyImportedSettings>[0]) => {
+    applyImportedSettings(settings);
+  }, [applyImportedSettings]);
+
+  const handleValidationReset = useCallback(() => {
+    setErrors((prev) => {
+      if (!Object.values(prev).some(Boolean)) return prev;
+      return { ...DEFAULT_SETTINGS_FORM_ERRORS };
+    });
+  }, []);
+
+  const handleResetDefaults = useCallback(() => {
+    resetToDefaults();
+    handleValidationReset();
+  }, [resetToDefaults, handleValidationReset]);
+
+  const handleSyncFromCloud = useCallback(async () => {
+    await forceSyncFromCloud();
+  }, [forceSyncFromCloud]);
+
   // Use useCallback for event handlers
   const handleSave = useCallback(() => {
     saveToStorage();
   }, [saveToStorage]);
 
   return (
-    <ThemeProvider theme={waniStyle(mode)}>
+    <ThemeProvider theme={theme}>
       <Box sx={{
         bgcolor: 'background.default',
         minHeight: '100vh',
@@ -236,24 +317,24 @@ export default function Options(): ReactElement {
                             {t('vocabulary_section_tooltip_line1')}
                           </Typography>
                           <Box sx={{
-                          bgcolor: 'background.paper',
-                          p: 2,
-                          borderRadius: 1,
-                          border: 1,
-                          borderColor: 'divider',
-                          maxWidth: '100%',
-                          wordWrap: 'break-word'
+                            bgcolor: 'background.paper',
+                            p: 2,
+                            borderRadius: 1,
+                            border: 1,
+                            borderColor: 'divider',
+                            maxWidth: '100%',
+                            wordWrap: 'break-word'
                           }}>
-                          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                            {t('vocabulary_section_tooltip_line2_intro')}<br/>
-                            <code style={{ display: 'block', marginTop: '8px', backgroundColor: 'action.hover', padding: '2px 2px' }}>
-                            {t('toggle_numbers_label')} &gt;<br/>
-                            {t('blacklist_tooltip_title')} &gt;<br/>
-                            {t('settings_custom_vocab_heading')} &gt;<br/>
-                            {t('import_heading_imported_vocab')} &gt;<br/>
-                            {t('settings_srs_section_heading')}
-                            </code>
-                          </Typography>
+                            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                              {t('vocabulary_section_tooltip_line2_intro')}<br />
+                              <code style={{ display: 'block', marginTop: '8px', backgroundColor: 'action.hover', padding: '2px 2px' }}>
+                                {t('toggle_numbers_label')} &gt;<br />
+                                {t('blacklist_tooltip_title')} &gt;<br />
+                                {t('settings_custom_vocab_heading')} &gt;<br />
+                                {t('import_heading_imported_vocab')} &gt;<br />
+                                {t('settings_srs_section_heading')}
+                              </code>
+                            </Typography>
                           </Box>
                         </WaniTooltip>
                       }
@@ -269,7 +350,7 @@ export default function Options(): ReactElement {
                           }
                         }}
                       >
-                        <HelpOutline sx={{ mt: -0.5 }}/>
+                        <HelpOutline sx={{ mt: -0.5 }} />
                       </IconButton>
                     </Tooltip>
                   </Box>
@@ -295,7 +376,7 @@ export default function Options(): ReactElement {
                     <Box display="flex" alignItems="center" width="70%">
                       <APITokenField
                         value={settingsForm.apiToken}
-                        onChange={(newValue) => updateSettingsForm({ apiToken: newValue })}
+                        onChange={handleApiTokenChange}
                         error={errors.apiToken}
                         helperText={errors.apiToken ? t('validation_api_token_format') : ''}
                       />
@@ -310,24 +391,24 @@ export default function Options(): ReactElement {
                   <>
                     <AutoRunToggle
                       value={settingsForm.autoRun}
-                      onChange={(newValue) => updateSettingsForm({ autoRun: newValue })}
+                      onChange={handleAutoRunChange}
                     />
                     <AudioToggle
                       enabled={settingsForm.audio.enabled}
                       mode={settingsForm.audio.mode}
                       volume={settingsForm.audio.volume}
-                      onEnabledChange={(enabled) => updateSettingsForm({ audio: { ...settingsForm.audio, enabled } })}
-                      onModeChange={(mode) => updateSettingsForm({ audio: { ...settingsForm.audio, mode } })}
-                      onVolumeChange={(volume) => updateSettingsForm({ audio: { ...settingsForm.audio, volume } })}
+                      onEnabledChange={handleAudioEnabledChange}
+                      onModeChange={handleAudioModeChange}
+                      onVolumeChange={handleAudioVolumeChange}
                     />
                     <TooltipsToggle
                       value={settingsForm.showReplacementTooltips}
-                      onChange={(newValue) => updateSettingsForm({ showReplacementTooltips: newValue })}
+                      onChange={handleTooltipsChange}
                     />
                     <Box mt={3} width="50%">
                       <SitesFilteringTable
                         value={settingsForm.sitesFiltering}
-                        onChange={(newValue) => updateSettingsForm({ sitesFiltering: newValue })}
+                        onChange={handleSitesFilteringChange}
                       />
                     </Box>
                     <Box mt={3}>
@@ -340,36 +421,32 @@ export default function Options(): ReactElement {
                   <>
                     <NumbersReplacementToggle
                       value={settingsForm.numbersReplacement}
-                      onChange={(newValue) => updateSettingsForm({ numbersReplacement: newValue })}
+                      onChange={handleNumbersReplacementChange}
                     />
                     <Box mt={3}>
                       <SRSCheckboxes
                         value={settingsForm.srsGroups}
-                        onChange={(newValue) => {
-                          updateSettingsForm({ srsGroups: newValue });
-                        }}
+                        onChange={handleSrsGroupsChange}
                       />
                     </Box>
                     <Box mt={3}>
-                    <CustomVocabularyTextArea
-                      value={settingsForm.customVocabulary}
-                      onChange={(newValue) => {
-                        updateSettingsForm({ customVocabulary: newValue });
-                      }}
-                      onErrorHandled={(error) => setErrors((prev) => ({ ...prev, customVocabulary: error }))}
-                    />
-                  </Box>
+                      <CustomVocabularyTextArea
+                        value={settingsForm.customVocabulary}
+                        onChange={handleCustomVocabularyChange}
+                        onErrorHandled={handleCustomVocabularyError}
+                      />
+                    </Box>
                     <Box mt={3}>
                       <VocabularyBlacklistTextArea
                         value={settingsForm.vocabularyBlacklist}
-                        onChange={(newValue) => updateSettingsForm({ vocabularyBlacklist: newValue })}
-                        onErrorHandled={(error) => setErrors((prev) => ({ ...prev, vocabularyBlacklist: error }))}
+                        onChange={handleBlacklistChange}
+                        onErrorHandled={handleBlacklistError}
                       />
                     </Box>
                     <Box mt={3}>
                       <SpreadsheetImportTable
                         value={settingsForm.spreadsheetImport}
-                        onChange={(newValue) => updateSettingsForm({ spreadsheetImport: newValue })}
+                        onChange={handleSpreadsheetImportChange}
                       />
                     </Box>
                   </>
@@ -379,7 +456,7 @@ export default function Options(): ReactElement {
                   <>
                     <PerformanceTelemetryToggle
                       value={settingsForm.performanceTelemetry}
-                      onChange={(newValue) => updateSettingsForm({ performanceTelemetry: newValue })}
+                      onChange={handlePerformanceTelemetryChange}
                     />
                   </>
                 )}
@@ -387,15 +464,10 @@ export default function Options(): ReactElement {
                 {section === 'tools' && (
                   <SettingsTools
                     settingsForm={settingsForm}
-                    onImportSettings={(settings) => applyImportedSettings(settings)}
-                    onValidationReset={() => setErrors({ ...DEFAULT_SETTINGS_FORM_ERRORS })}
-                    onResetDefaults={() => {
-                      resetToDefaults();
-                      setErrors({ ...DEFAULT_SETTINGS_FORM_ERRORS });
-                    }}
-                    onSyncFromCloud={async () => {
-                      await forceSyncFromCloud();
-                    }}
+                    onImportSettings={handleImportSettings}
+                    onValidationReset={handleValidationReset}
+                    onResetDefaults={handleResetDefaults}
+                    onSyncFromCloud={handleSyncFromCloud}
                   />
                 )}
               </CardContent>

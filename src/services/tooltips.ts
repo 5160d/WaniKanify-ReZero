@@ -66,11 +66,11 @@ export const toggleTooltipVisibility = (
 
 // Debug utilities removed for production cleanup
 
-export const initializeTooltipPositioning = (root: Document | Element | null): void => {
+export const initializeTooltipPositioning = (root: Document | Element | null): (() => void) => {
   const rootElement = toRootElement(root)
   
   if (!rootElement) {
-    return
+    return () => {}
   }
 
   // Add event listeners for dynamic tooltip positioning
@@ -119,6 +119,22 @@ export const initializeTooltipPositioning = (root: Document | Element | null): v
   window.addEventListener('scroll', handleScroll, { passive: true })
   document.addEventListener('scroll', handleDocumentScroll, { capture: true, passive: true })
   window.addEventListener('resize', handleResize, { passive: true })
+
+  return () => {
+    rootElement.removeEventListener('mouseenter', handleMouseEnter, { capture: true })
+    rootElement.removeEventListener('mouseleave', handleMouseLeave, { capture: true })
+    window.removeEventListener('scroll', handleScroll)
+    document.removeEventListener('scroll', handleDocumentScroll, { capture: true })
+    window.removeEventListener('resize', handleResize)
+    
+    if (hideTimeout) {
+      clearTimeout(hideTimeout)
+    }
+    if (englishObserver) {
+      englishObserver.disconnect()
+    }
+    hideSingletonTooltips()
+  }
 }
 
 const positionTooltipsForElement = (element: HTMLElement): void => {

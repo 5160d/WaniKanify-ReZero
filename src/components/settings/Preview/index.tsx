@@ -181,7 +181,7 @@ export const SettingsPreview: React.FC<SettingsPreviewProps> = ({ settingsForm }
 
   useEffect(() => {
     if (rootRef.current) {
-      initializeTooltipPositioning(rootRef.current)
+      return initializeTooltipPositioning(rootRef.current)
     }
   }, [])
 
