@@ -30,7 +30,7 @@ import {
   __WK_DATA_CONTAINER,
   __WK_DATA_SKIP,
 } from '~src/internal/tokens'
-import "./styles/style.css"
+import "./styles/contentStyle.css"
 
 ensureSafeRuntimeConnect()
 
